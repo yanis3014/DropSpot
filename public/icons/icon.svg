@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="DropSpot">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#2C1E16"/>
+      <stop offset="100%" stop-color="#4A7C59"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="url(#bg)"/>
+  <path fill="#FAF9F6" d="M256 96c-72 0-128 52-128 120 0 28 10 54 28 74l-18 146h236l-18-146c18-20 28-46 28-74 0-68-56-120-128-120zm0 48c42 0 72 30 72 72s-30 72-72 72-72-30-72-72 30-72 72-72z"/>
+  <ellipse cx="256" cy="382" rx="88" ry="24" fill="#E07A5F" opacity="0.9"/>
+</svg>

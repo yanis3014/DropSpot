@@ -16,7 +16,7 @@ import {
   CaretRight,
   NavigationArrow,
 } from '@phosphor-icons/react';
-import DropDetailModal, { dropTypeConfig } from '@/components/drops/DropDetailModal';
+import DropDetailModal, { getDropTypeConfig } from '@/components/drops/DropDetailModal';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { getPlaces, Place } from '@/lib/api/places';
 import { getActiveDrops, Drop, isDropLive, formatTime, formatCountdown } from '@/lib/api/drops';
@@ -86,7 +86,7 @@ function DropCard({
   matches: PreferenceId[];
   onOpen: () => void;
 }) {
-  const typeConfig = dropTypeConfig[drop.drop_type];
+  const typeConfig = getDropTypeConfig(drop.drop_type);
   const TypeIcon = typeConfig.icon;
   const iconColor = typeConfig.classes.split(' ').find((c) => c.startsWith('text-'));
   const live = isDropLive(drop);

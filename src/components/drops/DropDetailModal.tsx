@@ -9,6 +9,7 @@ import {
   Sneaker,
   Tag,
   Confetti,
+  Sparkle,
   CheckCircle,
   LockKey,
   Users,
@@ -24,10 +25,13 @@ interface DropDetailModalProps {
   onClose: () => void;
 }
 
-export const dropTypeConfig: Record<
-  Drop['drop_type'],
-  { label: string; icon: typeof Sneaker; classes: string }
-> = {
+export type DropTypeConfig = {
+  label: string;
+  icon: typeof Sneaker;
+  classes: string;
+};
+
+export const dropTypeConfig: Record<Drop['drop_type'], DropTypeConfig> = {
   sport: {
     label: 'Sport',
     icon: Sneaker,
@@ -45,6 +49,20 @@ export const dropTypeConfig: Record<
   },
 };
 
+/** Safe lookup — unknown DB values (null, typos, new types) won't crash the UI. */
+export const defaultDropTypeConfig: DropTypeConfig = {
+  label: 'Drop',
+  icon: Sparkle,
+  classes: 'bg-brand-mocha/10 text-brand-mocha',
+};
+
+export function getDropTypeConfig(dropType: string | null | undefined): DropTypeConfig {
+  if (dropType && dropType in dropTypeConfig) {
+    return dropTypeConfig[dropType as Drop['drop_type']];
+  }
+  return defaultDropTypeConfig;
+}
+
 export default function DropDetailModal({
   drop,
   countdown,
@@ -54,7 +72,7 @@ export default function DropDetailModal({
   onClose,
 }: DropDetailModalProps) {
   const [visible, setVisible] = useState(false);
-  const typeConfig = dropTypeConfig[drop.drop_type];
+  const typeConfig = getDropTypeConfig(drop.drop_type);
   const TypeIcon = typeConfig.icon;
   const live = isDropLive(drop);
 

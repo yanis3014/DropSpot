@@ -2,10 +2,41 @@
   <defs>
     <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
       <stop offset="0%" stop-color="#2C1E16"/>
+      <stop offset="55%" stop-color="#3D2A20"/>
       <stop offset="100%" stop-color="#4A7C59"/>
     </linearGradient>
+    <linearGradient id="cup" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FAF9F6"/>
+      <stop offset="100%" stop-color="#EDE6DC"/>
+    </linearGradient>
   </defs>
+
+  <!-- App tile -->
   <rect width="512" height="512" rx="112" fill="url(#bg)"/>
-  <path fill="#FAF9F6" d="M256 96c-72 0-128 52-128 120 0 28 10 54 28 74l-18 146h236l-18-146c18-20 28-46 28-74 0-68-56-120-128-120zm0 48c42 0 72 30 72 72s-30 72-72 72-72-30-72-72 30-72 72-72z"/>
-  <ellipse cx="256" cy="382" rx="88" ry="24" fill="#E07A5F" opacity="0.9"/>
+
+  <!-- Soft glow behind cup -->
+  <circle cx="250" cy="270" r="150" fill="#4A7C59" opacity="0.18"/>
+
+  <!-- Steam -->
+  <path d="M210 118c0 0 8-22 0-36" fill="none" stroke="#FAF9F6" stroke-width="10" stroke-linecap="round" opacity="0.55"/>
+  <path d="M246 108c0 0 10-28 0-44" fill="none" stroke="#FAF9F6" stroke-width="10" stroke-linecap="round" opacity="0.7"/>
+  <path d="M282 118c0 0 8-22 0-36" fill="none" stroke="#FAF9F6" stroke-width="10" stroke-linecap="round" opacity="0.55"/>
+
+  <!-- Cup body -->
+  <path fill="url(#cup)" d="M156 190h188c14 0 24 12 22 26l-18 168c-2 22-20 38-42 38H194c-22 0-40-16-42-38l-18-168c-2-14 8-26 22-26z"/>
+
+  <!-- Coffee surface -->
+  <ellipse cx="250" cy="214" rx="84" ry="22" fill="#2C1E16"/>
+  <ellipse cx="250" cy="208" rx="70" ry="14" fill="#4A3428"/>
+
+  <!-- Cup rim highlight -->
+  <path fill="none" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" opacity="0.35" d="M170 210c20-14 140-14 160 0"/>
+
+  <!-- Handle -->
+  <path d="M344 230c42 8 62 40 54 78-8 36-40 56-78 52" fill="none" stroke="#FAF9F6" stroke-width="26" stroke-linecap="round"/>
+  <path d="M344 230c42 8 62 40 54 78-8 36-40 56-78 52" fill="none" stroke="#EDE6DC" stroke-width="14" stroke-linecap="round"/>
+
+  <!-- Brand accent drop / saucer -->
+  <ellipse cx="250" cy="432" rx="96" ry="18" fill="#E07A5F" opacity="0.95"/>
+  <ellipse cx="250" cy="428" rx="70" ry="8" fill="#FAF9F6" opacity="0.2"/>
 </svg>

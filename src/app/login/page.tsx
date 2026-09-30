@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { GoogleLogo, AppleLogo, Envelope } from '@phosphor-icons/react';
 import { supabase } from '@/lib/supabase/client';
 import { useAuth } from '@/lib/hooks/useAuth';
+import ThemeSwitcher from '@/components/profile/ThemeSwitcher';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -108,7 +109,7 @@ export default function LoginPage() {
 
         {!supabase && (
           <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-6 text-sm text-yellow-800 text-center">
-            ⚠️ Supabase n'est pas configuré. Configurez NEXT_PUBLIC_SUPABASE_URL et NEXT_PUBLIC_SUPABASE_ANON_KEY.
+            ⚠️ Supabase n&apos;est pas configuré. Configurez NEXT_PUBLIC_SUPABASE_URL et NEXT_PUBLIC_SUPABASE_ANON_KEY.
           </div>
         )}
 
@@ -117,7 +118,7 @@ export default function LoginPage() {
           <button
             onClick={handleGoogleLogin}
             disabled={loading || !supabase}
-            className="w-full flex items-center justify-center gap-3 bg-white border border-gray-200 rounded-xl py-3 px-4 shadow-sm hover:shadow-md transition-all active:scale-95 disabled:opacity-50"
+            className="w-full flex items-center justify-center gap-3 bg-brand-surface border border-brand-mocha/15 rounded-xl py-3 px-4 shadow-sm hover:shadow-md transition-all active:scale-95 disabled:opacity-50"
           >
             <GoogleLogo size={20} weight="fill" className="text-brand-espresso" />
             <span className="text-brand-espresso font-medium">Continuer avec Google</span>
@@ -150,7 +151,7 @@ export default function LoginPage() {
             placeholder="ton@email.com"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-brand-matcha focus:outline-none focus:ring-2 focus:ring-brand-matcha/20 transition-all"
+            className="w-full px-4 py-3 rounded-xl border border-brand-mocha/15 bg-brand-surface text-brand-espresso focus:border-brand-matcha focus:outline-none focus:ring-2 focus:ring-brand-matcha/20 transition-all"
             disabled={loading || !supabase}
           />
           <button
@@ -163,13 +164,21 @@ export default function LoginPage() {
           </button>
         </form>
 
+        {/* Theme */}
+        <div className="mb-6">
+          <p className="text-xs font-semibold uppercase tracking-wider text-brand-mocha text-center mb-2">
+            Apparence
+          </p>
+          <ThemeSwitcher />
+        </div>
+
         {/* Guest Mode */}
         <div className="text-center">
           <button
             onClick={handleGuestMode}
             className="text-sm text-brand-mocha underline hover:text-brand-espresso transition-colors"
           >
-            Explorer l'app sans compte pour l'instant
+            Explorer l&apos;app sans compte pour l&apos;instant
           </button>
         </div>
       </div>

@@ -108,7 +108,7 @@ function WizardForm({ isEdit, initialName, initialPrefs, avatar, onSave, onDone 
             <button
               onClick={() => setStep(1)}
               aria-label="Retour"
-              className="w-9 h-9 -ml-2 rounded-full flex items-center justify-center text-brand-mocha hover:bg-white transition-colors"
+              className="w-9 h-9 -ml-2 rounded-full flex items-center justify-center text-brand-mocha hover:bg-brand-surface transition-colors"
             >
               <ArrowLeft size={20} weight="bold" />
             </button>
@@ -139,10 +139,10 @@ function WizardForm({ isEdit, initialName, initialPrefs, avatar, onSave, onDone 
                   src={avatar}
                   alt=""
                   referrerPolicy="no-referrer"
-                  className="w-24 h-24 rounded-full object-cover ring-4 ring-white shadow-lg"
+                  className="w-24 h-24 rounded-full object-cover ring-4 ring-brand-surface shadow-lg"
                 />
               ) : (
-                <div className="w-24 h-24 rounded-full bg-white ring-4 ring-white shadow-lg flex items-center justify-center">
+                <div className="w-24 h-24 rounded-full bg-brand-surface ring-4 ring-brand-surface shadow-lg flex items-center justify-center">
                   <UserCircle size={56} weight="duotone" className="text-brand-matcha" />
                 </div>
               )}
@@ -166,7 +166,7 @@ function WizardForm({ isEdit, initialName, initialPrefs, avatar, onSave, onDone 
                 placeholder="Ton prénom ou un pseudo"
                 maxLength={40}
                 autoFocus
-                className="mt-2 w-full bg-white rounded-2xl px-5 py-4 text-lg font-semibold text-brand-espresso border-2 border-transparent focus:border-brand-matcha focus:outline-none shadow-sm transition-all placeholder:font-normal placeholder:text-brand-mocha/50"
+                className="mt-2 w-full bg-brand-surface rounded-2xl px-5 py-4 text-lg font-semibold text-brand-espresso border-2 border-transparent focus:border-brand-matcha focus:outline-none shadow-sm transition-all placeholder:font-normal placeholder:text-brand-mocha/50"
               />
             </label>
             <p className="text-xs text-brand-mocha mt-2">
@@ -177,7 +177,7 @@ function WizardForm({ isEdit, initialName, initialPrefs, avatar, onSave, onDone 
             <button
               onClick={() => setStep(2)}
               disabled={!trimmedName}
-              className="w-full flex items-center justify-center gap-2 bg-brand-espresso text-white font-bold py-4 rounded-2xl shadow-lg hover:bg-brand-espresso/90 active:scale-[0.98] transition-all disabled:opacity-40 disabled:active:scale-100"
+              className="w-full flex items-center justify-center gap-2 bg-brand-ink text-white font-bold py-4 rounded-2xl shadow-lg hover:bg-brand-ink/90 active:scale-[0.98] transition-all disabled:opacity-40 disabled:active:scale-100"
             >
               Continuer
               <ArrowRight size={18} weight="bold" />

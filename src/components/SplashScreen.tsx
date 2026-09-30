@@ -30,7 +30,7 @@ export default function SplashScreen() {
   return (
     <div
       aria-hidden={exiting}
-      className={`fixed inset-0 z-[100] flex flex-col items-center justify-center bg-gradient-to-b from-brand-espresso via-[#241610] to-brand-espresso transition-opacity duration-500 ${
+      className={`fixed inset-0 z-[100] flex flex-col items-center justify-center bg-gradient-to-b from-[#2C1E16] via-[#241610] to-[#1A1410] transition-opacity duration-500 ${
         exiting ? 'opacity-0 pointer-events-none' : 'opacity-100'
       }`}
     >

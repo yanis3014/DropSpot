@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import Map, { Marker, useMap, GeolocateControl } from 'react-map-gl';
 import { Coffee, X, LockKey, MapPin, WifiHigh, Plugs, SpeakerHigh } from '@phosphor-icons/react';
 import { getPlaces, Place } from '@/lib/api/places';
@@ -10,6 +9,7 @@ import FavoriteButton from '@/components/places/FavoriteButton';
 import { getSavedPlaceIds, savePlace, unsavePlace } from '@/lib/api/saved';
 import { getLatestVibes, CheckIn } from '@/lib/api/checkins';
 import PlaceDetailModal from '@/components/spots/PlaceDetailModal';
+import LoginModal from '@/components/auth/LoginModal';
 import { openDirections } from '@/lib/utils/directions';
 
 const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN;
@@ -38,7 +38,6 @@ function FlyToPlace({ place }: { place: Place }) {
 }
 
 export default function PremiumMap() {
-  const router = useRouter();
   const { isAuthenticated } = useAuth();
   const [selectedPlace, setSelectedPlace] = useState<Place | null>(null);
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
@@ -48,6 +47,7 @@ export default function PremiumMap() {
   const [savedIds, setSavedIds] = useState<string[]>([]);
   const [vibes, setVibes] = useState<Record<string, CheckIn>>({});
   const [detailPlace, setDetailPlace] = useState<Place | null>(null);
+  const [showLogin, setShowLogin] = useState(false);
 
   useEffect(() => {
     getLatestVibes().then(setVibes);
@@ -197,7 +197,7 @@ export default function PremiumMap() {
               anchor="bottom"
               onClick={(e) => handleMarkerClick(e, place)}
             >
-              <div className="bg-brand-espresso text-white rounded-full p-2 shadow-lg flex items-center justify-center border-2 border-white transform transition-transform hover:scale-110 cursor-pointer">
+              <div className="bg-brand-ink text-white rounded-full p-2 shadow-lg flex items-center justify-center border-2 border-brand-surface transform transition-transform hover:scale-110 cursor-pointer">
                 <Coffee size={20} weight="fill" />
               </div>
             </Marker>
@@ -217,7 +217,7 @@ export default function PremiumMap() {
               <button
                 key={pill.value}
                 onClick={() => setActiveFilter(activeFilter === pill.value ? null : pill.value)}
-                className={`bg-white text-brand-espresso shadow-md rounded-full px-4 py-2 text-sm font-semibold border border-gray-100 whitespace-nowrap active:scale-95 transition-transform ${
+                className={`bg-brand-surface text-brand-espresso shadow-md rounded-full px-4 py-2 text-sm font-semibold border border-brand-mocha/10 whitespace-nowrap active:scale-95 transition-transform ${
                   activeFilter === pill.value ? 'ring-2 ring-brand-matcha' : ''
                 }`}
               >
@@ -233,11 +233,11 @@ export default function PremiumMap() {
         selectedPlace ? 'translate-y-0' : 'translate-y-[150%]'
       }`}>
         {selectedPlace && (
-          <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
+          <div className="bg-brand-surface rounded-2xl shadow-xl overflow-hidden">
             {/* Close Button */}
             <button
               onClick={() => setSelectedPlace(null)}
-              className="absolute top-4 right-4 z-10 bg-white/80 rounded-full p-1 hover:bg-white transition-colors"
+              className="absolute top-4 right-4 z-10 bg-brand-surface/80 rounded-full p-1 hover:bg-brand-surface transition-colors"
             >
               <X size={20} weight="bold" className="text-brand-mocha" />
             </button>
@@ -265,7 +265,7 @@ export default function PremiumMap() {
                 <div className="flex gap-2">
                   <button
                     onClick={() => openDirections(selectedPlace)}
-                    className="flex-1 flex items-center justify-center gap-2 bg-brand-espresso text-white rounded-xl py-3 font-semibold shadow-sm hover:bg-brand-espresso/90 active:scale-95 transition-all"
+                    className="flex-1 flex items-center justify-center gap-2 bg-brand-ink text-white rounded-xl py-3 font-semibold shadow-sm hover:bg-brand-ink/90 active:scale-95 transition-all"
                   >
                     <MapPin size={20} weight="fill" />
                     <span>S&apos;y rendre</span>
@@ -327,7 +327,7 @@ export default function PremiumMap() {
                     Connecte-toi pour voir les specs
                   </p>
                   <button
-                    onClick={() => router.push('/login')}
+                    onClick={() => setShowLogin(true)}
                     className="bg-brand-matcha text-white text-xs px-4 py-2 rounded-lg font-semibold shadow-sm active:scale-95 transition-all"
                   >
                     Connexion
@@ -350,6 +350,8 @@ export default function PremiumMap() {
           onClose={() => setDetailPlace(null)}
         />
       )}
+
+      <LoginModal isOpen={showLogin} onClose={() => setShowLogin(false)} />
     </div>
   );
 }

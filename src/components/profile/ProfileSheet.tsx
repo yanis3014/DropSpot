@@ -5,6 +5,7 @@ import { X, UserCircle, SignOut, PencilSimple, Check } from '@phosphor-icons/rea
 import { Profile, ProfilePatch } from '@/lib/api/profiles';
 import { PreferenceId } from '@/lib/preferences';
 import PreferencePills from '@/components/profile/PreferencePills';
+import ThemeSwitcher from '@/components/profile/ThemeSwitcher';
 
 interface ProfileSheetProps {
   profile: Profile | null;
@@ -79,7 +80,7 @@ export default function ProfileSheet({
     <div className="fixed inset-0 z-[60] flex items-end justify-center">
       <div
         onClick={handleClose}
-        className={`absolute inset-0 bg-brand-espresso/50 backdrop-blur-sm transition-opacity duration-300 ${
+        className={`absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity duration-300 ${
           visible ? 'opacity-100' : 'opacity-0'
         }`}
       />
@@ -98,7 +99,7 @@ export default function ProfileSheet({
         <button
           onClick={handleClose}
           aria-label="Fermer"
-          className="absolute top-4 right-4 w-9 h-9 flex items-center justify-center rounded-full text-brand-mocha hover:bg-white transition-colors"
+          className="absolute top-4 right-4 w-9 h-9 flex items-center justify-center rounded-full text-brand-mocha hover:bg-brand-surface transition-colors"
         >
           <X size={18} weight="bold" />
         </button>
@@ -111,10 +112,10 @@ export default function ProfileSheet({
                 src={avatar}
                 alt=""
                 referrerPolicy="no-referrer"
-                className="w-16 h-16 rounded-full object-cover ring-4 ring-white shadow-md flex-shrink-0"
+                className="w-16 h-16 rounded-full object-cover ring-4 ring-brand-surface shadow-md flex-shrink-0"
               />
             ) : (
-              <div className="w-16 h-16 rounded-full bg-white ring-4 ring-white shadow-md flex items-center justify-center flex-shrink-0">
+              <div className="w-16 h-16 rounded-full bg-brand-surface ring-4 ring-brand-surface shadow-md flex items-center justify-center flex-shrink-0">
                 <UserCircle size={40} weight="duotone" className="text-brand-matcha" />
               </div>
             )}
@@ -128,7 +129,7 @@ export default function ProfileSheet({
                   onBlur={() => setEditingName(false)}
                   maxLength={40}
                   autoFocus
-                  className="w-full bg-white rounded-xl px-3 py-2 text-lg font-bold text-brand-espresso border-2 border-brand-matcha focus:outline-none"
+                  className="w-full bg-brand-surface rounded-xl px-3 py-2 text-lg font-bold text-brand-espresso border-2 border-brand-matcha focus:outline-none"
                 />
               ) : (
                 <button
@@ -149,6 +150,14 @@ export default function ProfileSheet({
             </div>
           </div>
 
+          {/* Theme */}
+          <div className="mb-6">
+            <h3 className="text-sm font-bold uppercase tracking-wider text-brand-mocha mb-3">
+              Apparence
+            </h3>
+            <ThemeSwitcher />
+          </div>
+
           {/* Preferences */}
           <div className="flex items-baseline justify-between mb-3">
             <h3 className="text-sm font-bold uppercase tracking-wider text-brand-mocha">
@@ -167,7 +176,7 @@ export default function ProfileSheet({
         </div>
 
         {/* Footer */}
-        <div className="p-5 pt-3 border-t border-brand-mocha/10 bg-white flex-shrink-0 flex gap-2">
+        <div className="p-5 pt-3 border-t border-brand-mocha/10 bg-brand-surface flex-shrink-0 flex gap-2">
           <button
             onClick={onSignOut}
             aria-label="Se déconnecter"
@@ -181,7 +190,7 @@ export default function ProfileSheet({
             className={`flex-1 flex items-center justify-center gap-2 font-bold py-4 rounded-2xl shadow-lg transition-all active:scale-[0.98] disabled:active:scale-100 ${
               saved
                 ? 'bg-brand-matcha text-white'
-                : 'bg-brand-espresso text-white hover:bg-brand-espresso/90 disabled:opacity-40'
+                : 'bg-brand-ink text-white hover:bg-brand-ink/90 disabled:opacity-40'
             }`}
           >
             {saved ? (

@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
 import {
   X,
   MapPin,
@@ -17,6 +16,7 @@ import {
   CrowdLevel,
   WifiStatus,
 } from '@/lib/api/checkins';
+import LoginModal from '@/components/auth/LoginModal';
 
 interface CheckInModalProps {
   place: { id: string; name: string; image_url?: string };
@@ -36,13 +36,13 @@ export default function CheckInModal({
   onClose,
   onSubmitted,
 }: CheckInModalProps) {
-  const router = useRouter();
   const [visible, setVisible] = useState(false);
   const [crowd, setCrowd] = useState<CrowdLevel | null>(null);
   const [wifi, setWifi] = useState<WifiStatus | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showLogin, setShowLogin] = useState(false);
 
   // Slide-in on mount, and lock body scroll while open
   useEffect(() => {
@@ -79,7 +79,7 @@ export default function CheckInModal({
       {/* Backdrop */}
       <div
         onClick={handleClose}
-        className={`absolute inset-0 bg-brand-espresso/50 backdrop-blur-sm transition-opacity duration-300 ${
+        className={`absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity duration-300 ${
           visible ? 'opacity-100' : 'opacity-0'
         }`}
       />
@@ -91,7 +91,7 @@ export default function CheckInModal({
         }`}
       >
         {/* Header */}
-        <div className="relative h-28 flex-shrink-0 bg-gradient-to-br from-brand-espresso to-brand-mocha">
+        <div className="relative h-28 flex-shrink-0 bg-gradient-to-br from-[#2C1E16] to-[#8B6B5D]">
           {place.image_url && (
             <img
               src={place.image_url}
@@ -104,7 +104,7 @@ export default function CheckInModal({
           <button
             onClick={handleClose}
             aria-label="Fermer"
-            className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm rounded-full p-2 shadow-md hover:bg-white active:scale-95 transition-all"
+            className="absolute top-4 right-4 bg-brand-surface/90 backdrop-blur-sm rounded-full p-2 shadow-md hover:bg-brand-surface active:scale-95 transition-all"
           >
             <X size={20} weight="bold" className="text-brand-espresso" />
           </button>
@@ -140,8 +140,8 @@ export default function CheckInModal({
               Partage l'affluence et le Wi-Fi du spot en temps réel.
             </p>
             <button
-              onClick={() => router.push('/login')}
-              className="w-full bg-brand-espresso text-white font-bold py-3.5 rounded-2xl shadow-lg hover:bg-brand-espresso/90 active:scale-[0.98] transition-all"
+              onClick={() => setShowLogin(true)}
+              className="w-full bg-brand-ink text-white font-bold py-3.5 rounded-2xl shadow-lg hover:bg-brand-ink/90 active:scale-[0.98] transition-all"
             >
               Se connecter
             </button>
@@ -163,8 +163,8 @@ export default function CheckInModal({
                       onClick={() => setCrowd(level)}
                       className={`flex flex-col items-center gap-0.5 py-3 rounded-2xl border-2 transition-all active:scale-95 ${
                         crowd === level
-                          ? 'border-brand-espresso bg-white shadow-md'
-                          : 'border-transparent bg-white/60 hover:bg-white'
+                          ? 'border-brand-ink bg-brand-surface shadow-md'
+                          : 'border-transparent bg-brand-surface/60 hover:bg-brand-surface'
                       }`}
                     >
                       <span className="text-xl">{crowdConfig[level].emoji}</span>
@@ -192,8 +192,8 @@ export default function CheckInModal({
                       onClick={() => setWifi(option.value)}
                       className={`flex items-center gap-2.5 px-3.5 py-3 rounded-2xl border-2 transition-all active:scale-95 ${
                         wifi === option.value
-                          ? 'border-brand-espresso bg-white shadow-md'
-                          : 'border-transparent bg-white/60 hover:bg-white'
+                          ? 'border-brand-ink bg-brand-surface shadow-md'
+                          : 'border-transparent bg-brand-surface/60 hover:bg-brand-surface'
                       }`}
                     >
                       <span className="text-xl">{option.emoji}</span>
@@ -216,7 +216,7 @@ export default function CheckInModal({
             </div>
 
             {/* Submit */}
-            <div className="p-5 pt-3 border-t border-brand-mocha/10 bg-white flex-shrink-0">
+            <div className="p-5 pt-3 border-t border-brand-mocha/10 bg-brand-surface flex-shrink-0">
               <button
                 onClick={handleSubmit}
                 disabled={!crowd || !wifi || submitting}
@@ -229,6 +229,8 @@ export default function CheckInModal({
           </>
         )}
       </div>
+
+      <LoginModal isOpen={showLogin} onClose={() => setShowLogin(false)} />
     </div>
   );
 }

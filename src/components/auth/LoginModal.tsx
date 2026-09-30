@@ -77,7 +77,7 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
       {/* Backdrop */}
       <div
         onClick={onClose}
-        className="absolute inset-0 bg-brand-espresso/50 backdrop-blur-sm transition-opacity"
+        className="absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity"
       />
 
       {/* Modal panel */}
@@ -85,7 +85,7 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
         <button
           onClick={onClose}
           aria-label="Fermer"
-          className="absolute top-3 right-3 p-2 rounded-full text-brand-mocha hover:bg-white/60 hover:text-brand-espresso transition-colors"
+          className="absolute top-3 right-3 p-2 rounded-full text-brand-mocha hover:bg-brand-surface/60 hover:text-brand-espresso transition-colors"
         >
           <X size={20} weight="bold" />
         </button>
@@ -110,7 +110,7 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
           <button
             onClick={handleGoogleLogin}
             disabled={loading || !supabase}
-            className="w-full flex items-center justify-center gap-3 bg-white border border-gray-200 rounded-xl py-3 px-4 shadow-sm hover:shadow-md transition-all active:scale-95 disabled:opacity-50"
+            className="w-full flex items-center justify-center gap-3 bg-brand-surface border border-brand-mocha/15 rounded-xl py-3 px-4 shadow-sm hover:shadow-md transition-all active:scale-95 disabled:opacity-50"
           >
             <GoogleLogo size={20} weight="fill" className="text-brand-espresso" />
             <span className="text-brand-espresso font-medium">Continuer avec Google</span>
@@ -143,7 +143,7 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
             placeholder="ton@email.com"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white focus:border-brand-matcha focus:outline-none focus:ring-2 focus:ring-brand-matcha/20 transition-all"
+            className="w-full px-4 py-3 rounded-xl border border-brand-mocha/15 bg-brand-surface focus:border-brand-matcha focus:outline-none focus:ring-2 focus:ring-brand-matcha/20 transition-all"
             disabled={loading || !supabase}
           />
           <button

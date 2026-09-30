@@ -16,7 +16,6 @@ import {
   CaretRight,
   NavigationArrow,
 } from '@phosphor-icons/react';
-import Onboarding from '@/components/ui/Onboarding';
 import DropDetailModal, { dropTypeConfig } from '@/components/drops/DropDetailModal';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { getPlaces, Place } from '@/lib/api/places';
@@ -25,10 +24,12 @@ import { getLatestVibes, crowdConfig, CheckIn } from '@/lib/api/checkins';
 import { getSavedPlaceIds, savePlace, unsavePlace } from '@/lib/api/saved';
 import FavoriteButton from '@/components/places/FavoriteButton';
 import PlaceDetailModal from '@/components/spots/PlaceDetailModal';
+import ProfileSheet from '@/components/profile/ProfileSheet';
+import ThemeCycleButton from '@/components/profile/ThemeCycleButton';
+import LoginModal from '@/components/auth/LoginModal';
 import { openDirections } from '@/lib/utils/directions';
 import { useProfile } from '@/lib/hooks/useProfile';
 import { needsOnboarding } from '@/lib/api/profiles';
-import ProfileSheet from '@/components/profile/ProfileSheet';
 import {
   dropMatches,
   formatPreferenceList,
@@ -36,13 +37,6 @@ import {
   preferenceById,
   PreferenceId,
 } from '@/lib/preferences';
-
-const preferenceLabels: Record<string, string> = {
-  bosser: 'bosser',
-  evenements: 'des événements',
-  chill: 'chiller & écouter du DJ',
-  brunch: 'bruncher',
-};
 
 type CategoryFilter = 'all' | Drop['drop_type'] | 'remote' | 'bakery';
 
@@ -107,12 +101,12 @@ function DropCard({
       tabIndex={0}
       onClick={onOpen}
       onKeyDown={(e) => e.key === 'Enter' && onOpen()}
-      className={`relative w-[240px] flex-shrink-0 snap-start bg-white rounded-2xl overflow-hidden shadow-sm border cursor-pointer active:scale-[0.97] transition-transform ${
+      className={`relative w-[240px] flex-shrink-0 snap-start bg-brand-surface rounded-2xl overflow-hidden shadow-sm border cursor-pointer active:scale-[0.97] transition-transform ${
         matches.length > 0 ? 'border-brand-matcha/40 ring-1 ring-brand-matcha/20' : 'border-brand-mocha/5'
       }`}
     >
       {/* Image header with badge overlays */}
-      <div className="relative h-24 bg-gradient-to-br from-brand-espresso to-brand-mocha">
+      <div className="relative h-24 bg-gradient-to-br from-[#2C1E16] to-[#8B6B5D]">
         {drop.places?.image_url ? (
           <img
             src={drop.places.image_url}
@@ -127,7 +121,7 @@ function DropCard({
         <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
 
         {/* Type badge overlay */}
-        <span className="absolute top-2 left-2 flex items-center gap-1 bg-white/95 backdrop-blur-sm rounded-full px-2 py-0.5 shadow">
+        <span className="absolute top-2 left-2 flex items-center gap-1 bg-brand-surface/95 backdrop-blur-sm rounded-full px-2 py-0.5 shadow">
           {live && (
             <span className="relative flex h-1.5 w-1.5">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-terracotta opacity-75" />
@@ -186,9 +180,8 @@ export default function Home() {
   const router = useRouter();
   const { isAuthenticated, loading, email, avatarUrl, displayName, signOut } = useAuth();
   const { profile, loading: profileLoading, save: saveProfile } = useProfile(isAuthenticated, loading);
-  const [preference, setPreference] = useState<string | null>(null);
-  const [showOnboarding, setShowOnboarding] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
+  const [showLogin, setShowLogin] = useState(false);
   const [places, setPlaces] = useState<Place[]>([]);
   const [placesLoading, setPlacesLoading] = useState(true);
   const [vibes, setVibes] = useState<Record<string, CheckIn>>({});
@@ -207,24 +200,15 @@ export default function Home() {
     try {
       const stored = JSON.parse(localStorage.getItem('dropspot_claims') ?? '[]');
       if (Array.isArray(stored)) setClaimedDrops(stored);
+      // Drop the legacy guest-onboarding key if it still exists.
+      localStorage.removeItem('dropspot_preference');
     } catch {
       // ignore malformed storage
     }
   }, []);
 
-  // Guest onboarding (localStorage). Signed-in users go through /onboarding instead.
-  useEffect(() => {
-    if (loading) return;
-    const savedPreference = localStorage.getItem('dropspot_preference');
-    if (savedPreference) {
-      setPreference(savedPreference);
-    } else if (!isAuthenticated) {
-      setShowOnboarding(true);
-    }
-  }, [loading, isAuthenticated]);
-
-  // Fallback: a signed-in user who never finished their profile lands on the wizard.
-  // (The auth callback already does this on login; this covers stale sessions.)
+  // Signed-in users without a finished profile go through /onboarding.
+  // Guests land straight on the feed in discovery mode.
   useEffect(() => {
     if (loading || profileLoading || !isAuthenticated) return;
     if (needsOnboarding(profile)) router.replace('/onboarding');
@@ -250,10 +234,8 @@ export default function Home() {
       }
     };
 
-    if (!showOnboarding) {
-      fetchPlaces();
-    }
-  }, [showOnboarding, isAuthenticated]);
+    fetchPlaces();
+  }, [isAuthenticated]);
 
   // Fetch drops
   useEffect(() => {
@@ -269,10 +251,8 @@ export default function Home() {
       }
     };
 
-    if (!showOnboarding) {
-      fetchDrops();
-    }
-  }, [showOnboarding]);
+    fetchDrops();
+  }, []);
 
   // Tick every second so every card's countdown stays live
   useEffect(() => {
@@ -283,8 +263,7 @@ export default function Home() {
 
   const handleClaimDrop = (drop: Drop) => {
     if (!isAuthenticated) {
-      // Soft-gate: send the guest to the login screen
-      router.push('/login');
+      setShowLogin(true);
       return;
     }
 
@@ -298,8 +277,7 @@ export default function Home() {
 
   const handleToggleSave = async (placeId: string) => {
     if (!isAuthenticated) {
-      // Soft-gate: guests need an account to save spots
-      router.push('/login');
+      setShowLogin(true);
       return;
     }
 
@@ -329,12 +307,6 @@ export default function Home() {
     router.refresh();
   };
 
-  const handleOnboardingComplete = () => {
-    const savedPreference = localStorage.getItem('dropspot_preference');
-    setPreference(savedPreference);
-    setShowOnboarding(false);
-  };
-
   if (loading || (isAuthenticated && profileLoading)) {
     return (
       <div className="flex-1 flex items-center justify-center">
@@ -343,18 +315,12 @@ export default function Home() {
     );
   }
 
-  if (showOnboarding) {
-    return <Onboarding onComplete={handleOnboardingComplete} />;
-  }
-
   const userPrefs: PreferenceId[] = profile?.preferences ?? [];
   const prefSummary = formatPreferenceList(userPrefs);
 
   const greetingText = prefSummary
     ? `Tes spots pour ${prefSummary}`
-    : preference
-      ? `Les meilleurs spots pour ${preferenceLabels[preference] || preference}`
-      : 'Les meilleurs spots pour toi';
+    : 'Les meilleurs spots pour toi';
 
   const query = searchQuery.trim().toLowerCase();
   const dropTypeFilter =
@@ -421,7 +387,7 @@ export default function Home() {
             onClick={() => setShowProfile(true)}
             aria-label="Mon profil"
             title={email ?? undefined}
-            className="flex items-center gap-2 bg-white rounded-full pl-1 pr-3 py-1 shadow-sm border border-brand-mocha/10 hover:shadow-md hover:border-brand-espresso/20 active:scale-95 transition-all flex-shrink-0"
+            className="flex items-center gap-2 bg-brand-surface rounded-full pl-1 pr-3 py-1 shadow-sm border border-brand-mocha/10 hover:shadow-md hover:border-brand-espresso/20 active:scale-95 transition-all flex-shrink-0"
           >
             {resolvedAvatar ? (
               <img
@@ -443,18 +409,21 @@ export default function Home() {
             )}
           </button>
         ) : (
-          <button
-            onClick={() => router.push('/login')}
-            className="flex-shrink-0 text-sm font-semibold text-brand-matcha bg-brand-matcha/10 px-4 py-2 rounded-full hover:bg-brand-matcha/20 transition-colors"
-          >
-            Connexion
-          </button>
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <ThemeCycleButton />
+            <button
+              onClick={() => setShowLogin(true)}
+              className="text-sm font-semibold text-brand-matcha bg-brand-matcha/10 px-4 py-2 rounded-full hover:bg-brand-matcha/20 transition-colors"
+            >
+              Connexion
+            </button>
+          </div>
         )}
       </div>
 
       {/* Search bar */}
       <div className="px-5 mt-3">
-        <div className="flex items-center gap-3 bg-white rounded-2xl px-4 py-3 shadow-sm border border-brand-mocha/10 focus-within:border-brand-matcha/40 focus-within:shadow-md transition-all">
+        <div className="flex items-center gap-3 bg-brand-surface rounded-2xl px-4 py-3 shadow-sm border border-brand-mocha/10 focus-within:border-brand-matcha/40 focus-within:shadow-md transition-all">
           <MagnifyingGlass
             size={18}
             weight="bold"
@@ -487,8 +456,8 @@ export default function Home() {
             onClick={() => setCategory(cat.id)}
             className={`flex-shrink-0 px-4 py-2 rounded-full text-xs font-semibold whitespace-nowrap transition-all ${
               category === cat.id
-                ? 'bg-brand-espresso text-white shadow-md shadow-brand-espresso/20'
-                : 'bg-white text-brand-mocha border border-brand-mocha/10 hover:border-brand-espresso/25'
+                ? 'bg-brand-ink text-white shadow-md shadow-brand-ink/20'
+                : 'bg-brand-surface text-brand-mocha border border-brand-mocha/10 hover:border-brand-espresso/25'
             }`}
           >
             {cat.label}
@@ -527,7 +496,7 @@ export default function Home() {
           </div>
         ) : drops.length === 0 ? (
           /* Polished empty state when there is no active drop */
-          <div className="mx-5 rounded-3xl bg-white border border-brand-mocha/10 p-6 flex items-center gap-4 shadow-sm">
+          <div className="mx-5 rounded-3xl bg-brand-surface border border-brand-mocha/10 p-6 flex items-center gap-4 shadow-sm">
             <div className="w-12 h-12 rounded-2xl bg-brand-terracotta/10 flex items-center justify-center flex-shrink-0">
               <Sparkle size={26} weight="duotone" className="text-brand-terracotta" />
             </div>
@@ -552,7 +521,7 @@ export default function Home() {
             ))}
           </div>
         ) : (
-          <div className="mx-5 rounded-3xl bg-white border border-dashed border-brand-mocha/20 p-6 text-center">
+          <div className="mx-5 rounded-3xl bg-brand-surface border border-dashed border-brand-mocha/20 p-6 text-center">
             <p className="font-semibold text-brand-espresso mb-1">
               Aucun drop ne correspond
             </p>
@@ -579,7 +548,7 @@ export default function Home() {
         {placesLoading ? (
           <div className="space-y-4">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="bg-white rounded-2xl shadow-sm p-4">
+              <div key={i} className="bg-brand-surface rounded-2xl shadow-sm p-4">
                 <div className="flex gap-4">
                   <div className="w-24 h-24 bg-brand-oat rounded-xl flex-shrink-0 animate-pulse" />
                   <div className="flex-1 space-y-3 py-1">
@@ -607,7 +576,7 @@ export default function Home() {
             </p>
           </div>
         ) : visiblePlaces.length === 0 ? (
-          <div className="rounded-3xl bg-white border border-dashed border-brand-mocha/20 p-6 text-center">
+          <div className="rounded-3xl bg-brand-surface border border-dashed border-brand-mocha/20 p-6 text-center">
             <p className="font-semibold text-brand-espresso mb-1">
               Aucun café ne correspond
             </p>
@@ -629,7 +598,7 @@ export default function Home() {
                 tabIndex={0}
                 onClick={() => setSelectedPlace(place)}
                 onKeyDown={(e) => e.key === 'Enter' && setSelectedPlace(place)}
-                className={`group bg-white rounded-2xl shadow-sm hover:shadow-md transition-all p-3 border cursor-pointer active:scale-[0.99] ${
+                className={`group bg-brand-surface rounded-2xl shadow-sm hover:shadow-md transition-all p-3 border cursor-pointer active:scale-[0.99] ${
                   matches.length > 0 ? 'border-brand-matcha/40 ring-1 ring-brand-matcha/20' : 'border-brand-mocha/5'
                 }`}
               >
@@ -667,7 +636,7 @@ export default function Home() {
                           openDirections(place);
                         }}
                         aria-label={`S'y rendre : ${place.name}`}
-                        className="flex-shrink-0 w-7 h-7 rounded-full bg-brand-espresso/5 text-brand-espresso flex items-center justify-center hover:bg-brand-espresso hover:text-white active:scale-90 transition-all"
+                        className="flex-shrink-0 w-7 h-7 rounded-full bg-brand-espresso/5 text-brand-espresso flex items-center justify-center hover:bg-brand-ink hover:text-white active:scale-90 transition-all"
                       >
                         <NavigationArrow size={14} weight="fill" />
                       </button>
@@ -762,6 +731,8 @@ export default function Home() {
           onClose={() => setSelectedPlace(null)}
         />
       )}
+
+      <LoginModal isOpen={showLogin} onClose={() => setShowLogin(false)} />
     </div>
   );
 }

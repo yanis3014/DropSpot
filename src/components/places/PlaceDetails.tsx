@@ -2,9 +2,9 @@
 
 import { useEffect, useState } from 'react';
 import { MapPin, LockKey, WifiHigh, Plugs, SpeakerHigh, Laptop, Lightning } from '@phosphor-icons/react';
-import Link from 'next/link';
 import CheckInModal from '@/components/spots/CheckInModal';
 import FavoriteButton from '@/components/places/FavoriteButton';
+import LoginModal from '@/components/auth/LoginModal';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { Place } from '@/lib/api/places';
 import { getSavedPlaceIds, savePlace, unsavePlace } from '@/lib/api/saved';
@@ -17,6 +17,7 @@ interface PlaceDetailsProps {
 export default function PlaceDetails({ place }: PlaceDetailsProps) {
   const { isAuthenticated } = useAuth();
   const [showCheckIn, setShowCheckIn] = useState(false);
+  const [showLogin, setShowLogin] = useState(false);
   const [savedIds, setSavedIds] = useState<string[]>([]);
 
   useEffect(() => {
@@ -69,7 +70,7 @@ export default function PlaceDetails({ place }: PlaceDetailsProps) {
   ];
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+    <div className="bg-brand-surface rounded-2xl shadow-sm overflow-hidden">
       {/* Public Section */}
       <div className="relative">
         {/* Place Image */}
@@ -110,7 +111,7 @@ export default function PlaceDetails({ place }: PlaceDetailsProps) {
             </button>
             <button
               onClick={() => setShowCheckIn(true)}
-              className="flex-1 flex items-center justify-center gap-2 bg-brand-espresso text-white rounded-xl py-3 font-semibold shadow-sm hover:bg-brand-espresso/90 active:scale-95 transition-all"
+              className="flex-1 flex items-center justify-center gap-2 bg-brand-ink text-white rounded-xl py-3 font-semibold shadow-sm hover:bg-brand-ink/90 active:scale-95 transition-all"
             >
               <Lightning size={20} weight="fill" />
               <span>Checker</span>
@@ -154,15 +155,16 @@ export default function PlaceDetails({ place }: PlaceDetailsProps) {
             <div className="absolute inset-0 z-10 flex flex-col items-center justify-center p-6 bg-brand-oat/60 backdrop-blur-[2px]">
               <LockKey weight="duotone" size={32} className="text-brand-terracotta mb-2" />
               <p className="text-sm text-center font-medium text-brand-espresso mb-4">
-                Crée un compte gratuit pour voir le débit Wi-Fi, l'accès aux prises et le niveau sonore.
+                Crée un compte gratuit pour voir le débit Wi-Fi, l&apos;accès aux prises et le niveau sonore.
               </p>
-              <Link
-                href="/login"
+              <button
+                type="button"
+                onClick={() => setShowLogin(true)}
                 className="bg-brand-matcha text-white w-full rounded-xl py-3 font-semibold shadow-sm active:scale-95 transition-all flex items-center justify-center gap-2"
               >
                 <LockKey size={20} weight="fill" />
-                <span>Déverrouiller l'accès</span>
-              </Link>
+                <span>Déverrouiller l&apos;accès</span>
+              </button>
             </div>
           )}
         </div>
@@ -176,6 +178,8 @@ export default function PlaceDetails({ place }: PlaceDetailsProps) {
           onClose={() => setShowCheckIn(false)}
         />
       )}
+
+      <LoginModal isOpen={showLogin} onClose={() => setShowLogin(false)} />
     </div>
   );
 }

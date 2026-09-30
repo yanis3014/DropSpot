@@ -73,7 +73,7 @@ export default function CheckInPage() {
             return (
               <div
                 key={place.id}
-                className="bg-white rounded-2xl shadow-sm border border-brand-mocha/5 p-3 flex items-center gap-3"
+                className="bg-brand-surface rounded-2xl shadow-sm border border-brand-mocha/5 p-3 flex items-center gap-3"
               >
                 <div className="w-14 h-14 rounded-xl overflow-hidden flex-shrink-0 bg-brand-oat">
                   {place.image_url ? (
@@ -107,7 +107,7 @@ export default function CheckInPage() {
 
                 <button
                   onClick={() => setSelectedPlace(place)}
-                  className="flex-shrink-0 flex items-center gap-1.5 bg-brand-espresso text-white text-xs font-bold px-3.5 py-2.5 rounded-full shadow-sm hover:bg-brand-espresso/90 active:scale-95 transition-all"
+                  className="flex-shrink-0 flex items-center gap-1.5 bg-brand-ink text-white text-xs font-bold px-3.5 py-2.5 rounded-full shadow-sm hover:bg-brand-ink/90 active:scale-95 transition-all"
                 >
                   <Lightning size={14} weight="fill" />
                   Checker

@@ -100,7 +100,7 @@ export default function PlaceDetailModal({
       {/* Backdrop */}
       <div
         onClick={handleClose}
-        className={`absolute inset-0 bg-brand-espresso/50 backdrop-blur-sm transition-opacity duration-300 ${
+        className={`absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity duration-300 ${
           visible ? 'opacity-100' : 'opacity-0'
         }`}
       />
@@ -115,7 +115,7 @@ export default function PlaceDetailModal({
         }`}
       >
         {/* Cover image */}
-        <div className="relative h-52 flex-shrink-0 bg-gradient-to-br from-brand-espresso to-brand-mocha">
+        <div className="relative h-52 flex-shrink-0 bg-gradient-to-br from-[#2C1E16] to-[#8B6B5D]">
           {place.image_url ? (
             <img
               src={place.image_url}
@@ -130,7 +130,7 @@ export default function PlaceDetailModal({
           <div className="absolute inset-0 bg-gradient-to-t from-brand-oat via-transparent to-black/20" />
 
           {/* Drag handle */}
-          <div className="absolute top-2 left-1/2 -translate-x-1/2 w-10 h-1 rounded-full bg-white/70" />
+          <div className="absolute top-2 left-1/2 -translate-x-1/2 w-10 h-1 rounded-full bg-brand-surface/70" />
 
           <div className="absolute top-4 right-4 flex gap-2">
             <FavoriteButton
@@ -143,7 +143,7 @@ export default function PlaceDetailModal({
             <button
               onClick={handleClose}
               aria-label="Fermer"
-              className="w-9 h-9 flex items-center justify-center bg-white/90 backdrop-blur-sm rounded-full shadow-md hover:bg-white active:scale-95 transition-all"
+              className="w-9 h-9 flex items-center justify-center bg-brand-surface/90 backdrop-blur-sm rounded-full shadow-md hover:bg-brand-surface active:scale-95 transition-all"
             >
               <X size={18} weight="bold" className="text-brand-espresso" />
             </button>
@@ -187,7 +187,7 @@ export default function PlaceDetailModal({
               {features.map(({ icon: Icon, label }) => (
                 <span
                   key={label}
-                  className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 bg-white text-brand-espresso rounded-full border border-brand-mocha/10 shadow-sm"
+                  className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 bg-brand-surface text-brand-espresso rounded-full border border-brand-mocha/10 shadow-sm"
                 >
                   <Icon size={14} weight="duotone" className="text-brand-mocha" />
                   {label}
@@ -212,10 +212,10 @@ export default function PlaceDetailModal({
         </div>
 
         {/* Actions */}
-        <div className="p-5 pt-3 border-t border-brand-mocha/10 bg-white flex-shrink-0 flex gap-2">
+        <div className="p-5 pt-3 border-t border-brand-mocha/10 bg-brand-surface flex-shrink-0 flex gap-2">
           <button
             onClick={() => openDirections(place)}
-            className="flex-1 flex items-center justify-center gap-2 bg-brand-espresso text-white font-bold py-4 rounded-2xl shadow-lg hover:bg-brand-espresso/90 active:scale-[0.98] transition-all"
+            className="flex-1 flex items-center justify-center gap-2 bg-brand-ink text-white font-bold py-4 rounded-2xl shadow-lg hover:bg-brand-ink/90 active:scale-[0.98] transition-all"
           >
             <NavigationArrow size={20} weight="fill" />
             S&apos;y rendre

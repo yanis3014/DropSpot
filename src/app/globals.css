@@ -1,33 +1,61 @@
 @import "tailwindcss";
 
+/* Class-based dark mode (not prefers-color-scheme alone). */
+@custom-variant dark (&:where(.dark, .dark *));
+
 :root {
-  --background: #FAF9F6;
-  --foreground: #2C1E16;
+  --ds-oat: #faf9f6;
+  --ds-espresso: #2c1e16;
+  --ds-mocha: #8b6b5d;
+  --ds-surface: #ffffff;
+  --ds-surface-muted: #f3ede6;
+  --ds-ink: #2c1e16;
+  --ds-matcha: #4a7c59;
+  --ds-terracotta: #e07a5f;
+  --background: var(--ds-oat);
+  --foreground: var(--ds-espresso);
+}
+
+.dark {
+  /* Warm deep espresso — not pure black */
+  --ds-oat: #1a1410;
+  --ds-espresso: #f5f0eb;
+  --ds-mocha: #c4a99a;
+  --ds-surface: #2a211c;
+  --ds-surface-muted: #342a24;
+  --ds-ink: #16110e;
+  --ds-matcha: #6fa37d;
+  --ds-terracotta: #e8927a;
+  --background: var(--ds-oat);
+  --foreground: var(--ds-espresso);
+  color-scheme: dark;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --color-brand-oat: #FAF9F6;
-  --color-brand-espresso: #2C1E16;
-  --color-brand-mocha: #8B6B5D;
-  --color-brand-matcha: #4A7C59;
-  --color-brand-terracotta: #E07A5F;
+  --color-brand-oat: var(--ds-oat);
+  --color-brand-espresso: var(--ds-espresso);
+  --color-brand-mocha: var(--ds-mocha);
+  --color-brand-surface: var(--ds-surface);
+  --color-brand-muted: var(--ds-surface-muted);
+  --color-brand-ink: var(--ds-ink);
+  --color-brand-matcha: var(--ds-matcha);
+  --color-brand-terracotta: var(--ds-terracotta);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  background: var(--background);
+  color: var(--foreground);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 @keyframes step-in {

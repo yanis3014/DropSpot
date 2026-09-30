@@ -14,12 +14,14 @@ import {
 } from '@phosphor-icons/react';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { getSavedPlaces, unsavePlace, SavedPlace } from '@/lib/api/saved';
+import LoginModal from '@/components/auth/LoginModal';
 
 export default function SavedPage() {
   const router = useRouter();
   const { isAuthenticated, loading } = useAuth();
   const [saved, setSaved] = useState<SavedPlace[]>([]);
   const [fetching, setFetching] = useState(true);
+  const [showLogin, setShowLogin] = useState(false);
 
   useEffect(() => {
     if (loading || !isAuthenticated) {
@@ -73,11 +75,12 @@ export default function SavedPage() {
           Connecte-toi pour retrouver tous les cafés que tu as enregistrés.
         </p>
         <button
-          onClick={() => router.push('/login')}
-          className="w-full max-w-xs bg-brand-espresso text-white font-bold py-4 rounded-2xl shadow-lg hover:bg-brand-espresso/90 active:scale-[0.98] transition-all"
+          onClick={() => setShowLogin(true)}
+          className="w-full max-w-xs bg-brand-ink text-white font-bold py-4 rounded-2xl shadow-lg hover:bg-brand-ink/90 active:scale-[0.98] transition-all"
         >
           Se connecter
         </button>
+        <LoginModal isOpen={showLogin} onClose={() => setShowLogin(false)} />
       </div>
     );
   }
@@ -99,7 +102,7 @@ export default function SavedPage() {
       {saved.length === 0 ? (
         /* Empty state */
         <div className="px-5">
-          <div className="bg-white rounded-3xl border border-dashed border-brand-mocha/20 p-8 text-center">
+          <div className="bg-brand-surface rounded-3xl border border-dashed border-brand-mocha/20 p-8 text-center">
             <div className="w-16 h-16 rounded-full bg-brand-oat flex items-center justify-center mx-auto mb-4">
               <Heart size={32} weight="duotone" className="text-brand-mocha/50" />
             </div>
@@ -112,13 +115,13 @@ export default function SavedPage() {
             <div className="flex gap-2 justify-center">
               <button
                 onClick={() => router.push('/')}
-                className="bg-brand-espresso text-white text-sm font-bold px-5 py-2.5 rounded-full shadow-sm hover:bg-brand-espresso/90 active:scale-95 transition-all"
+                className="bg-brand-ink text-white text-sm font-bold px-5 py-2.5 rounded-full shadow-sm hover:bg-brand-ink/90 active:scale-95 transition-all"
               >
                 Voir le feed
               </button>
               <button
                 onClick={() => router.push('/map')}
-                className="bg-white text-brand-espresso text-sm font-bold px-5 py-2.5 rounded-full border border-brand-mocha/15 hover:border-brand-espresso/25 active:scale-95 transition-all"
+                className="bg-brand-surface text-brand-espresso text-sm font-bold px-5 py-2.5 rounded-full border border-brand-mocha/15 hover:border-brand-espresso/25 active:scale-95 transition-all"
               >
                 Explorer la carte
               </button>
@@ -135,7 +138,7 @@ export default function SavedPage() {
             return (
               <div
                 key={item.id}
-                className="group bg-white rounded-2xl shadow-sm hover:shadow-md transition-all p-3 border border-brand-mocha/5"
+                className="group bg-brand-surface rounded-2xl shadow-sm hover:shadow-md transition-all p-3 border border-brand-mocha/5"
               >
                 <div className="flex gap-4">
                   <div className="relative w-24 h-24 rounded-xl overflow-hidden flex-shrink-0 bg-brand-oat">
@@ -154,7 +157,7 @@ export default function SavedPage() {
                     <button
                       onClick={() => handleUnsave(place.id)}
                       aria-label="Retirer des favoris"
-                      className="absolute top-1.5 right-1.5 w-7 h-7 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center shadow-sm hover:bg-white active:scale-90 transition-all"
+                      className="absolute top-1.5 right-1.5 w-7 h-7 rounded-full bg-brand-surface/90 backdrop-blur-sm flex items-center justify-center shadow-sm hover:bg-brand-surface active:scale-90 transition-all"
                     >
                       <Heart size={15} weight="fill" className="text-brand-terracotta" />
                     </button>

@@ -27,8 +27,8 @@ export default function PreferencePills({ value, onChange, variant = 'cards' }: 
               aria-pressed={selected}
               className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-sm font-semibold border transition-all active:scale-95 ${
                 selected
-                  ? 'bg-brand-espresso text-white border-brand-espresso shadow-md shadow-brand-espresso/20'
-                  : 'bg-white text-brand-espresso border-brand-mocha/15 hover:border-brand-espresso/30'
+                  ? 'bg-brand-ink text-white border-brand-ink shadow-md shadow-brand-ink/20'
+                  : 'bg-brand-surface text-brand-espresso border-brand-mocha/15 hover:border-brand-espresso/30'
               }`}
             >
               <span>{pref.emoji}</span>
@@ -50,7 +50,7 @@ export default function PreferencePills({ value, onChange, variant = 'cards' }: 
             type="button"
             onClick={() => toggle(pref.id)}
             aria-pressed={selected}
-            className={`relative text-left bg-white rounded-2xl p-4 border-2 transition-all duration-200 active:scale-[0.97] ${
+            className={`relative text-left bg-brand-surface rounded-2xl p-4 border-2 transition-all duration-200 active:scale-[0.97] ${
               selected
                 ? 'border-brand-matcha bg-brand-matcha/5 shadow-md shadow-brand-matcha/10'
                 : 'border-transparent shadow-sm hover:shadow-md'

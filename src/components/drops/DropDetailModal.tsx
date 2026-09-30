@@ -79,7 +79,7 @@ export default function DropDetailModal({
       {/* Backdrop */}
       <div
         onClick={handleClose}
-        className={`absolute inset-0 bg-brand-espresso/50 backdrop-blur-sm transition-opacity duration-300 ${
+        className={`absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity duration-300 ${
           visible ? 'opacity-100' : 'opacity-0'
         }`}
       />
@@ -91,7 +91,7 @@ export default function DropDetailModal({
         }`}
       >
         {/* Header image */}
-        <div className="relative h-40 flex-shrink-0 bg-gradient-to-br from-brand-espresso to-brand-mocha">
+        <div className="relative h-40 flex-shrink-0 bg-gradient-to-br from-[#2C1E16] to-[#8B6B5D]">
           {drop.places?.image_url && (
             <img
               src={drop.places.image_url}
@@ -105,14 +105,14 @@ export default function DropDetailModal({
           <button
             onClick={handleClose}
             aria-label="Fermer"
-            className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm rounded-full p-2 shadow-md hover:bg-white active:scale-95 transition-all"
+            className="absolute top-4 right-4 bg-brand-surface/90 backdrop-blur-sm rounded-full p-2 shadow-md hover:bg-brand-surface active:scale-95 transition-all"
           >
             <X size={20} weight="bold" className="text-brand-espresso" />
           </button>
 
           {/* Type badge */}
           <div
-            className={`absolute top-4 left-4 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-white/90 backdrop-blur-sm ${typeConfig.classes}`}
+            className={`absolute top-4 left-4 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-brand-surface/90 backdrop-blur-sm ${typeConfig.classes}`}
           >
             <TypeIcon size={14} weight="fill" />
             {typeConfig.label}
@@ -131,7 +131,7 @@ export default function DropDetailModal({
           </p>
 
           {/* Time info */}
-          <div className="bg-white rounded-2xl border border-brand-mocha/10 shadow-sm divide-y divide-brand-mocha/5 mb-4">
+          <div className="bg-brand-surface rounded-2xl border border-brand-mocha/10 shadow-sm divide-y divide-brand-mocha/5 mb-4">
             <div className="flex items-center gap-3 p-3.5">
               <div className="w-9 h-9 rounded-xl bg-brand-matcha/10 flex items-center justify-center flex-shrink-0">
                 <CalendarBlank size={18} weight="duotone" className="text-brand-matcha" />
@@ -183,7 +183,7 @@ export default function DropDetailModal({
         </div>
 
         {/* Claim action */}
-        <div className="p-5 pt-3 border-t border-brand-mocha/10 bg-white flex-shrink-0">
+        <div className="p-5 pt-3 border-t border-brand-mocha/10 bg-brand-surface flex-shrink-0">
           {isClaimed ? (
             <div className="w-full flex items-center justify-center gap-2 bg-brand-matcha/10 text-brand-matcha font-bold py-4 rounded-2xl">
               <CheckCircle size={22} weight="fill" />
@@ -203,7 +203,7 @@ export default function DropDetailModal({
           ) : (
             <button
               onClick={onClaim}
-              className="w-full flex items-center justify-center gap-2 bg-brand-espresso text-white font-bold py-4 rounded-2xl shadow-lg hover:bg-brand-espresso/90 active:scale-[0.98] transition-all"
+              className="w-full flex items-center justify-center gap-2 bg-brand-ink text-white font-bold py-4 rounded-2xl shadow-lg hover:bg-brand-ink/90 active:scale-[0.98] transition-all"
             >
               <LockKey size={18} weight="fill" />
               Connecte-toi pour participer

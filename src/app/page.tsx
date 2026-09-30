@@ -30,6 +30,7 @@ import LoginModal from '@/components/auth/LoginModal';
 import { openDirections } from '@/lib/utils/directions';
 import { useProfile } from '@/lib/hooks/useProfile';
 import { needsOnboarding } from '@/lib/api/profiles';
+import { dropMatchesFilter, placeMatchesFilter } from '@/lib/filters';
 import {
   dropMatches,
   formatPreferenceList,
@@ -38,7 +39,7 @@ import {
   PreferenceId,
 } from '@/lib/preferences';
 
-type CategoryFilter = 'all' | Drop['drop_type'] | 'remote' | 'bakery';
+type CategoryFilter = 'all' | 'promo' | 'sport' | 'event' | 'remote' | 'bakery';
 
 const quickCategories: { id: CategoryFilter; label: string }[] = [
   { id: 'all', label: '☕ Tous' },
@@ -47,16 +48,6 @@ const quickCategories: { id: CategoryFilter; label: string }[] = [
   { id: 'remote', label: '💻 Remote Friendly' },
   { id: 'bakery', label: '🥐 Viennoiseries' },
   { id: 'event', label: '🎧 Événements' },
-];
-
-const bakeryKeywords = [
-  'viennoiserie',
-  'boulangerie',
-  'bakery',
-  'croissant',
-  'brunch',
-  'patisserie',
-  'pâtisserie',
 ];
 
 function ForYouBadge({ matches }: { matches: PreferenceId[] }) {
@@ -337,7 +328,7 @@ export default function Home() {
       (map.get(b.id)?.length ?? 0) - (map.get(a.id)?.length ?? 0);
 
   const filteredDrops = drops
-    .filter((d) => !dropTypeFilter || d.drop_type === dropTypeFilter)
+    .filter((d) => dropMatchesFilter(d, dropTypeFilter))
     .filter(
       (d) =>
         !query ||
@@ -348,18 +339,11 @@ export default function Home() {
     .sort(byMatchCount(dropMatchMap));
 
   const visiblePlaces = places
-    .filter((p) => {
-      if (category === 'remote') return p.has_plugs || !!p.wifi_speed;
-      if (category === 'bakery') {
-        const haystack = `${p.name} ${p.description ?? ''}`.toLowerCase();
-        return bakeryKeywords.some((k) => haystack.includes(k));
-      }
-      return true;
-    })
+    .filter((p) => placeMatchesFilter(p, category))
     .filter(
       (p) =>
         !query ||
-        [p.name, p.address, p.description].some((f) =>
+        [p.name, p.address, p.description, p.category].some((f) =>
           f?.toLowerCase().includes(query)
         )
     )

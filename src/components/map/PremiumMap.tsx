@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Map, { Marker, useMap, GeolocateControl } from 'react-map-gl';
 import { Coffee, X, LockKey, MapPin, WifiHigh, Plugs, SpeakerHigh } from '@phosphor-icons/react';
-import { getPlaces, Place } from '@/lib/api/places';
+import { getPlaces, Place, hasValidCoordinates } from '@/lib/api/places';
 import { useAuth } from '@/lib/hooks/useAuth';
 import FavoriteButton from '@/components/places/FavoriteButton';
 import { getSavedPlaceIds, savePlace, unsavePlace } from '@/lib/api/saved';
@@ -11,12 +11,13 @@ import { getLatestVibes, CheckIn } from '@/lib/api/checkins';
 import PlaceDetailModal from '@/components/spots/PlaceDetailModal';
 import LoginModal from '@/components/auth/LoginModal';
 import { openDirections } from '@/lib/utils/directions';
+import { placeMatchesFilter } from '@/lib/filters';
 
 const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN;
 const MAP_STYLE = 'mapbox://styles/yanis3014/cmuldtuxb002h01s51acaf25v';
 
 const filterPills = [
-  { label: ' Prises', value: 'plugs' },
+  { label: '🔌 Prises', value: 'plugs' },
   { label: '☀️ Terrasse', value: 'terrace' },
   { label: '☕️ Café', value: 'coffee' },
   { label: '🎵 Ambiance', value: 'chill' },
@@ -25,14 +26,15 @@ const filterPills = [
 function FlyToPlace({ place }: { place: Place }) {
   const { current: map } = useMap();
 
-  if (map && place) {
+  useEffect(() => {
+    if (!map || !hasValidCoordinates(place)) return;
     map.flyTo({
       center: [place.lng, place.lat] as [number, number],
       zoom: 15,
       duration: 1000,
       offset: [0, -150],
     });
-  }
+  }, [map, place]);
 
   return null;
 }
@@ -70,7 +72,7 @@ export default function PremiumMap() {
     const fetchPlaces = async () => {
       try {
         setLoading(true);
-        const data = await getPlaces();
+        const data = await getPlaces({ withCoordinatesOnly: true });
         setPlaces(data);
         
         if (data.length === 0) {
@@ -113,10 +115,15 @@ export default function PremiumMap() {
     }
   };
 
-  const handleMarkerClick = (e: any, place: Place) => {
+  const handleMarkerClick = (
+    e: { originalEvent: { stopPropagation: () => void } },
+    place: Place
+  ) => {
     e.originalEvent.stopPropagation();
     setSelectedPlace(place);
   };
+
+  const visiblePlaces = places.filter((p) => placeMatchesFilter(p, activeFilter));
 
   if (!MAPBOX_TOKEN) {
     return (
@@ -188,8 +195,7 @@ export default function PremiumMap() {
           style={{ marginBottom: '100px' }}
         />
 
-        {places.map((place) => {
-          return (
+        {visiblePlaces.map((place) => (
             <Marker
               key={place.id}
               longitude={place.lng}
@@ -201,10 +207,11 @@ export default function PremiumMap() {
                 <Coffee size={20} weight="fill" />
               </div>
             </Marker>
-          );
-        })}
+        ))}
 
-        {selectedPlace && <FlyToPlace place={selectedPlace} />}
+        {selectedPlace && hasValidCoordinates(selectedPlace) && (
+          <FlyToPlace place={selectedPlace} />
+        )}
       </Map>
 
       {/* Floating UI Overlay */}

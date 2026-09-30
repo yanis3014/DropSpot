@@ -1,5 +1,6 @@
 import type { Place } from '@/lib/api/places';
 import type { Drop } from '@/lib/api/drops';
+import { normalizeDropType } from '@/lib/filters';
 
 export type PreferenceId = 'remote' | 'brunch' | 'sport' | 'specialty' | 'events' | 'chill';
 
@@ -73,17 +74,22 @@ const keywordMatchers: Partial<Record<PreferenceId, string[]>> = {
   events: ['dj', 'concert', 'expo', 'soirée', 'événement', 'evenement', 'live'],
 };
 
-function haystackFor(text: (string | undefined)[]): string {
+function haystackFor(text: (string | undefined | null)[]): string {
   return text.filter(Boolean).join(' ').toLowerCase();
 }
 
 /** Which of the user's preferences this place satisfies. Empty when none. */
 export function placeMatches(place: Place, prefs: PreferenceId[]): PreferenceId[] {
   if (prefs.length === 0) return [];
-  const text = haystackFor([place.name, place.description]);
+  const text = haystackFor([place.name, place.description, place.category]);
+  const categories = place.categories ?? [];
 
   return prefs.filter((pref) => {
-    if (pref === 'remote') return !!(place.has_plugs || place.wifi_speed || place.laptop_policy);
+    const categoryKey = pref === 'events' ? 'event' : pref;
+    if (categories.includes(categoryKey as (typeof categories)[number])) return true;
+    if (pref === 'remote') {
+      return !!(place.has_plugs || place.wifi_speed || place.laptop_policy);
+    }
     if (pref === 'chill' && place.has_terrace) return true;
     const keywords = keywordMatchers[pref];
     return !!keywords && keywords.some((k) => text.includes(k));
@@ -94,10 +100,11 @@ export function placeMatches(place: Place, prefs: PreferenceId[]): PreferenceId[
 export function dropMatches(drop: Drop, prefs: PreferenceId[]): PreferenceId[] {
   if (prefs.length === 0) return [];
   const text = haystackFor([drop.title, drop.description]);
+  const type = normalizeDropType(drop.drop_type) ?? drop.drop_type;
 
   return prefs.filter((pref) => {
-    if (pref === 'sport') return drop.drop_type === 'sport';
-    if (pref === 'events') return drop.drop_type === 'event';
+    if (pref === 'sport') return type === 'sport';
+    if (pref === 'events') return type === 'event';
     const keywords = keywordMatchers[pref];
     return !!keywords && keywords.some((k) => text.includes(k));
   });

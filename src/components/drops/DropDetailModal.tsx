@@ -14,7 +14,8 @@ import {
   LockKey,
   Users,
 } from '@phosphor-icons/react';
-import { Drop, isDropLive, formatDateTime } from '@/lib/api/drops';
+import { Drop, isDropLive, formatDateTime, type DropTypeId } from '@/lib/api/drops';
+import { normalizeDropType } from '@/lib/filters';
 
 interface DropDetailModalProps {
   drop: Drop;
@@ -31,7 +32,7 @@ export type DropTypeConfig = {
   classes: string;
 };
 
-export const dropTypeConfig: Record<Drop['drop_type'], DropTypeConfig> = {
+export const dropTypeConfig: Record<DropTypeId, DropTypeConfig> = {
   sport: {
     label: 'Sport',
     icon: Sneaker,
@@ -49,7 +50,7 @@ export const dropTypeConfig: Record<Drop['drop_type'], DropTypeConfig> = {
   },
 };
 
-/** Safe lookup — unknown DB values (null, typos, new types) won't crash the UI. */
+/** Safe lookup — unknown DB values won't crash the UI. */
 export const defaultDropTypeConfig: DropTypeConfig = {
   label: 'Drop',
   icon: Sparkle,
@@ -57,9 +58,8 @@ export const defaultDropTypeConfig: DropTypeConfig = {
 };
 
 export function getDropTypeConfig(dropType: string | null | undefined): DropTypeConfig {
-  if (dropType && dropType in dropTypeConfig) {
-    return dropTypeConfig[dropType as Drop['drop_type']];
-  }
+  const normalized = normalizeDropType(dropType);
+  if (normalized) return dropTypeConfig[normalized];
   return defaultDropTypeConfig;
 }
 
@@ -76,7 +76,6 @@ export default function DropDetailModal({
   const TypeIcon = typeConfig.icon;
   const live = isDropLive(drop);
 
-  // Slide-in on mount, and lock body scroll while open
   useEffect(() => {
     const frame = requestAnimationFrame(() => setVisible(true));
     document.body.style.overflow = 'hidden';
@@ -88,13 +87,11 @@ export default function DropDetailModal({
 
   const handleClose = () => {
     setVisible(false);
-    // Let the slide-out animation finish before unmounting
     setTimeout(onClose, 250);
   };
 
   return (
     <div className="fixed inset-0 z-[60] flex items-end justify-center">
-      {/* Backdrop */}
       <div
         onClick={handleClose}
         className={`absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity duration-300 ${
@@ -102,13 +99,11 @@ export default function DropDetailModal({
         }`}
       />
 
-      {/* Bottom sheet panel */}
       <div
         className={`relative w-full max-w-md bg-brand-oat rounded-t-3xl overflow-hidden shadow-2xl transition-transform duration-300 ease-out max-h-[85dvh] flex flex-col ${
           visible ? 'translate-y-0' : 'translate-y-full'
         }`}
       >
-        {/* Header image */}
         <div className="relative h-40 flex-shrink-0 bg-gradient-to-br from-[#2C1E16] to-[#8B6B5D]">
           {drop.places?.image_url && (
             <img
@@ -119,7 +114,6 @@ export default function DropDetailModal({
           )}
           <div className="absolute inset-0 bg-gradient-to-t from-brand-oat via-transparent to-transparent" />
 
-          {/* Close button */}
           <button
             onClick={handleClose}
             aria-label="Fermer"
@@ -128,7 +122,6 @@ export default function DropDetailModal({
             <X size={20} weight="bold" className="text-brand-espresso" />
           </button>
 
-          {/* Type badge */}
           <div
             className={`absolute top-4 left-4 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-brand-surface/90 backdrop-blur-sm ${typeConfig.classes}`}
           >
@@ -137,7 +130,6 @@ export default function DropDetailModal({
           </div>
         </div>
 
-        {/* Content */}
         <div className="flex-1 overflow-y-auto p-5 pb-6 -mt-4 relative">
           <h2 className="text-2xl font-extrabold text-brand-espresso tracking-tight mb-1">
             {drop.title}
@@ -148,7 +140,6 @@ export default function DropDetailModal({
             {drop.places?.name || 'Lieu à déterminer'}
           </p>
 
-          {/* Time info */}
           <div className="bg-brand-surface rounded-2xl border border-brand-mocha/10 shadow-sm divide-y divide-brand-mocha/5 mb-4">
             <div className="flex items-center gap-3 p-3.5">
               <div className="w-9 h-9 rounded-xl bg-brand-matcha/10 flex items-center justify-center flex-shrink-0">
@@ -182,14 +173,12 @@ export default function DropDetailModal({
             </div>
           </div>
 
-          {/* Description */}
           {drop.description && (
             <p className="text-sm text-brand-mocha leading-relaxed mb-4">
               {drop.description}
             </p>
           )}
 
-          {/* Capacity */}
           {drop.capacity && (
             <div className="flex items-center gap-2 text-sm text-brand-mocha mb-4">
               <Users size={16} weight="duotone" />
@@ -200,12 +189,11 @@ export default function DropDetailModal({
           )}
         </div>
 
-        {/* Claim action */}
         <div className="p-5 pt-3 border-t border-brand-mocha/10 bg-brand-surface flex-shrink-0">
           {isClaimed ? (
             <div className="w-full flex items-center justify-center gap-2 bg-brand-matcha/10 text-brand-matcha font-bold py-4 rounded-2xl">
               <CheckCircle size={22} weight="fill" />
-              Inscrit — on t'attend ! ✅
+              Inscrit — on t&apos;attend ! ✅
             </div>
           ) : isAuthenticated ? (
             <button
@@ -215,7 +203,7 @@ export default function DropDetailModal({
               {drop.drop_type === 'promo'
                 ? 'Réclamer ce drop'
                 : drop.drop_type === 'event'
-                  ? 'Rejoindre l’événement'
+                  ? "Rejoindre l'événement"
                   : 'Participer'}
             </button>
           ) : (

@@ -1,5 +1,5 @@
 import { supabase } from '@/lib/supabase/client';
-import { Place } from '@/lib/api/places';
+import { normalizePlace, Place } from '@/lib/api/places';
 
 export interface SavedPlace {
   id: string;
@@ -35,7 +35,16 @@ export async function getSavedPlaces(): Promise<SavedPlace[]> {
       return [];
     }
 
-    return (data ?? []) as SavedPlace[];
+    return (data ?? []).map((row) => {
+      const raw = row as Record<string, unknown>;
+      return {
+        id: String(raw.id),
+        user_id: String(raw.user_id),
+        place_id: String(raw.place_id),
+        created_at: String(raw.created_at),
+        places: normalizePlace((raw.places ?? {}) as Record<string, unknown>),
+      } satisfies SavedPlace;
+    });
   } catch (error) {
     console.error('Error in getSavedPlaces:', error);
     return [];

@@ -5,17 +5,32 @@ import { X, MapPin, LockKey, CheckCircle } from '@phosphor-icons/react';
 import {
   createCheckIn,
   crowdConfig,
+  getUserLastCheckInAtPlace,
   CrowdLevel,
   WifiStatus,
+  VIBE_WINDOW_MS,
 } from '@/lib/api/checkins';
-import { addGrains, CHECKIN_GRAINS_REWARD } from '@/lib/grains';
+import {
+  addGrains,
+  evaluateGrainsEligibility,
+  markGrainsEarned,
+  type GrainsAwardReason,
+} from '@/lib/grains';
+import { startCheckInSession } from '@/lib/checkinSession';
 import LoginModal from '@/components/auth/LoginModal';
 
 interface CheckInModalProps {
   place: { id: string; name: string; image_url?: string };
   isAuthenticated: boolean;
+  /** Distance from user GPS to place; null if GPS unknown. */
+  distanceM?: number | null;
+  /** True when updating vibe on the currently active session place. */
+  isActiveSession?: boolean;
   onClose: () => void;
-  onSubmitted?: (grainsEarned: number) => void;
+  onSubmitted?: (result: {
+    grainsEarned: number;
+    reason: GrainsAwardReason;
+  }) => void;
 }
 
 const wifiOptions: {
@@ -27,9 +42,18 @@ const wifiOptions: {
   { value: 'good', label: 'Fusée', emoji: '🚀' },
 ];
 
+function rewardCopy(reason: GrainsAwardReason, earned: number): string {
+  if (earned > 0) return `+${earned} Grains 🌾`;
+  if (reason === 'cooldown') return 'Vibe mise à jour (0 Grain — Délai de 3h)';
+  if (reason === 'too_far') return 'Vibe partagée (0 Grain — trop loin)';
+  return 'Vibe partagée (0 Grain — GPS requis)';
+}
+
 export default function CheckInModal({
   place,
   isAuthenticated,
+  distanceM = null,
+  isActiveSession = false,
   onClose,
   onSubmitted,
 }: CheckInModalProps) {
@@ -38,7 +62,8 @@ export default function CheckInModal({
   const [wifi, setWifi] = useState<WifiStatus | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
-  const [earned, setEarned] = useState(CHECKIN_GRAINS_REWARD);
+  const [earned, setEarned] = useState(0);
+  const [reason, setReason] = useState<GrainsAwardReason>('ok');
   const [error, setError] = useState<string | null>(null);
   const [showLogin, setShowLogin] = useState(false);
 
@@ -61,16 +86,37 @@ export default function CheckInModal({
     setSubmitting(true);
     setError(null);
     try {
+      const last = await getUserLastCheckInAtPlace(place.id);
+      const serverCooldownActive = !!(
+        last &&
+        Date.now() - new Date(last.created_at).getTime() < VIBE_WINDOW_MS
+      );
+
+      const award = evaluateGrainsEligibility({
+        placeId: place.id,
+        distanceM: distanceM ?? null,
+        serverCooldownActive,
+      });
+
       await createCheckIn({
         place_id: place.id,
         crowd_level: crowd,
         wifi_speed: wifi,
       });
-      addGrains(CHECKIN_GRAINS_REWARD);
-      setEarned(CHECKIN_GRAINS_REWARD);
+
+      if (award.eligible && award.amount > 0) {
+        addGrains(award.amount);
+        markGrainsEarned(place.id);
+      }
+
+      // One physical place at a time — start / refresh the active session.
+      startCheckInSession(place.id, place.name);
+
+      setEarned(award.amount);
+      setReason(award.reason);
       setSubmitted(true);
-      onSubmitted?.(CHECKIN_GRAINS_REWARD);
-      setTimeout(handleClose, 1800);
+      onSubmitted?.({ grainsEarned: award.amount, reason: award.reason });
+      setSubmitting(false);
     } catch {
       setError("Oups, le check-in n'est pas parti. Réessaie.");
       setSubmitting(false);
@@ -98,7 +144,7 @@ export default function CheckInModal({
         <div className="px-5 pb-3 flex items-start justify-between gap-3">
           <div className="min-w-0">
             <p className="text-[11px] font-semibold uppercase tracking-wider text-brand-mocha mb-0.5">
-              Quick vibe
+              {isActiveSession ? 'Mettre à jour' : 'Quick vibe'}
             </p>
             <p className="flex items-center gap-1.5 text-brand-espresso font-bold text-lg leading-tight">
               <MapPin size={18} weight="fill" className="text-brand-terracotta flex-shrink-0" />
@@ -115,24 +161,41 @@ export default function CheckInModal({
         </div>
 
         {submitted ? (
-          <div className="flex-1 flex flex-col items-center justify-center gap-5 py-14 px-5 text-center">
-            <div className="relative">
+          <div className="flex flex-col items-center justify-center gap-4 px-6 py-12 w-full text-center">
+            <div className="relative shrink-0">
               <span className="absolute inset-0 rounded-full bg-brand-matcha/25 animate-ping" />
               <div className="relative w-16 h-16 rounded-full bg-brand-matcha/15 flex items-center justify-center">
                 <CheckCircle size={40} weight="fill" className="text-brand-matcha" />
               </div>
             </div>
-            <div className="flex flex-col items-center gap-3">
-              <p className="text-lg font-extrabold text-brand-espresso">
-                Check-in validé !
-              </p>
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-matcha text-white px-4 py-2 text-base font-extrabold shadow-md shadow-brand-matcha/30 animate-pop">
-                +{earned} Grains 🌾
-              </span>
-              <p className="text-sm text-brand-mocha max-w-[220px]">
-                Ta vibe est partagée avec la communauté.
-              </p>
-            </div>
+
+            <h2 className="text-xl font-extrabold text-brand-espresso shrink-0">
+              Check-in validé !
+            </h2>
+
+            {/* Non-interactive reward / status pill — never a second CTA */}
+            <span
+              role="status"
+              className={`pointer-events-none inline-flex max-w-full items-center justify-center rounded-full px-4 py-2 text-sm font-extrabold leading-snug animate-pop ${
+                earned > 0
+                  ? 'bg-brand-matcha/15 text-brand-matcha'
+                  : 'bg-brand-surface text-brand-espresso border border-brand-mocha/15'
+              }`}
+            >
+              {rewardCopy(reason, earned)}
+            </span>
+
+            <p className="w-full text-sm leading-relaxed text-brand-mocha text-center px-1">
+              Ta vibe est partagée avec la communauté.
+            </p>
+
+            <button
+              type="button"
+              onClick={handleClose}
+              className="mt-1 w-full max-w-xs bg-brand-ink text-white font-bold py-3.5 rounded-2xl shadow-lg hover:bg-brand-ink/90 active:scale-[0.98] transition-all"
+            >
+              Fermer
+            </button>
           </div>
         ) : !isAuthenticated ? (
           <div className="flex-1 flex flex-col items-center justify-center py-12 px-8 text-center">
@@ -153,6 +216,18 @@ export default function CheckInModal({
         ) : (
           <>
             <div className="flex-1 overflow-y-auto px-5 pb-4 space-y-6">
+              {distanceM != null && distanceM > 100 && (
+                <p className="text-xs text-center text-brand-mocha bg-brand-muted rounded-xl px-3 py-2">
+                  Tu es à {Math.round(distanceM)} m — la vibe sera partagée, mais
+                  sans Grains (présence &lt; 100 m requise).
+                </p>
+              )}
+              {distanceM == null && (
+                <p className="text-xs text-center text-brand-mocha bg-brand-muted rounded-xl px-3 py-2">
+                  GPS indisponible — vibe OK, Grains uniquement sur place.
+                </p>
+              )}
+
               <div>
                 <p className="text-sm font-bold text-brand-espresso mb-3 text-center">
                   Comment est l&apos;affluence ?
@@ -215,7 +290,11 @@ export default function CheckInModal({
                 disabled={!crowd || !wifi || submitting}
                 className="w-full bg-brand-matcha text-white font-extrabold py-4 rounded-2xl shadow-lg shadow-brand-matcha/25 hover:bg-brand-matcha/90 active:scale-[0.98] transition-all disabled:opacity-40 disabled:pointer-events-none"
               >
-                {submitting ? 'Validation…' : 'Valider'}
+                {submitting
+                  ? 'Validation…'
+                  : isActiveSession
+                    ? 'Mettre à jour'
+                    : 'Valider'}
               </button>
             </div>
           </>

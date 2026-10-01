@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { MapPin, LockKey, WifiHigh, Plugs, SpeakerHigh, Laptop, Lightning } from '@phosphor-icons/react';
 import CheckInModal from '@/components/spots/CheckInModal';
 import FavoriteButton from '@/components/places/FavoriteButton';
+import TrophyBadge, { mockTrophyForPlace } from '@/components/places/TrophyBadge';
 import LoginModal from '@/components/auth/LoginModal';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { Place } from '@/lib/api/places';
@@ -97,9 +98,12 @@ export default function PlaceDetails({ place }: PlaceDetailsProps) {
 
         {/* Place Name */}
         <div className="p-4">
-          <h2 className="text-2xl font-extrabold text-brand-espresso tracking-tight mb-4">
+          <h2 className="text-2xl font-extrabold text-brand-espresso tracking-tight mb-2">
             {place.name}
           </h2>
+          <div className="mb-4">
+            <TrophyBadge trophy={mockTrophyForPlace(place.id)} size="md" />
+          </div>
 
           {/* Action buttons */}
           <div className="flex gap-2">

@@ -22,7 +22,16 @@ import SeeMoreDropsCard from '@/components/drops/SeeMoreDropsCard';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { getPlaces, Place } from '@/lib/api/places';
 import { getActiveDrops, Drop, formatCountdown } from '@/lib/api/drops';
-import { peekCache } from '@/lib/cache/clientCache';import { getLatestVibes, crowdConfig, CheckIn } from '@/lib/api/checkins';
+import { peekCache } from '@/lib/cache/clientCache';
+import { getLatestVibes, crowdConfig, CheckIn } from '@/lib/api/checkins';
+import {
+  getTopTrophiesForPlaces,
+  type PlaceTrophy,
+} from '@/lib/api/endorsements';
+import TrophyBadge, { mockTrophyForPlace } from '@/components/places/TrophyBadge';
+import PepitesCommunSection, {
+  buildMockPepites,
+} from '@/components/places/PepitesCommunSection';
 import { getSavedPlaceIds, savePlace, unsavePlace } from '@/lib/api/saved';
 import FavoriteButton from '@/components/places/FavoriteButton';
 import PlaceDetailModal from '@/components/spots/PlaceDetailModal';
@@ -68,6 +77,7 @@ export default function Home() {
     () => !peekCache('places:full')
   );
   const [vibes, setVibes] = useState<Record<string, CheckIn>>({});
+  const [trophies, setTrophies] = useState<Record<string, PlaceTrophy>>({});
   const [savedIds, setSavedIds] = useState<string[]>([]);
   const [drops, setDrops] = useState<Drop[]>(
     () => peekCache<Drop[]>('drops:active') ?? []
@@ -114,6 +124,10 @@ export default function Home() {
         setPlaces(data.slice(0, 6));
         setVibes(vibesData);
         setSavedIds(saved);
+        const ids = data.slice(0, 6).map((p) => p.id);
+        if (ids.length) {
+          getTopTrophiesForPlaces(ids).then(setTrophies);
+        }
       } catch (error) {
         console.error('Error fetching places:', error);
       } finally {
@@ -347,6 +361,14 @@ export default function Home() {
         <div className="w-4 shrink-0" aria-hidden />
       </div>
 
+      <PepitesCommunSection
+        pepites={buildMockPepites(places)}
+        onOpenPlace={(id) => {
+          const found = places.find((p) => p.id === id);
+          if (found) setSelectedPlace(found);
+        }}
+      />
+
       {/* À découvrir en ce moment */}
       <div className="mt-5 mb-8">
         <div className="px-5 flex items-center justify-between mb-3">
@@ -477,6 +499,7 @@ export default function Home() {
               const vibe = vibes[place.id];
               const crowd = vibe ? crowdConfig[vibe.crowd_level] : null;
               const matches = placeMatchMap.get(place.id) ?? [];
+              const trophy = trophies[place.id];
 
               return (
               <div
@@ -514,9 +537,20 @@ export default function Home() {
 
                   <div className="flex-1 min-w-0 py-0.5">
                     <div className="flex items-start justify-between gap-2">
-                      <h4 className="font-bold text-brand-espresso mb-0.5 truncate">
-                        {place.name}
-                      </h4>
+                      <div className="min-w-0 flex-1">
+                        <h4 className="font-bold text-brand-espresso mb-0.5 truncate">
+                          {place.name}
+                        </h4>
+                        {trophy ? (
+                          <div className="mb-1">
+                            <TrophyBadge trophy={trophy} size="sm" />
+                          </div>
+                        ) : (
+                          <div className="mb-1">
+                            <TrophyBadge trophy={mockTrophyForPlace(place.id)} size="sm" />
+                          </div>
+                        )}
+                      </div>
                       <button
                         onClick={(e) => {
                           e.stopPropagation();

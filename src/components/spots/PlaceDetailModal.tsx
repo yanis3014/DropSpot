@@ -16,8 +16,15 @@ import {
 } from '@phosphor-icons/react';
 import FavoriteButton from '@/components/places/FavoriteButton';
 import CheckInModal from '@/components/spots/CheckInModal';
+import TrophyModal from '@/components/places/TrophyModal';
+import TrophyBadge, { mockTrophyForPlace } from '@/components/places/TrophyBadge';
 import { getPlaceById, Place } from '@/lib/api/places';
 import { CheckIn, crowdConfig } from '@/lib/api/checkins';
+import { getPlaceTopTrophy, type PlaceTrophy } from '@/lib/api/endorsements';
+import {
+  markTrophyPromptShown,
+  shouldShowTrophyPrompt,
+} from '@/lib/trophyPrompt';
 import { formatAddress, openDirections } from '@/lib/utils/directions';
 
 interface PlaceDetailModalProps {
@@ -49,6 +56,12 @@ export default function PlaceDetailModal({
   const [visible, setVisible] = useState(false);
   const [place, setPlace] = useState<Place>(initialPlace);
   const [showCheckIn, setShowCheckIn] = useState(false);
+  const [trophy, setTrophy] = useState<PlaceTrophy | null>(null);
+  const [trophyPlace, setTrophyPlace] = useState<{
+    id: string;
+    name: string;
+  } | null>(null);
+  const [toast, setToast] = useState<string | null>(null);
 
   // Slide-in on mount, and lock body scroll while open
   useEffect(() => {
@@ -76,6 +89,10 @@ export default function PlaceDetailModal({
     return () => {
       cancelled = true;
     };
+  }, [initialPlace.id]);
+
+  useEffect(() => {
+    getPlaceTopTrophy(initialPlace.id).then(setTrophy);
   }, [initialPlace.id]);
 
   const handleClose = () => {
@@ -155,6 +172,13 @@ export default function PlaceDetailModal({
           <h2 className="text-2xl font-extrabold text-brand-espresso tracking-tight mb-1">
             {place.name}
           </h2>
+
+          <div className="mb-3">
+            <TrophyBadge
+              trophy={trophy ?? mockTrophyForPlace(place.id)}
+              size="md"
+            />
+          </div>
 
           {address && (
             <p className="flex items-start gap-1.5 text-sm text-brand-mocha mb-4">
@@ -236,7 +260,31 @@ export default function PlaceDetailModal({
           isAuthenticated={isAuthenticated}
           onClose={() => setShowCheckIn(false)}
           onSubmitted={onCheckedIn}
+          onSuccessDismiss={(p) => {
+            if (isAuthenticated && shouldShowTrophyPrompt()) {
+              markTrophyPromptShown();
+              setTrophyPlace(p);
+            }
+          }}
         />
+      )}
+
+      {trophyPlace && (
+        <TrophyModal
+          place={trophyPlace}
+          onClose={() => setTrophyPlace(null)}
+          onVoted={() => {
+            setToast('Merci ! 🎉');
+            getPlaceTopTrophy(place.id).then(setTrophy);
+            window.setTimeout(() => setToast(null), 2800);
+          }}
+        />
+      )}
+
+      {toast && (
+        <div className="fixed bottom-28 left-1/2 z-[80] -translate-x-1/2 rounded-2xl bg-brand-ink text-white px-4 py-3 text-sm font-bold shadow-xl">
+          {toast}
+        </div>
       )}
     </div>
   );

@@ -9,6 +9,7 @@ import {
 } from '@phosphor-icons/react';
 import Link from 'next/link';
 import CheckInModal from '@/components/spots/CheckInModal';
+import TrophyModal from '@/components/places/TrophyModal';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { getPlaces, Place } from '@/lib/api/places';
 import { hasValidCoordinates } from '@/lib/filters';
@@ -31,6 +32,10 @@ import {
   sessionRemainingMs,
   type CheckInSession,
 } from '@/lib/checkinSession';
+import {
+  markTrophyPromptShown,
+  shouldShowTrophyPrompt,
+} from '@/lib/trophyPrompt';
 
 type PlaceWithDistance = Place & { distanceM: number | null };
 
@@ -85,6 +90,10 @@ export default function CheckInPage() {
   const [selectedPlace, setSelectedPlace] = useState<PlaceWithDistance | null>(
     null
   );
+  const [trophyPlace, setTrophyPlace] = useState<{
+    id: string;
+    name: string;
+  } | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [grains, setGrains] = useState(0);
   const [vibes, setVibes] = useState<Record<string, AggregatedVibe>>({});
@@ -217,6 +226,13 @@ export default function CheckInPage() {
     setGrains(getGrainsBalance());
     setSession(getActiveSession());
     void getAggregatedVibes().then(setVibes);
+  };
+
+  const handleSuccessDismiss = (place: { id: string; name: string }) => {
+    if (isAuthenticated && shouldShowTrophyPrompt()) {
+      markTrophyPromptShown();
+      setTrophyPlace(place);
+    }
   };
 
   if (authLoading) {
@@ -425,6 +441,18 @@ export default function CheckInPage() {
           isActiveSession={session?.placeId === selectedPlace.id}
           onClose={() => setSelectedPlace(null)}
           onSubmitted={handleSubmitted}
+          onSuccessDismiss={handleSuccessDismiss}
+        />
+      )}
+
+      {trophyPlace && (
+        <TrophyModal
+          place={trophyPlace}
+          onClose={() => setTrophyPlace(null)}
+          onVoted={() => {
+            setToast('Merci ! 🎉');
+            window.setTimeout(() => setToast(null), 2800);
+          }}
         />
       )}
     </div>

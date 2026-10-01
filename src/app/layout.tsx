@@ -3,6 +3,8 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import BottomNav from "@/components/layout/BottomNav";
 import SplashScreen from "@/components/SplashScreen";
+import IosInstallPrompt from "@/components/pwa/IosInstallPrompt";
+import AndroidInstallPrompt from "@/components/pwa/AndroidInstallPrompt";
 import { ThemeProvider, themeBootScript } from "@/lib/theme";
 
 const geistSans = Geist({
@@ -67,6 +69,8 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
             {children}
             <BottomNav />
           </div>
+          <IosInstallPrompt />
+          <AndroidInstallPrompt />
           <SplashScreen />
         </ThemeProvider>
       </body>

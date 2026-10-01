@@ -8,6 +8,7 @@ import { getMapPlaces, getPlaceById, Place, hasValidCoordinates } from '@/lib/ap
 import { peekCache } from '@/lib/cache/clientCache';
 import { useAuth } from '@/lib/hooks/useAuth';
 import FavoriteButton from '@/components/places/FavoriteButton';
+import TrophyBadge, { mockTrophyForPlace } from '@/components/places/TrophyBadge';
 import { getSavedPlaceIds, savePlace, unsavePlace } from '@/lib/api/saved';
 import { getLatestVibes, CheckIn } from '@/lib/api/checkins';
 import PlaceDetailModal from '@/components/spots/PlaceDetailModal';
@@ -285,6 +286,12 @@ export default function PremiumMap() {
                 <h3 className="text-xl font-bold text-brand-espresso mb-2">
                   {selectedPlace.name}
                 </h3>
+                <div className="mb-3">
+                  <TrophyBadge
+                    trophy={mockTrophyForPlace(selectedPlace.id)}
+                    size="sm"
+                  />
+                </div>
                 <div className="flex gap-2">
                   <button
                     onClick={() => openDirections(selectedPlace)}

@@ -31,6 +31,11 @@ interface CheckInModalProps {
     grainsEarned: number;
     reason: GrainsAwardReason;
   }) => void;
+  /**
+   * Called when the user taps Fermer after a successful check-in.
+   * If provided, this runs instead of a plain close — parent can open TrophyModal.
+   */
+  onSuccessDismiss?: (place: { id: string; name: string }) => void;
 }
 
 const wifiOptions: {
@@ -56,6 +61,7 @@ export default function CheckInModal({
   isActiveSession = false,
   onClose,
   onSubmitted,
+  onSuccessDismiss,
 }: CheckInModalProps) {
   const [visible, setVisible] = useState(false);
   const [crowd, setCrowd] = useState<CrowdLevel | null>(null);
@@ -79,6 +85,15 @@ export default function CheckInModal({
   const handleClose = () => {
     setVisible(false);
     setTimeout(onClose, 250);
+  };
+
+  /** Fermer after success — let parent intercept for TrophyModal. */
+  const handleSuccessFermer = () => {
+    setVisible(false);
+    setTimeout(() => {
+      onClose();
+      onSuccessDismiss?.({ id: place.id, name: place.name });
+    }, 250);
   };
 
   const handleSubmit = async () => {
@@ -191,7 +206,7 @@ export default function CheckInModal({
 
             <button
               type="button"
-              onClick={handleClose}
+              onClick={handleSuccessFermer}
               className="mt-1 w-full max-w-xs bg-brand-ink text-white font-bold py-3.5 rounded-2xl shadow-lg hover:bg-brand-ink/90 active:scale-[0.98] transition-all"
             >
               Fermer

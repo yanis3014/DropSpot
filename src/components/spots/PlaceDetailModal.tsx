@@ -132,7 +132,7 @@ export default function PlaceDetailModal({
           {/* Drag handle */}
           <div className="absolute top-2 left-1/2 -translate-x-1/2 w-10 h-1 rounded-full bg-brand-surface/70" />
 
-          <div className="absolute top-4 right-4 flex gap-2">
+          <div className="absolute top-3 right-3 flex items-center gap-2">
             <FavoriteButton
               placeId={place.id}
               isSaved={isSaved}

@@ -1,6 +1,10 @@
 import { supabase } from '@/lib/supabase/client';
-import { normalizeDropType, type DropTypeId } from '@/lib/filters';
-
+import {
+  inferDropTypeFromContent,
+  normalizeDropType,
+  type DropTypeId,
+} from '@/lib/filters';
+import { cachedQuery } from '@/lib/cache/clientCache';
 export type { DropTypeId };
 
 export interface Drop {
@@ -17,6 +21,9 @@ export interface Drop {
   places?: {
     name: string;
     image_url?: string;
+    address?: string;
+    city?: string;
+    category?: string | null;
   };
   capacity?: number;
   current_participants?: number;
@@ -32,7 +39,6 @@ export function normalizeDrop(row: RawDrop): Drop {
     (row.type as string | null | undefined) ??
     (row.category as string | null | undefined) ??
     null;
-  const drop_type = normalizeDropType(rawType) ?? 'event';
 
   const placesRaw = row.places;
   let places: Drop['places'];
@@ -41,13 +47,35 @@ export function normalizeDrop(row: RawDrop): Drop {
     places = {
       name: String(p.name ?? 'Lieu à déterminer'),
       image_url: (p.image_url as string | undefined) ?? undefined,
+      address: (p.address as string | undefined) ?? undefined,
+      city: (p.city as string | undefined) ?? undefined,
+      category:
+        typeof p.category === 'string'
+          ? p.category
+          : typeof p.type === 'string'
+            ? p.type
+            : null,
     };
   }
 
+  const title = String(row.title ?? 'Drop');
+  const description = (row.description as string | undefined) ?? undefined;
+
+  // Prefer explicit DB type; otherwise infer from title/description/place for badges + filters.
+  const drop_type =
+    normalizeDropType(rawType) ??
+    inferDropTypeFromContent({
+      title,
+      description,
+      raw_drop_type: rawType,
+      places,
+    }) ??
+    'event';
+
   return {
     id: String(row.id),
-    title: String(row.title ?? 'Drop'),
-    description: (row.description as string | undefined) ?? undefined,
+    title,
+    description,
     drop_type,
     raw_drop_type: rawType,
     start_time: String(row.start_time ?? ''),
@@ -66,29 +94,75 @@ export function normalizeDrop(row: RawDrop): Drop {
 
 export async function getActiveDrops(): Promise<Drop[]> {
   try {
-    if (!supabase) {
-      console.warn('Supabase client not initialized');
-      return [];
-    }
+    return await cachedQuery('drops:active', async () => {
+      if (!supabase) {
+        console.warn('Supabase client not initialized');
+        return [];
+      }
 
-    const now = new Date().toISOString();
+      const now = new Date().toISOString();
 
-    const { data, error } = await supabase
-      .from('drops')
-      .select('*, places(name, image_url)')
-      .gte('end_time', now)
-      .order('start_time', { ascending: true });
+      const { data, error } = await supabase
+        .from('drops')
+        .select('*, places(name, image_url, address, city, category)')
+        .gte('end_time', now)
+        .order('start_time', { ascending: true });
 
-    if (error) {
-      console.error('Error fetching drops:', error);
-      throw error;
-    }
+      if (error) {
+        console.error('Error fetching drops:', error);
+        throw error;
+      }
 
-    return ((data ?? []) as RawDrop[]).map(normalizeDrop);
+      return ((data ?? []) as RawDrop[]).map(normalizeDrop);
+    });
   } catch (error) {
     console.error('Error in getActiveDrops:', error);
     throw error;
   }
+}
+
+/**
+ * Broader catalogue for the /drops exploration page:
+ * live + upcoming + recently ended (last 7 days).
+ */
+export async function getExploreDrops(): Promise<Drop[]> {
+  try {
+    return await cachedQuery('drops:explore', async () => {
+      if (!supabase) {
+        console.warn('Supabase client not initialized');
+        return [];
+      }
+
+      const since = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+
+      const { data, error } = await supabase
+        .from('drops')
+        .select('*, places(name, image_url, address, city, category)')
+        .gte('end_time', since)
+        .order('start_time', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching explore drops:', error);
+        throw error;
+      }
+
+      return ((data ?? []) as RawDrop[]).map(normalizeDrop);
+    });
+  } catch (error) {
+    console.error('Error in getExploreDrops:', error);
+    throw error;
+  }
+}
+
+export type DropTiming = 'live' | 'upcoming' | 'ended';
+
+export function getDropTiming(drop: Drop, now: number = Date.now()): DropTiming {
+  const start = new Date(drop.start_time).getTime();
+  const end = new Date(drop.end_time).getTime();
+  if (!Number.isFinite(start) || !Number.isFinite(end)) return 'ended';
+  if (now < start) return 'upcoming';
+  if (now <= end) return 'live';
+  return 'ended';
 }
 
 export function formatTime(isoString: string): string {

@@ -19,19 +19,19 @@ export const crowdConfig: Record<
   quiet: {
     label: 'Calme',
     sublabel: 'Peu de monde',
-    emoji: '🟢',
+    emoji: '👻',
     classes: 'bg-brand-matcha/10 text-brand-matcha',
   },
   moderate: {
     label: 'Animé',
     sublabel: 'Ça bouge',
-    emoji: '🟡',
+    emoji: '🐝',
     classes: 'bg-amber-500/10 text-amber-600',
   },
   full: {
-    label: 'Bondé',
+    label: 'Blindé',
     sublabel: 'Complet',
-    emoji: '🔴',
+    emoji: '🥵',
     classes: 'bg-brand-terracotta/10 text-brand-terracotta',
   },
 };

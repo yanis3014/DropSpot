@@ -4,7 +4,7 @@ import {
   normalizePlaceCategory,
   type PlaceCategoryId,
 } from '@/lib/filters';
-
+import { cachedQuery } from '@/lib/cache/clientCache';
 export interface Place {
   id: string;
   name: string;
@@ -118,7 +118,7 @@ export function normalizePlace(row: RawPlace): Place {
     noise_level: (row.noise_level as string | undefined) ?? undefined,
     laptop_policy: (row.laptop_policy as string | undefined) ?? undefined,
     has_terrace: Boolean(row.has_terrace),
-    is_vegan: Boolean(row.is_vegan),
+    is_vegan: Boolean(row.is_vegan ?? row.has_vegan),
     description: (row.description as string | undefined) ?? undefined,
     address: (row.address as string | undefined) ?? undefined,
     city: (row.city as string | undefined) ?? undefined,
@@ -128,27 +128,42 @@ export function normalizePlace(row: RawPlace): Place {
   };
 }
 
+// Must match the live `places` schema: selecting a missing column fails the whole query.
+// Coordinates live in either lat/lng or latitude/longitude depending on the row.
+const PLACES_FULL_SELECT =
+  'id, name, image_url, lat, lng, latitude, longitude, category, description, address, city, has_plugs, has_vegan, laptop_policy, noise_level, wifi_speed, created_at';
+
+/** Marker payload: no description / image. Amenity flags are kept for the map filter pills. */
+const PLACES_MAP_SELECT =
+  'id, name, lat, lng, latitude, longitude, category, has_plugs, laptop_policy, noise_level, wifi_speed';
+
+async function fetchPlacesRaw(select: string): Promise<Place[]> {
+  if (!supabase) {
+    console.warn('Supabase client not initialized');
+    return [];
+  }
+
+  const { data, error } = await supabase
+    .from('places')
+    .select(select)
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    console.error('Error fetching places:', error);
+    throw error;
+  }
+
+  return ((data ?? []) as unknown as RawPlace[]).map(normalizePlace);
+}
+
 export async function getPlaces(options?: {
   /** Only return rows with plottable lat/lng (map). Default: all normalized rows. */
   withCoordinatesOnly?: boolean;
 }): Promise<Place[]> {
   try {
-    if (!supabase) {
-      console.warn('Supabase client not initialized');
-      return [];
-    }
-
-    const { data, error } = await supabase
-      .from('places')
-      .select('*')
-      .order('created_at', { ascending: false });
-
-    if (error) {
-      console.error('Error fetching places:', error);
-      throw error;
-    }
-
-    const places = ((data ?? []) as RawPlace[]).map(normalizePlace);
+    const places = await cachedQuery('places:full', () =>
+      fetchPlacesRaw(PLACES_FULL_SELECT)
+    );
     if (options?.withCoordinatesOnly) {
       return places.filter(hasValidCoordinates);
     }
@@ -159,25 +174,48 @@ export async function getPlaces(options?: {
   }
 }
 
+/**
+ * Lightweight places payload for map markers.
+ * Skips description / image_url; keeps tiny amenity flags for filter pills.
+ */
+export async function getMapPlaces(): Promise<Place[]> {
+  try {
+    const places = await cachedQuery('places:map', () =>
+      fetchPlacesRaw(PLACES_MAP_SELECT)
+    );
+    return places.filter(hasValidCoordinates);
+  } catch (error) {
+    console.error('Error in getMapPlaces:', error);
+    throw error;
+  }
+}
+
 export async function getPlaceById(id: string): Promise<Place | null> {
   try {
-    if (!supabase) {
-      console.warn('Supabase client not initialized');
-      return null;
-    }
+    const cached = await cachedQuery(
+      `places:byId:${id}`,
+      async () => {
+        if (!supabase) {
+          console.warn('Supabase client not initialized');
+          return null;
+        }
 
-    const { data, error } = await supabase
-      .from('places')
-      .select('*')
-      .eq('id', id)
-      .maybeSingle();
+        const { data, error } = await supabase
+          .from('places')
+          .select(PLACES_FULL_SELECT)
+          .eq('id', id)
+          .maybeSingle();
 
-    if (error) {
-      console.error('Error fetching place:', error);
-      throw error;
-    }
+        if (error) {
+          console.error('Error fetching place:', error);
+          throw error;
+        }
 
-    return data ? normalizePlace(data as RawPlace) : null;
+        return data ? normalizePlace(data as unknown as RawPlace) : null;
+      },
+      120_000
+    );
+    return cached;
   } catch (error) {
     console.error('Error in getPlaceById:', error);
     throw error;

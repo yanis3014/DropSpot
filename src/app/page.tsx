@@ -16,11 +16,13 @@ import {
   CaretRight,
   NavigationArrow,
 } from '@phosphor-icons/react';
-import DropDetailModal, { getDropTypeConfig } from '@/components/drops/DropDetailModal';
+import DropDetailModal from '@/components/drops/DropDetailModal';
+import DropCard, { ForYouBadge } from '@/components/drops/DropCard';
+import SeeMoreDropsCard from '@/components/drops/SeeMoreDropsCard';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { getPlaces, Place } from '@/lib/api/places';
-import { getActiveDrops, Drop, isDropLive, formatTime, formatCountdown } from '@/lib/api/drops';
-import { getLatestVibes, crowdConfig, CheckIn } from '@/lib/api/checkins';
+import { getActiveDrops, Drop, formatCountdown } from '@/lib/api/drops';
+import { peekCache } from '@/lib/cache/clientCache';import { getLatestVibes, crowdConfig, CheckIn } from '@/lib/api/checkins';
 import { getSavedPlaceIds, savePlace, unsavePlace } from '@/lib/api/saved';
 import FavoriteButton from '@/components/places/FavoriteButton';
 import PlaceDetailModal from '@/components/spots/PlaceDetailModal';
@@ -50,122 +52,7 @@ const quickCategories: { id: CategoryFilter; label: string }[] = [
   { id: 'event', label: '🎧 Événements' },
 ];
 
-function ForYouBadge({ matches }: { matches: PreferenceId[] }) {
-  if (matches.length === 0) return null;
-  const emojis = matches.slice(0, 2).map((m) => preferenceById[m].emoji).join('');
-  return (
-    <span
-      title={matches.map((m) => preferenceById[m].label).join(' · ')}
-      className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-brand-matcha text-white shadow-sm shadow-brand-matcha/30"
-    >
-      <Sparkle size={10} weight="fill" />
-      Pour toi {emojis}
-    </span>
-  );
-}
-
-function DropCard({
-  drop,
-  isClaimed,
-  now,
-  matches,
-  onOpen,
-}: {
-  drop: Drop;
-  isClaimed: boolean;
-  now: number;
-  matches: PreferenceId[];
-  onOpen: () => void;
-}) {
-  const typeConfig = getDropTypeConfig(drop.drop_type);
-  const TypeIcon = typeConfig.icon;
-  const iconColor = typeConfig.classes.split(' ').find((c) => c.startsWith('text-'));
-  const live = isDropLive(drop);
-  const timeBadge =
-    drop.drop_type === 'promo'
-      ? formatCountdown(drop.end_time, now)
-      : formatTime(drop.start_time);
-
-  return (
-    <div
-      role="button"
-      tabIndex={0}
-      onClick={onOpen}
-      onKeyDown={(e) => e.key === 'Enter' && onOpen()}
-      className={`relative w-[240px] flex-shrink-0 snap-start bg-brand-surface rounded-2xl overflow-hidden shadow-sm border cursor-pointer active:scale-[0.97] transition-transform ${
-        matches.length > 0 ? 'border-brand-matcha/40 ring-1 ring-brand-matcha/20' : 'border-brand-mocha/5'
-      }`}
-    >
-      {/* Image header with badge overlays */}
-      <div className="relative h-24 bg-gradient-to-br from-[#2C1E16] to-[#8B6B5D]">
-        {drop.places?.image_url ? (
-          <img
-            src={drop.places.image_url}
-            alt=""
-            className="absolute inset-0 w-full h-full object-cover"
-          />
-        ) : (
-          <div className="absolute inset-0 flex items-center justify-center">
-            <Coffee size={28} weight="duotone" className="text-white/30" />
-          </div>
-        )}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
-
-        {/* Type badge overlay */}
-        <span className="absolute top-2 left-2 flex items-center gap-1 bg-brand-surface/95 backdrop-blur-sm rounded-full px-2 py-0.5 shadow">
-          {live && (
-            <span className="relative flex h-1.5 w-1.5">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-terracotta opacity-75" />
-              <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-brand-terracotta" />
-            </span>
-          )}
-          <TypeIcon size={10} weight="fill" className={iconColor} />
-          <span className="text-[9px] font-bold uppercase tracking-wider text-brand-espresso">
-            {typeConfig.label}
-          </span>
-        </span>
-
-        {/* Timer badge overlay */}
-        <span className="absolute top-2 right-2 bg-brand-terracotta text-white text-[10px] font-bold px-2 py-0.5 rounded-full tabular-nums shadow">
-          {timeBadge}
-        </span>
-
-        {matches.length > 0 && (
-          <span className="absolute bottom-2 left-2">
-            <ForYouBadge matches={matches} />
-          </span>
-        )}
-      </div>
-
-      {/* Card content */}
-      <div className="p-3">
-        <h4 className="text-sm font-bold text-brand-espresso truncate mb-1.5">
-          {drop.title}
-        </h4>
-        <div className="flex items-center justify-between gap-2">
-          <p className="flex items-center gap-1 text-[11px] text-brand-mocha min-w-0">
-            <MapPin size={11} weight="fill" className="flex-shrink-0" />
-            <span className="truncate">{drop.places?.name || 'Lieu à déterminer'}</span>
-          </p>
-
-          {isClaimed ? (
-            <span className="flex-shrink-0 bg-brand-matcha/10 text-brand-matcha text-[10px] font-bold px-2.5 py-1 rounded-full">
-              Inscrit ✅
-            </span>
-          ) : (
-            <span className="flex-shrink-0 bg-brand-matcha text-white text-[10px] font-bold px-2.5 py-1 rounded-full shadow-sm shadow-brand-matcha/30 pointer-events-none">
-              {drop.drop_type === 'promo'
-                ? 'Réclamer'
-                : drop.drop_type === 'event'
-                  ? 'Rejoindre'
-                  : 'Participer'}
-            </span>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
+const FEED_DROP_LIMIT = 3;
 
 export default function Home() {
   const router = useRouter();
@@ -173,12 +60,21 @@ export default function Home() {
   const { profile, loading: profileLoading, save: saveProfile } = useProfile(isAuthenticated, loading);
   const [showProfile, setShowProfile] = useState(false);
   const [showLogin, setShowLogin] = useState(false);
-  const [places, setPlaces] = useState<Place[]>([]);
-  const [placesLoading, setPlacesLoading] = useState(true);
+  const [places, setPlaces] = useState<Place[]>(() => {
+    const cached = peekCache<Place[]>('places:full');
+    return cached ? cached.slice(0, 6) : [];
+  });
+  const [placesLoading, setPlacesLoading] = useState(
+    () => !peekCache('places:full')
+  );
   const [vibes, setVibes] = useState<Record<string, CheckIn>>({});
   const [savedIds, setSavedIds] = useState<string[]>([]);
-  const [drops, setDrops] = useState<Drop[]>([]);
-  const [dropsLoading, setDropsLoading] = useState(true);
+  const [drops, setDrops] = useState<Drop[]>(
+    () => peekCache<Drop[]>('drops:active') ?? []
+  );
+  const [dropsLoading, setDropsLoading] = useState(
+    () => !peekCache('drops:active')
+  );
   const [now, setNow] = useState<number>(() => Date.now());
   const [category, setCategory] = useState<CategoryFilter>('all');
   const [searchQuery, setSearchQuery] = useState('');
@@ -433,12 +329,13 @@ export default function Home() {
       </div>
 
       {/* Quick category pills */}
-      <div className="flex gap-2 overflow-x-auto scrollbar-hide px-5 pt-4">
+      <div className="flex gap-2 overflow-x-auto scrollbar-hide scroll-pl-5 snap-x snap-mandatory pt-4">
+        <div className="w-5 shrink-0" aria-hidden />
         {quickCategories.map((cat) => (
           <button
             key={cat.id}
             onClick={() => setCategory(cat.id)}
-            className={`flex-shrink-0 px-4 py-2 rounded-full text-xs font-semibold whitespace-nowrap transition-all ${
+            className={`flex-shrink-0 snap-start px-4 py-2 rounded-full text-xs font-semibold whitespace-nowrap transition-all ${
               category === cat.id
                 ? 'bg-brand-ink text-white shadow-md shadow-brand-ink/20'
                 : 'bg-brand-surface text-brand-mocha border border-brand-mocha/10 hover:border-brand-espresso/25'
@@ -447,6 +344,7 @@ export default function Home() {
             {cat.label}
           </button>
         ))}
+        <div className="w-4 shrink-0" aria-hidden />
       </div>
 
       {/* À découvrir en ce moment */}
@@ -455,45 +353,42 @@ export default function Home() {
           <h3 className="text-lg font-bold text-brand-espresso tracking-tight">
             À découvrir en ce moment
           </h3>
-          {(dropTypeFilter || query) && (
-            <button
-              onClick={() => {
-                setCategory('all');
-                setSearchQuery('');
-              }}
-              className="flex items-center gap-0.5 text-xs font-semibold text-brand-matcha hover:text-brand-matcha/80 transition-colors"
-            >
-              Voir tout
-              <CaretRight size={13} weight="bold" />
-            </button>
-          )}
+          <button
+            onClick={() => router.push('/drops')}
+            className="flex items-center gap-0.5 text-xs font-semibold text-brand-matcha hover:text-brand-matcha/80 transition-colors"
+          >
+            Voir plus
+            <CaretRight size={13} weight="bold" />
+          </button>
         </div>
 
         {dropsLoading ? (
-          <div className="flex gap-4 overflow-hidden px-5">
-            {[1, 2].map((i) => (
+          <div className="flex gap-3 overflow-hidden">
+            <div className="w-5 shrink-0" aria-hidden />
+            {[1, 2, 3].map((i) => (
               <div
                 key={i}
                 className="w-[240px] h-[158px] flex-shrink-0 rounded-2xl bg-brand-espresso/[0.04] animate-pulse"
               />
             ))}
+            <div className="w-4 shrink-0" aria-hidden />
           </div>
         ) : drops.length === 0 ? (
-          /* Polished empty state when there is no active drop */
           <div className="mx-5 rounded-3xl bg-brand-surface border border-brand-mocha/10 p-6 flex items-center gap-4 shadow-sm">
             <div className="w-12 h-12 rounded-2xl bg-brand-terracotta/10 flex items-center justify-center flex-shrink-0">
               <Sparkle size={26} weight="duotone" className="text-brand-terracotta" />
             </div>
             <div>
-              <p className="font-semibold text-brand-espresso">Rien de prévu pour l'instant</p>
+              <p className="font-semibold text-brand-espresso">Rien de prévu pour l&apos;instant</p>
               <p className="text-sm text-brand-mocha">
                 Les prochains Drops apparaîtront ici. Reste connecté !
               </p>
             </div>
           </div>
         ) : filteredDrops.length > 0 ? (
-          <div className="flex gap-3 overflow-x-auto scrollbar-hide px-5 pb-2 snap-x snap-mandatory">
-            {filteredDrops.map((drop) => (
+          <div className="flex gap-3 overflow-x-auto scrollbar-hide scroll-pl-5 snap-x snap-mandatory pb-2">
+            <div className="w-5 shrink-0" aria-hidden />
+            {filteredDrops.slice(0, FEED_DROP_LIMIT).map((drop) => (
               <DropCard
                 key={drop.id}
                 drop={drop}
@@ -503,15 +398,23 @@ export default function Home() {
                 onOpen={() => setSelectedDrop(drop)}
               />
             ))}
+            <SeeMoreDropsCard />
+            <div className="w-4 shrink-0" aria-hidden />
           </div>
         ) : (
           <div className="mx-5 rounded-3xl bg-brand-surface border border-dashed border-brand-mocha/20 p-6 text-center">
             <p className="font-semibold text-brand-espresso mb-1">
               Aucun drop ne correspond
             </p>
-            <p className="text-sm text-brand-mocha">
+            <p className="text-sm text-brand-mocha mb-4">
               Essaie un autre filtre ou une autre recherche.
             </p>
+            <button
+              onClick={() => router.push('/drops')}
+              className="text-sm font-bold text-brand-matcha"
+            >
+              Voir tous les drops →
+            </button>
           </div>
         )}
       </div>

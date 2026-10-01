@@ -51,17 +51,96 @@ const dropTypeAliases: Record<string, DropTypeId> = {
   flash: 'promo',
   'flash promo': 'promo',
   promotion: 'promo',
+  discount: 'promo',
+  reduction: 'promo',
+  'réduction': 'promo',
+  offre: 'promo',
   deal: 'promo',
   offer: 'promo',
+  coupon: 'promo',
   sport: 'sport',
   run: 'sport',
+  running: 'sport',
   fitness: 'sport',
+  yoga: 'sport',
+  workout: 'sport',
+  training: 'sport',
+  footing: 'sport',
+  velo: 'sport',
+  'vélo': 'sport',
+  bike: 'sport',
   event: 'event',
   events: 'event',
   'événement': 'event',
   evenement: 'event',
+  meetup: 'event',
+  workshop: 'event',
+  atelier: 'event',
   party: 'event',
   concert: 'event',
+  expo: 'event',
+  soiree: 'event',
+  'soirée': 'event',
+  live: 'event',
+  dj: 'event',
+};
+
+/** Loose title/description keywords per drop category pill. */
+const dropTypeKeywords: Record<DropTypeId, string[]> = {
+  promo: [
+    'promo',
+    'flash',
+    'promotion',
+    'discount',
+    'offre',
+    'deal',
+    'réduction',
+    'reduction',
+    'gratuit',
+    'free',
+    'happy hour',
+    'coupon',
+  ],
+  sport: [
+    'sport',
+    'run',
+    'running',
+    'footing',
+    'fitness',
+    'yoga',
+    'workout',
+    'training',
+    'velo',
+    'vélo',
+    'bike',
+    'course',
+    'jog',
+    'crossfit',
+    'hiit',
+    'padel',
+    'tennis',
+  ],
+  event: [
+    'event',
+    'événement',
+    'evenement',
+    'meetup',
+    'workshop',
+    'atelier',
+    'concert',
+    'expo',
+    'soirée',
+    'soiree',
+    'party',
+    'live',
+    'dj',
+    'set',
+    'opening',
+    'vernissage',
+    'talk',
+    'conférence',
+    'conference',
+  ],
 };
 
 export function normalizeKey(value: unknown): string {
@@ -162,12 +241,70 @@ export function placeMatchesFilter(
   return asCategory ? categories.includes(asCategory) : true;
 }
 
+/**
+ * Infer a drop type from free text / place when the DB type is missing or unknown.
+ * Prefer promo > sport > event so a "Flash Run" still reads as promo if both match.
+ */
+export function inferDropTypeFromContent(
+  drop: Pick<Drop, 'title' | 'description' | 'raw_drop_type' | 'places'>
+): DropTypeId | null {
+  const text = normalizeKey(
+    [drop.title, drop.description, drop.raw_drop_type].filter(Boolean).join(' ')
+  );
+  const placeText = normalizeKey(
+    [drop.places?.name, drop.places?.category, drop.places?.city]
+      .filter(Boolean)
+      .join(' ')
+  );
+  const haystack = `${text} ${placeText}`;
+  const placeCat = normalizePlaceCategory(drop.places?.category);
+
+  for (const id of ['promo', 'sport', 'event'] as DropTypeId[]) {
+    if (dropTypeKeywords[id].some((k) => haystack.includes(normalizeKey(k)))) {
+      return id;
+    }
+    if (id === 'sport' && placeCat === 'sport') return 'sport';
+    if (id === 'event' && placeCat === 'event') return 'event';
+  }
+  return null;
+}
+
+/**
+ * Category / type matching for drops.
+ * Matches canonical drop_type, raw DB type, title/description keywords,
+ * and associated place category/name — never applies date constraints.
+ */
 export function dropMatchesFilter(
-  drop: Pick<Drop, 'drop_type'>,
+  drop: Pick<Drop, 'drop_type' | 'title' | 'description' | 'raw_drop_type' | 'places'>,
   filter: string | null | undefined
 ): boolean {
   if (!filter || filter === 'all') return true;
   const wanted = normalizeDropType(filter);
   if (!wanted) return true;
-  return normalizeDropType(drop.drop_type) === wanted;
+
+  // 1) Canonical / raw type fields
+  if (normalizeDropType(drop.drop_type) === wanted) return true;
+  if (normalizeDropType(drop.raw_drop_type) === wanted) return true;
+
+  // 2) Loose text match on title + description
+  const text = normalizeKey(
+    [drop.title, drop.description, drop.raw_drop_type].filter(Boolean).join(' ')
+  );
+  const keywords = dropTypeKeywords[wanted];
+  if (keywords.some((k) => text.includes(normalizeKey(k)))) return true;
+
+  // 3) Associated place hints (sport venue, event hall, etc.)
+  const place = drop.places;
+  if (place) {
+    const placeCat = normalizePlaceCategory(place.category);
+    if (wanted === 'sport' && placeCat === 'sport') return true;
+    if (wanted === 'event' && placeCat === 'event') return true;
+    // Promo at specialty/coffee spots is common but not place-category driven.
+    const placeText = normalizeKey(
+      [place.name, place.category, place.city].filter(Boolean).join(' ')
+    );
+    if (keywords.some((k) => placeText.includes(normalizeKey(k)))) return true;
+  }
+
+  return false;
 }

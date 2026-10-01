@@ -6,7 +6,8 @@ const nextConfig: NextConfig = {
   webpack: (config) => {
     config.resolve.alias = {
       ...config.resolve.alias,
-      'mapbox-gl': 'mapbox-gl/dist/mapbox-gl.js',
+      // `$` = exact match, so subpaths like mapbox-gl/dist/mapbox-gl.css still resolve.
+      'mapbox-gl$': 'mapbox-gl/dist/mapbox-gl.js',
     };
     return config;
   },

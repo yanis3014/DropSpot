@@ -97,7 +97,7 @@ export default function AndroidInstallPrompt() {
     <div
       className="fixed inset-x-0 z-[90] flex justify-center pointer-events-none px-3"
       style={{
-        bottom: 'calc(4.75rem + env(safe-area-inset-bottom, 0px))',
+        bottom: 'calc(5.5rem + env(safe-area-inset-bottom, 0px))',
       }}
       role="dialog"
       aria-label="Installer DropSpot"

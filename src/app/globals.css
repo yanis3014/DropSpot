@@ -12,6 +12,12 @@
   --ds-ink: #2c1e16;
   --ds-matcha: #4a7c59;
   --ds-terracotta: #e07a5f;
+  /* Tokens de la maquette d'accueil (design/dropspot_accueil.html) */
+  --ds-light: #fcfaf8;
+  --ds-dark: #302621;
+  --ds-green: #4f7c62;
+  --ds-greenlight: #e8f0ec;
+  --ds-purple: #7b1fa2;
   --background: var(--ds-oat);
   --foreground: var(--ds-espresso);
 }
@@ -26,6 +32,12 @@
   --ds-ink: #16110e;
   --ds-matcha: #6fa37d;
   --ds-terracotta: #e8927a;
+  /* Variantes sombres des tokens maquette */
+  --ds-light: #1a1410;
+  --ds-dark: #f5f0eb;
+  --ds-green: #6fa37d;
+  --ds-greenlight: #26352c;
+  --ds-purple: #b45fd6;
   --background: var(--ds-oat);
   --foreground: var(--ds-espresso);
   color-scheme: dark;
@@ -42,6 +54,14 @@
   --color-brand-ink: var(--ds-ink);
   --color-brand-matcha: var(--ds-matcha);
   --color-brand-terracotta: var(--ds-terracotta);
+  --color-brand-light: var(--ds-light);
+  --color-brand-dark: var(--ds-dark);
+  --color-brand-green: var(--ds-green);
+  --color-brand-greenlight: var(--ds-greenlight);
+  --color-brand-purple: var(--ds-purple);
+  --shadow-soft: 0 4px 20px -2px rgba(0, 0, 0, 0.05);
+  --shadow-card:
+    0 10px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.01);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
@@ -56,6 +76,13 @@ body {
   color: var(--foreground);
   font-family: var(--font-sans), Arial, Helvetica, sans-serif;
   transition: background-color 0.2s ease, color 0.2s ease;
+  /* Empêche le rebond iOS pour une sensation plus "app native" */
+  overscroll-behavior-y: none;
+}
+
+/* Safe area pour les encoches sur mobile récent (ex: iPhone) */
+@utility safe-pb {
+  padding-bottom: calc(0.75rem + env(safe-area-inset-bottom, 0px));
 }
 
 @keyframes step-in {

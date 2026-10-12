@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DropSpot - Accueil</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Phosphor Icons pour un look moderne et clean -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <!-- Google Fonts: Inter pour la lisibilité, et peut-être une police un peu plus ronde pour les titres -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            light: '#fcfaf8', // Le fond crème très clair
+                            dark: '#302621',  // Le texte marron foncé
+                            green: '#4f7c62', // Le vert des liens/icônes actifs
+                            greenlight: '#e8f0ec',
+                            purple: '#7b1fa2', // Couleur du badge profil (Y)
+                        }
+                    },
+                    boxShadow: {
+                        'soft': '0 4px 20px -2px rgba(0, 0, 0, 0.05)',
+                        'card': '0 10px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.01)',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Masquer la scrollbar pour les carrousels horizontaux tout en gardant le scroll */
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scrollbar {
+            -ms-overflow-style: none;  /* IE and Edge */
+            scrollbar-width: none;  /* Firefox */
+        }
+        
+        body {
+            background-color: #fcfaf8;
+            color: #302621;
+            /* Empêcher le rebond sur iOS pour une sensation plus "app native" */
+            overscroll-behavior-y: none; 
+        }
+
+        /* Safe area pour les encoches sur mobile récent (ex: iPhone) */
+        .safe-pb {
+            padding-bottom: env(safe-area-inset-bottom, 20px);
+        }
+    </style>
+</head>
+<body class="antialiased min-h-screen flex justify-center">
+
+    <!-- Container principal (limite la largeur sur desktop pour simuler un mobile) -->
+    <main class="w-full max-w-md bg-brand-light relative pb-24 shadow-2xl h-screen overflow-y-auto hide-scrollbar">
+        
+        <!-- HEADER -->
+        <header class="px-5 pt-8 pb-4 flex justify-between items-center sticky top-0 bg-brand-light/95 backdrop-blur-md z-40">
+            <h1 class="text-2xl font-bold tracking-tight">DropSpot</h1>
+            
+            <!-- Badge Profil -->
+            <button class="flex items-center gap-2 bg-white rounded-full pl-1 pr-3 py-1 shadow-sm border border-gray-100 transition active:scale-95">
+                <div class="w-8 h-8 rounded-full bg-brand-purple flex items-center justify-center text-white font-semibold text-sm">
+                    Y
+                </div>
+                <span class="text-sm font-semibold pr-1">Yanis <span class="text-lg leading-none">🥐</span></span>
+            </button>
+        </header>
+
+        <!-- RECHERCHE -->
+        <div class="px-5 mb-8 flex gap-3">
+            <div class="relative flex-1">
+                <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400">
+                    <i class="ph ph-magnifying-glass text-xl"></i>
+                </div>
+                <input type="text" 
+                       placeholder="Rechercher un spot, un drop..." 
+                       class="w-full bg-white border border-gray-200 rounded-2xl py-3 pl-11 pr-4 text-sm font-medium placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-green/20 focus:border-brand-green transition-all shadow-sm">
+            </div>
+            <button class="bg-white border border-gray-200 rounded-2xl w-12 h-12 flex items-center justify-center text-gray-700 shadow-sm transition active:bg-gray-50 active:scale-95">
+                <i class="ph ph-faders text-xl"></i>
+            </button>
+        </div>
+
+        <!-- A DECOUVRIR EN CE MOMENT (DROPS) -->
+        <section class="px-5 mb-10">
+            <h2 class="text-xl font-bold mb-4">À découvrir en ce moment</h2>
+            
+            <!-- État vide (comme sur ta maquette) -->
+            <div class="border border-dashed border-gray-300 rounded-2xl p-8 flex flex-col items-center justify-center text-center bg-white/50">
+                <div class="w-12 h-12 bg-gray-50 rounded-full flex items-center justify-center mb-3 text-gray-400">
+                    <i class="ph ph-parachute text-2xl"></i>
+                </div>
+                <h3 class="font-semibold text-brand-dark mb-1">Aucun drop pour l'instant</h3>
+                <p class="text-sm text-gray-500">Élargis ta recherche ou désactive un filtre.</p>
+            </div>
+            
+            <!-- Bouton pour voir plus de drops (optionnel) -->
+            <div class="mt-4">
+                <a href="#" class="inline-flex items-center gap-1 text-brand-green text-sm font-medium hover:underline">
+                    Voir tous les drops <i class="ph ph-caret-right text-xs"></i>
+                </a>
+            </div>
+        </section>
+
+        <!-- SPOTS TENDANCES -->
+        <section class="mb-6">
+            <div class="px-5 mb-4 flex justify-between items-end">
+                <h2 class="text-xl font-bold">Spots tendances</h2>
+            </div>
+
+            <!-- Carrousel horizontal -->
+            <div class="flex overflow-x-auto hide-scrollbar px-5 pb-6 gap-4 snap-x snap-mandatory">
+                
+                <!-- Carte Spot 1 -->
+                <div class="snap-start shrink-0 w-[260px] bg-white rounded-3xl overflow-hidden shadow-card relative cursor-pointer transform transition hover:-translate-y-1">
+                    <!-- Image Container -->
+                    <div class="h-[140px] w-full relative bg-gray-200">
+                        <img src="https://images.unsplash.com/photo-1554118811-1e0d58224f24?q=80&w=600&auto=format&fit=crop" alt="Bloom Specialty Coffee" class="w-full h-full object-cover">
+                        <!-- Overlay gradient pour rendre le texte/badges lisibles -->
+                        <div class="absolute inset-0 bg-gradient-to-b from-black/30 to-transparent"></div>
+                        
+                        <!-- Badges en haut de l'image -->
+                        <div class="absolute top-3 left-3 flex gap-2">
+                            <span class="bg-white/90 backdrop-blur-sm text-xs font-bold px-2.5 py-1 rounded-full flex items-center gap-1 shadow-sm text-gray-800">
+                                <i class="ph-fill ph-map-pin text-brand-green"></i> SPOT
+                            </span>
+                        </div>
+                        
+                        <!-- Indicateurs (Pastille de statut + Favori) -->
+                        <div class="absolute top-3 right-3 flex items-center gap-2">
+                            <!-- Indicateur d'affluence ou statut d'ouverture (vert = ok) -->
+                            <div class="w-3 h-3 bg-green-400 rounded-full border-2 border-white shadow-sm"></div>
+                            <!-- Bouton J'aime -->
+                            <button class="w-8 h-8 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center text-red-400 shadow-sm hover:scale-110 transition">
+                                <i class="ph-fill ph-heart text-lg"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Contenu texte -->
+                    <div class="p-4">
+                        <h3 class="font-bold text-[17px] mb-1 truncate">Bloom Specialty Coffee</h3>
+                        <div class="flex items-center text-gray-500 text-xs font-medium">
+                            <i class="ph ph-map-pin mr-1 text-gray-400"></i>
+                            <p class="truncate">4 Boulevard Victor Hugo, 06000...</p>
+                        </div>
+                        <!-- Petit bonus UI : tags ou distance -->
+                        <div class="mt-3 flex gap-2">
+                            <span class="text-[11px] font-semibold text-brand-green bg-brand-greenlight px-2 py-0.5 rounded flex items-center gap-1">
+                                <i class="ph ph-coffee"></i> Café
+                            </span>
+                            <span class="text-[11px] font-medium text-gray-500 bg-gray-100 px-2 py-0.5 rounded">
+                                À 2km
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Carte Spot 2 -->
+                <div class="snap-start shrink-0 w-[260px] bg-white rounded-3xl overflow-hidden shadow-card relative cursor-pointer transform transition hover:-translate-y-1">
+                    <div class="h-[140px] w-full relative bg-gray-200">
+                        <img src="https://images.unsplash.com/photo-1527192491265-7e15c55b1ed2?q=80&w=600&auto=format&fit=crop" alt="Oasis Coworking" class="w-full h-full object-cover">
+                        <div class="absolute inset-0 bg-gradient-to-b from-black/30 to-transparent"></div>
+                        
+                        <div class="absolute top-3 left-3 flex gap-2">
+                            <span class="bg-white/90 backdrop-blur-sm text-xs font-bold px-2.5 py-1 rounded-full flex items-center gap-1 shadow-sm text-gray-800">
+                                <i class="ph-fill ph-map-pin text-brand-green"></i> SPOT
+                            </span>
+                        </div>
+                        
+                        <div class="absolute top-3 right-3 flex items-center gap-2">
+                            <div class="w-3 h-3 bg-yellow-400 rounded-full border-2 border-white shadow-sm"></div> <!-- Affluence moyenne -->
+                            <button class="w-8 h-8 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center text-gray-400 shadow-sm hover:scale-110 hover:text-red-400 transition">
+                                <i class="ph ph-heart text-lg"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="p-4">
+                        <h3 class="font-bold text-[17px] mb-1 truncate">Oasis Coworking</h3>
+                        <div class="flex items-center text-gray-500 text-xs font-medium">
+                            <i class="ph ph-map-pin mr-1 text-gray-400"></i>
+                            <p class="truncate">Route des Colles, Sophia...</p>
+                        </div>
+                        <div class="mt-3 flex gap-2">
+                            <span class="text-[11px] font-semibold text-brand-green bg-brand-greenlight px-2 py-0.5 rounded flex items-center gap-1">
+                                <i class="ph ph-laptop"></i> Travail
+                            </span>
+                            <span class="text-[11px] font-medium text-gray-500 bg-gray-100 px-2 py-0.5 rounded">
+                                À 5km
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                 <!-- Carte Spot 3 (Pour montrer le défilement) -->
+                 <div class="snap-start shrink-0 w-[260px] bg-white rounded-3xl overflow-hidden shadow-card relative cursor-pointer transform transition hover:-translate-y-1">
+                    <div class="h-[140px] w-full relative bg-gray-200">
+                        <img src="https://images.unsplash.com/photo-1541167760496-1628856ab772?q=80&w=600&auto=format&fit=crop" alt="Boulangerie Artisanale" class="w-full h-full object-cover">
+                        <div class="absolute inset-0 bg-gradient-to-b from-black/30 to-transparent"></div>
+                        
+                        <div class="absolute top-3 left-3 flex gap-2">
+                            <span class="bg-white/90 backdrop-blur-sm text-xs font-bold px-2.5 py-1 rounded-full flex items-center gap-1 shadow-sm text-gray-800">
+                                <i class="ph-fill ph-map-pin text-brand-green"></i> SPOT
+                            </span>
+                        </div>
+                        
+                        <div class="absolute top-3 right-3 flex items-center gap-2">
+                            <div class="w-3 h-3 bg-gray-400 rounded-full border-2 border-white shadow-sm"></div> <!-- Fermé -->
+                            <button class="w-8 h-8 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center text-gray-400 shadow-sm hover:scale-110 hover:text-red-400 transition">
+                                <i class="ph ph-heart text-lg"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="p-4">
+                        <h3 class="font-bold text-[17px] mb-1 truncate">Le Fournil de Biot</h3>
+                        <div class="flex items-center text-gray-500 text-xs font-medium">
+                            <i class="ph ph-map-pin mr-1 text-gray-400"></i>
+                            <p class="truncate">Village de Biot</p>
+                        </div>
+                        <div class="mt-3 flex gap-2">
+                            <span class="text-[11px] font-semibold text-brand-green bg-brand-greenlight px-2 py-0.5 rounded flex items-center gap-1">
+                                <i class="ph ph-croissant"></i> Gourmand
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+            
+            <div class="px-5 mt-[-10px]">
+                <a href="#" class="inline-flex items-center gap-1 text-brand-green text-sm font-medium hover:underline">
+                    Voir tous les spots <i class="ph ph-caret-right text-xs"></i>
+                </a>
+            </div>
+        </section>
+
+        <!-- BOTTOM NAVIGATION -->
+        <!-- On utilise fixed, et on la restreint à la largeur du conteneur parent (max-w-md) pour la vue desktop -->
+        <nav class="fixed bottom-0 w-full max-w-md bg-white border-t border-gray-200 px-6 py-3 safe-pb z-50 flex justify-between items-center shadow-[0_-10px_20px_rgba(0,0,0,0.03)] rounded-t-3xl">
+            
+            <!-- Accueil (Actif) -->
+            <button class="flex flex-col items-center gap-1 p-2 text-brand-green transition active:scale-95">
+                <div class="relative">
+                    <i class="ph-fill ph-house text-2xl"></i>
+                    <!-- Petit point indicateur sous l'icône active (optionnel, design natif) -->
+                    <div class="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-1 h-1 bg-brand-green rounded-full"></div>
+                </div>
+                <span class="text-[10px] font-semibold">Accueil</span>
+            </button>
+
+            <!-- Carte -->
+            <button class="flex flex-col items-center gap-1 p-2 text-gray-400 hover:text-gray-700 transition active:scale-95">
+                <i class="ph ph-map-trifold text-2xl"></i>
+                <span class="text-[10px] font-medium">Carte</span>
+            </button>
+
+            <!-- Créer (Bouton central d'action) -->
+            <!-- Option 1: Bouton flottant -->
+            <!-- Option 2 (Choisie ici): Intégré mais mis en valeur -->
+            <button class="flex flex-col items-center justify-center -mt-6">
+                <div class="bg-brand-dark text-white w-14 h-14 rounded-full flex items-center justify-center shadow-lg shadow-brand-dark/20 transform transition hover:scale-105 active:scale-95 border-4 border-[#fcfaf8]">
+                    <i class="ph ph-plus text-2xl font-bold"></i>
+                </div>
+            </button>
+
+            <!-- Activité / Notifs -->
+            <button class="flex flex-col items-center gap-1 p-2 text-gray-400 hover:text-gray-700 transition active:scale-95 relative">
+                <i class="ph ph-bell text-2xl"></i>
+                <!-- Badge de notification -->
+                <div class="absolute top-2 right-2 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white"></div>
+                <span class="text-[10px] font-medium">Activité</span>
+            </button>
+
+            <!-- Favoris / Profil (D'après ton image c'était un coeur) -->
+            <button class="flex flex-col items-center gap-1 p-2 text-gray-400 hover:text-gray-700 transition active:scale-95">
+                <i class="ph ph-heart text-2xl"></i>
+                <span class="text-[10px] font-medium">Favoris</span>
+            </button>
+
+        </nav>
+
+    </main>
+
+    <script>
+        // Petit script pour gérer l'état "J'aime" sur les cartes
+        document.addEventListener('DOMContentLoaded', () => {
+            const heartButtons = document.querySelectorAll('button:has(.ph-heart)');
+            
+            heartButtons.forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.preventDefault(); // Si jamais c'est dans un lien
+                    const icon = btn.querySelector('i');
+                    
+                    if (icon.classList.contains('ph-fill')) {
+                        // Unlike
+                        icon.classList.remove('ph-fill', 'text-red-400');
+                        icon.classList.add('ph', 'text-gray-400');
+                        btn.classList.remove('text-red-400');
+                        btn.classList.add('text-gray-400');
+                    } else {
+                        // Like
+                        icon.classList.remove('ph', 'text-gray-400');
+                        icon.classList.add('ph-fill', 'text-red-400');
+                        btn.classList.remove('text-gray-400');
+                        btn.classList.add('text-red-400');
+                        
+                        // Petite animation de "pop"
+                        btn.style.transform = 'scale(1.2)';
+                        setTimeout(() => {
+                            btn.style.transform = 'scale(1)';
+                        }, 150);
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>

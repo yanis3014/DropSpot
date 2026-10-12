@@ -3,6 +3,18 @@ import withPWA from "@ducanh2912/next-pwa";
 
 const nextConfig: NextConfig = {
   transpilePackages: ['react-map-gl', 'mapbox-gl'],
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'lh3.googleusercontent.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'images.unsplash.com',
+      },
+    ],
+  },
   webpack: (config) => {
     config.resolve.alias = {
       ...config.resolve.alias,

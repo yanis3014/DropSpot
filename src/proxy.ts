@@ -1,6 +1,10 @@
 import { type NextRequest } from 'next/server';
 import { updateSession } from '@/lib/supabase/proxy';
 
+/**
+ * Next.js 16 network boundary (ex-`middleware.ts`).
+ * Refresh session Supabase + garde les routes privées.
+ */
 export async function proxy(request: NextRequest) {
   return await updateSession(request);
 }

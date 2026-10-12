@@ -5,6 +5,8 @@ import {
   Coffee,
   MagnifyingGlass,
   Crosshair,
+  Plus,
+  Storefront,
   X,
 } from '@phosphor-icons/react';
 import Link from 'next/link';
@@ -70,13 +72,12 @@ function actionLabel(kind: ActionKind): string {
 function actionClasses(kind: ActionKind): string {
   switch (kind) {
     case 'update':
-      return 'bg-brand-matcha text-white';
     case 'checkin':
-      return 'bg-brand-matcha/10 text-brand-matcha';
+      return 'bg-brand-green text-white font-bold text-sm px-4 py-2.5 rounded-xl shadow-md hover:bg-brand-green/90 active:scale-95 transition-all';
     case 'too_far':
     case 'busy':
     case 'no_gps':
-      return 'bg-brand-muted text-brand-mocha';
+      return 'bg-gray-100 text-gray-400 cursor-not-allowed font-bold text-sm px-4 py-2.5 rounded-xl';
   }
 }
 
@@ -100,7 +101,6 @@ export default function CheckInPage() {
   const [toast, setToast] = useState<string | null>(null);
   const [session, setSession] = useState<CheckInSession | null>(null);
   const [now, setNow] = useState(() => Date.now());
-  const [visibleOtherSpots, setVisibleOtherSpots] = useState(10);
 
   useEffect(() => {
     setGrains(getGrainsBalance());
@@ -181,11 +181,6 @@ export default function CheckInPage() {
       ),
     [rankedPlaces]
   );
-
-  const otherPlaces = useMemo(() => {
-    const nearbyIds = new Set(nearbyPlaces.map((p) => p.id));
-    return rankedPlaces.filter((p) => !nearbyIds.has(p.id));
-  }, [rankedPlaces, nearbyPlaces]);
 
   const searching = searchQuery.trim().length > 0;
 
@@ -311,12 +306,6 @@ export default function CheckInPage() {
           </button>
         </div>
 
-        {gpsLoading && (
-          <p className="mt-2 text-[11px] font-medium text-brand-mocha flex items-center gap-1.5">
-            <span className="inline-block w-1.5 h-1.5 rounded-full bg-brand-matcha animate-pulse" />
-            Localisation en cours…
-          </p>
-        )}
         {!gpsLoading && gpsDenied && (
           <p className="mt-2 text-[11px] text-brand-mocha">
             GPS refusé — active-le pour check-in à proximité.
@@ -324,21 +313,17 @@ export default function CheckInPage() {
         )}
 
         <div className="mt-4 space-y-5">
-          {placesLoading ? (
-            <div className="space-y-2.5">
-              {[1, 2, 3, 4].map((i) => (
-                <div
-                  key={i}
-                  className="h-[76px] rounded-2xl bg-brand-espresso/[0.04] animate-pulse"
-                />
-              ))}
-            </div>
+          {/* Skeletons pendant chargement spots ou init GPS */}
+          {!searching && (placesLoading || gpsLoading) ? (
+            <NearbySpotsSkeleton />
           ) : searching ? (
             <section>
               <h2 className="text-sm font-extrabold text-brand-espresso mb-2.5">
                 Résultats
               </h2>
-              {searchResults.length === 0 ? (
+              {placesLoading ? (
+                <NearbySpotsSkeleton hideTitle />
+              ) : searchResults.length === 0 ? (
                 <EmptyState />
               ) : (
                 <div className="space-y-2.5">
@@ -383,45 +368,18 @@ export default function CheckInPage() {
                 </section>
               )}
 
-              {!gpsLoading &&
-                userCoords &&
-                nearbyPlaces.length === 0 && (
-                  <p className="text-sm text-brand-mocha text-center py-2">
-                    Aucun café à moins de 100 m — cherche un spot ou rapproche-toi.
-                  </p>
-                )}
-
-              {otherPlaces.length > 0 && (
-                <section>
-                  <h2 className="text-sm font-extrabold text-brand-espresso mb-2.5">
-                    Autres spots
-                  </h2>
-                  <div className="space-y-2.5">
-                    {otherPlaces.slice(0, visibleOtherSpots).map((place) => (
-                      <PlaceRow
-                        key={place.id}
-                        place={place}
-                        vibe={vibes[place.id]}
-                        action={resolveAction(place, session)}
-                        onPress={() => handlePlacePress(place)}
-                      />
-                    ))}
-                  </div>
-                  {otherPlaces.length > visibleOtherSpots && (
-                    <button
-                      type="button"
-                      onClick={() => setVisibleOtherSpots((prev) => prev + 10)}
-                      className="w-full py-3 mt-2 text-sm font-medium text-brand-mocha bg-brand-muted rounded-xl active:scale-95 transition-all hover:text-brand-espresso"
-                    >
-                      Voir plus
-                    </button>
-                  )}
-                </section>
+              {userCoords && nearbyPlaces.length === 0 && (
+                <p className="text-sm text-brand-mocha text-center py-2">
+                  Aucun café à moins de 100 m — rapproche-toi ou ajoute un spot.
+                </p>
               )}
 
-              {!placesLoading &&
-                nearbyPlaces.length === 0 &&
-                otherPlaces.length === 0 && <EmptyState />}
+              <MissingSpotCard
+                onPress={() => {
+                  setToast('Ajout de spot bientôt disponible — merci !');
+                  window.setTimeout(() => setToast(null), 2800);
+                }}
+              />
             </>
           )}
         </div>
@@ -480,22 +438,21 @@ function PlaceRow({
       type="button"
       onClick={onPress}
       disabled={disabled}
-      className={`w-full text-left rounded-2xl p-3 flex items-center gap-3 shadow-sm transition-all ${
+      className={`w-full text-left flex items-center gap-3 rounded-2xl p-2.5 transition-all ${
         highlight
-          ? 'border-2 border-brand-matcha/35 bg-brand-matcha/5 shadow-brand-matcha/10'
-          : 'border border-brand-mocha/8 bg-brand-surface'
-      } ${
-        disabled
-          ? 'opacity-70 cursor-not-allowed'
-          : 'hover:shadow-md active:scale-[0.99]'
-      }`}
+          ? 'bg-brand-green/5 border border-brand-green/20 hover:border-brand-green/40'
+          : 'bg-white border border-gray-100 opacity-80'
+      } ${disabled ? 'cursor-not-allowed' : 'active:scale-[0.99]'}`}
     >
       <div className="w-14 h-14 rounded-xl overflow-hidden flex-shrink-0 bg-brand-oat">
         {place.image_url ? (
+          // eslint-disable-next-line @next/next/no-img-element
           <img
             src={place.image_url}
             alt=""
-            className="w-full h-full object-cover"
+            className={`w-full h-full object-cover ${
+              highlight ? '' : 'grayscale-[30%]'
+            }`}
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center">
@@ -517,9 +474,77 @@ function PlaceRow({
         )}
       </div>
       <span
-        className={`flex-shrink-0 text-[11px] font-bold px-2.5 py-2 rounded-full max-w-[7.5rem] text-center leading-tight ${actionClasses(action)}`}
+        className={`flex-shrink-0 text-[11px] max-w-[7.5rem] text-center leading-tight ${actionClasses(action)}`}
       >
         {actionLabel(action)}
+      </span>
+    </button>
+  );
+}
+
+/** Carte fantôme — même structure qu'une PlaceRow (image + textes + bouton). */
+function PlaceRowSkeleton() {
+  return (
+    <div
+      className="w-full flex items-center gap-3 rounded-2xl p-2.5 border border-brand-green/10 bg-brand-green/[0.03] animate-pulse"
+      aria-hidden
+    >
+      <div className="w-14 h-14 rounded-xl bg-gray-100 flex-shrink-0" />
+      <div className="flex-1 min-w-0 space-y-2">
+        <div className="h-3.5 w-36 max-w-full rounded-full bg-gray-100" />
+        <div className="h-2.5 w-28 max-w-[80%] rounded-full bg-gray-100" />
+        <div className="h-2 w-14 rounded-full bg-gray-100" />
+      </div>
+      <div className="h-9 w-[5.5rem] rounded-xl bg-gray-100 flex-shrink-0" />
+    </div>
+  );
+}
+
+function NearbySpotsSkeleton({ hideTitle = false }: { hideTitle?: boolean }) {
+  return (
+    <section aria-busy="true" aria-label="Chargement des spots à proximité">
+      {!hideTitle && (
+        <div className="mb-2.5 flex items-center gap-2">
+          <div className="h-4 w-28 rounded-full bg-gray-100 animate-pulse" />
+          <div className="h-3 w-8 rounded-full bg-gray-100 animate-pulse" />
+        </div>
+      )}
+      <div className="space-y-2.5">
+        {[1, 2, 3].map((i) => (
+          <PlaceRowSkeleton key={i} />
+        ))}
+      </div>
+      <p className="mt-3 text-center text-[11px] font-medium text-brand-mocha flex items-center justify-center gap-1.5">
+        <span className="inline-block w-1.5 h-1.5 rounded-full bg-brand-green animate-pulse" />
+        Recherche des spots autour de toi…
+      </p>
+    </section>
+  );
+}
+
+function MissingSpotCard({ onPress }: { onPress: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onPress}
+      className="w-full border-2 border-dashed border-gray-300 bg-gray-50/50 rounded-2xl p-4 flex items-center justify-between transition-all hover:bg-gray-50 hover:border-brand-green/50 cursor-pointer active:scale-[0.98]"
+    >
+      <div className="flex items-center gap-3 min-w-0">
+        <div className="w-10 h-10 rounded-full bg-white border border-gray-200 flex items-center justify-center text-gray-400 shadow-sm flex-shrink-0">
+          <Storefront size={20} weight="duotone" />
+        </div>
+        <div className="text-left min-w-0">
+          <p className="font-bold text-brand-dark text-sm">Spot manquant ?</p>
+          <p className="text-xs text-gray-500 mt-0.5">
+            Ajoute-le et gagne des Grains
+          </p>
+        </div>
+      </div>
+      <span
+        className="w-8 h-8 rounded-full bg-brand-dark text-white flex items-center justify-center shadow-md flex-shrink-0"
+        aria-hidden
+      >
+        <Plus size={16} weight="bold" />
       </span>
     </button>
   );
@@ -548,14 +573,12 @@ function Header({ grains }: { grains: number }) {
       </div>
       <Link
         href="/gamification"
-        className="flex-shrink-0 inline-flex items-center gap-1.5 rounded-full bg-brand-surface border border-brand-mocha/10 px-3 py-1.5 shadow-sm hover:border-brand-matcha/30 hover:shadow-md active:scale-95 transition-all"
+        className="flex-shrink-0 inline-flex items-center gap-1.5 bg-amber-100 border border-amber-200 text-amber-700 font-bold px-3 py-1.5 rounded-full active:scale-95 transition-all"
       >
         <span className="text-sm" aria-hidden>
           🌾
         </span>
-        <span className="text-sm font-extrabold text-brand-espresso tabular-nums">
-          {grains}
-        </span>
+        <span className="text-sm tabular-nums">{grains}</span>
       </Link>
     </div>
   );

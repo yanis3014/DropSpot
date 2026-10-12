@@ -1,24 +1,53 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { Suspense, useEffect, useMemo, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { GoogleLogo, AppleLogo, Envelope } from '@phosphor-icons/react';
 import { supabase } from '@/lib/supabase/client';
 import { useAuth } from '@/lib/hooks/useAuth';
 import ThemeSwitcher from '@/components/profile/ThemeSwitcher';
 
+/** Only allow same-origin relative paths (open-redirect safe). */
+function safeRedirectPath(raw: string | null): string {
+  if (!raw || !raw.startsWith('/') || raw.startsWith('//')) return '/';
+  return raw;
+}
+
 export default function LoginPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-brand-oat flex items-center justify-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-matcha" />
+        </div>
+      }
+    >
+      <LoginPageContent />
+    </Suspense>
+  );
+}
+
+function LoginPageContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { isAuthenticated, loading: authLoading } = useAuth();
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
 
-  // Already logged in? No need to show the login screen.
+  const postLoginPath = useMemo(
+    () => safeRedirectPath(searchParams.get('redirect')),
+    [searchParams]
+  );
+
+  const buildAuthCallbackUrl = () =>
+    `${window.location.origin}/auth/callback?next=${encodeURIComponent(postLoginPath)}`;
+
+  // Already logged in? Resume the protected destination when present.
   useEffect(() => {
     if (!authLoading && isAuthenticated) {
-      router.replace('/');
+      router.replace(postLoginPath);
     }
-  }, [authLoading, isAuthenticated, router]);
+  }, [authLoading, isAuthenticated, postLoginPath, router]);
 
   const handleGoogleLogin = async () => {
     if (!supabase) {
@@ -30,7 +59,7 @@ export default function LoginPage() {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
+          redirectTo: buildAuthCallbackUrl(),
         },
       });
       if (error) throw error;
@@ -51,7 +80,7 @@ export default function LoginPage() {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'apple',
         options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
+          redirectTo: buildAuthCallbackUrl(),
         },
       });
       if (error) throw error;
@@ -75,7 +104,7 @@ export default function LoginPage() {
       const { error } = await supabase.auth.signInWithOtp({
         email,
         options: {
-          emailRedirectTo: `${window.location.origin}/auth/callback`,
+          emailRedirectTo: buildAuthCallbackUrl(),
         },
       });
       if (error) throw error;

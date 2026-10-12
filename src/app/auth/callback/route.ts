@@ -6,7 +6,10 @@ type CookieToSet = { name: string; value: string; options?: Record<string, unkno
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get('code');
-  const next = searchParams.get('next') ?? '/';
+  const rawNext = searchParams.get('next') ?? '/';
+  // Prevent open redirects: only allow relative same-origin paths.
+  const next =
+    rawNext.startsWith('/') && !rawNext.startsWith('//') ? rawNext : '/';
 
   if (!code) {
     return NextResponse.redirect(`${origin}/login?error=missing_code`);

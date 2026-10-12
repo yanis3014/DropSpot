@@ -2,10 +2,28 @@ import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 
 /**
+ * Routes accessibles uniquement avec une session Supabase valide.
+ * Les pages publiques (accueil `/`, `/map`, `/drops`, `/login`) restent ouvertes.
+ */
+const PROTECTED_PREFIXES = [
+  '/check-in',
+  '/gamification',
+  '/saved',
+  '/onboarding',
+] as const;
+
+function isProtectedPath(pathname: string): boolean {
+  return PROTECTED_PREFIXES.some(
+    (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`)
+  );
+}
+
+/**
  * Refreshes the Supabase auth session on every request and keeps the
  * auth cookies in sync between the browser, Server Components and
- * Route Handlers. This is the Supabase SSR "middleware" pattern, adapted
- * to the Next.js 16 `proxy` convention.
+ * Route Handlers. This is the Supabase SSR pattern for Next.js 16 `proxy`.
+ *
+ * Also redirects unauthenticated users away from private routes.
  */
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
@@ -37,7 +55,23 @@ export async function updateSession(request: NextRequest) {
   // IMPORTANT: do not run code between createServerClient and
   // supabase.auth.getUser(). A simple mistake could make it very hard to
   // debug issues with users being randomly logged out.
-  await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  const { pathname } = request.nextUrl;
+
+  if (!user && isProtectedPath(pathname)) {
+    const loginUrl = request.nextUrl.clone();
+    loginUrl.pathname = '/login';
+    loginUrl.searchParams.set('redirect', pathname);
+    const redirectResponse = NextResponse.redirect(loginUrl);
+    // Forward refreshed auth cookies onto the redirect response
+    supabaseResponse.cookies.getAll().forEach((cookie) => {
+      redirectResponse.cookies.set(cookie.name, cookie.value);
+    });
+    return redirectResponse;
+  }
 
   // IMPORTANT: you *must* return the supabaseResponse object as is so the
   // refreshed cookies are forwarded to the browser.

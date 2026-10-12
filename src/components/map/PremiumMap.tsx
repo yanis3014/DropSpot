@@ -1,7 +1,14 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
-import Map, { Marker, useMap, GeolocateControl, type ErrorEvent } from 'react-map-gl';
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
+import Map, {
+  Marker,
+  useMap,
+  GeolocateControl,
+  type ErrorEvent,
+  type MapRef,
+} from 'react-map-gl';
+import type { GeolocateControl as MapboxGeolocateControl } from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { Coffee, X, LockKey, MapPin, WifiHigh, Plugs, SpeakerHigh } from '@phosphor-icons/react';
 import { getMapPlaces, getPlaceById, Place, hasValidCoordinates } from '@/lib/api/places';
@@ -51,6 +58,22 @@ function handleMapError(event: ErrorEvent) {
   console.error('Mapbox error:', event.error);
 }
 
+/** Auto-déclenche le GeolocateControl si la permission GPS est déjà accordée. */
+async function triggerGeolocateIfGranted(
+  control: MapboxGeolocateControl | null
+) {
+  if (!control) return;
+  try {
+    if (typeof navigator === 'undefined' || !navigator.permissions) return;
+    const status = await navigator.permissions.query({ name: 'geolocation' });
+    if (status.state === 'granted') {
+      control.trigger();
+    }
+  } catch (err) {
+    console.warn('Error checking geolocation permission:', err);
+  }
+}
+
 export default function PremiumMap() {
   const { isAuthenticated } = useAuth();
   const [selectedPlace, setSelectedPlace] = useState<Place | null>(null);
@@ -65,10 +88,16 @@ export default function PremiumMap() {
   const [detailPlace, setDetailPlace] = useState<Place | null>(null);
   const [showLogin, setShowLogin] = useState(false);
 
+  const mapRef = useRef<MapRef>(null);
+  const geolocateControlRef = useRef<MapboxGeolocateControl | null>(null);
+  // Évite de re-trigger la géoloc à chaque remount / re-load du style
+  const didAutoGeolocate = useRef(false);
+
   useEffect(() => {
     getLatestVibes().then(setVibes);
   }, []);
 
+  // Chargement unique des spots (pas de bounding box → pas de reload à chaque pan)
   useEffect(() => {
     let cancelled = false;
 
@@ -100,6 +129,16 @@ export default function PremiumMap() {
       .then(setSavedIds)
       .catch((err) => console.error('Error fetching saved places:', err));
   }, [isAuthenticated]);
+
+  // Déclenche la géoloc native Mapbox une fois la carte prête (point bleu + bouton)
+  const handleMapLoad = useCallback(() => {
+    if (didAutoGeolocate.current) return;
+    didAutoGeolocate.current = true;
+    // Un tick pour laisser le GeolocateControl s'attacher à la map
+    requestAnimationFrame(() => {
+      void triggerGeolocateIfGranted(geolocateControlRef.current);
+    });
+  }, []);
 
   const handleToggleSave = async (placeId: string) => {
     const isSaved = savedIds.includes(placeId);
@@ -188,6 +227,7 @@ export default function PremiumMap() {
   return (
     <div className="w-full h-[100dvh] absolute inset-0">
       <Map
+        ref={mapRef}
         mapboxAccessToken={MAPBOX_TOKEN}
         initialViewState={{
           longitude: 7.262,
@@ -198,15 +238,20 @@ export default function PremiumMap() {
         mapStyle={MAP_STYLE}
         attributionControl={false}
         onError={handleMapError}
+        onLoad={handleMapLoad}
       >
+        {/* Bouton GPS natif Mapbox + pastille bleue de position utilisateur */}
         <GeolocateControl
+          ref={geolocateControlRef}
           position="bottom-right"
-          trackUserLocation={true}
-          showUserHeading={true}
-          showUserLocation={true}
+          trackUserLocation
+          showUserLocation
+          showUserHeading
+          positionOptions={{ enableHighAccuracy: true }}
           style={{ marginBottom: '100px' }}
         />
 
+        {/* Marqueurs des spots — chargés une fois via getMapPlaces(), pas de bbox */}
         {visiblePlaces.map((place) => (
           <Marker
             key={place.id}
@@ -226,23 +271,30 @@ export default function PremiumMap() {
         )}
       </Map>
 
-      <div className="absolute top-0 left-0 right-0 z-10">
-        <div className="bg-gradient-to-b from-brand-oat/90 to-transparent p-4">
-          <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-            {filterPills.map((pill) => (
+      {/* Barre de filtres — glassmorphism + scroll horizontal */}
+      <div className="absolute top-0 left-0 right-0 z-10 safe-pt bg-white/70 backdrop-blur-md border-b border-white/20 pb-3">
+        <div className="flex overflow-x-auto scrollbar-hide gap-2 px-4">
+          {filterPills.map((pill) => {
+            const isActive = activeFilter === pill.value;
+            return (
               <button
                 key={pill.value}
+                type="button"
                 onClick={() =>
-                  setActiveFilter(activeFilter === pill.value ? null : pill.value)
+                  setActiveFilter(isActive ? null : pill.value)
                 }
-                className={`bg-brand-surface text-brand-espresso shadow-md rounded-full px-4 py-2 text-sm font-semibold border border-brand-mocha/10 whitespace-nowrap active:scale-95 transition-transform ${
-                  activeFilter === pill.value ? 'ring-2 ring-brand-matcha' : ''
+                className={`shrink-0 rounded-full px-4 py-2 text-sm font-semibold whitespace-nowrap transition-all duration-200 active:scale-95 ${
+                  isActive
+                    ? 'bg-brand-dark text-white border border-brand-dark shadow-md'
+                    : 'bg-white/90 border border-gray-200 text-gray-700 shadow-sm'
                 }`}
               >
                 {pill.label}
               </button>
-            ))}
-          </div>
+            );
+          })}
+          {/* Spacer pour que la dernière pilule ne soit pas coupée au bord droit */}
+          <div className="w-2 shrink-0" aria-hidden />
         </div>
       </div>
 

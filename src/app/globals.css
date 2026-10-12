@@ -62,6 +62,11 @@
   --shadow-soft: 0 4px 20px -2px rgba(0, 0, 0, 0.05);
   --shadow-card:
     0 10px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.01);
+  --animate-wave: wave 4s linear infinite;
+  --animate-wave-slow: wave 6s linear infinite;
+  --animate-float-up: floatUp 3s ease-in-out infinite;
+  --animate-float-up-delayed: floatUp 4s ease-in-out infinite 1.5s;
+  --animate-pulse-glow: pulseGlow 3s ease-in-out infinite;
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
@@ -83,6 +88,10 @@ body {
 /* Safe area pour les encoches sur mobile récent (ex: iPhone) */
 @utility safe-pb {
   padding-bottom: calc(0.75rem + env(safe-area-inset-bottom, 0px));
+}
+
+@utility safe-pt {
+  padding-top: calc(0.75rem + env(safe-area-inset-top, 0px));
 }
 
 @keyframes step-in {
@@ -124,4 +133,86 @@ body {
   &::-webkit-scrollbar {
     display: none;
   }
+}
+
+/* ===== Bocal de Grains — vagues + glassmorphism ===== */
+@keyframes wave {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes floatUp {
+  0% {
+    transform: translateY(0) scale(1);
+    opacity: 0.55;
+  }
+  50% {
+    transform: translateY(-18px) scale(1.15);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-36px) scale(0.85);
+    opacity: 0;
+  }
+}
+
+@keyframes pulseGlow {
+  0%,
+  100% {
+    opacity: 0.55;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.04);
+  }
+}
+
+.liquid-container {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  overflow: hidden;
+  border-bottom-left-radius: 9999px;
+  border-bottom-right-radius: 9999px;
+  transition: height 1s ease-out;
+}
+
+.liquid-wave {
+  position: absolute;
+  top: -50px;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(180deg, #f59e0b 0%, #b45309 100%);
+  border-radius: 40% 60% 70% 30% / 40% 50% 60% 50%;
+  box-shadow: inset 0 0 50px rgba(0, 0, 0, 0.5);
+}
+
+.liquid-wave:nth-child(2) {
+  background: linear-gradient(
+    180deg,
+    rgba(251, 191, 36, 0.8) 0%,
+    rgba(217, 119, 6, 0.8) 100%
+  );
+  border-radius: 60% 40% 30% 70% / 50% 60% 40% 50%;
+}
+
+.glass-jar {
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.4) 0%,
+    rgba(255, 255, 255, 0.1) 100%
+  );
+  backdrop-filter: blur(10px);
+  border: 2px solid rgba(255, 255, 255, 0.5);
+  box-shadow:
+    0 8px 32px 0 rgba(0, 0, 0, 0.1),
+    inset 0 4px 15px rgba(255, 255, 255, 0.6),
+    inset 0 -10px 20px rgba(0, 0, 0, 0.1);
 }

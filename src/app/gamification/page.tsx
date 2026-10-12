@@ -48,12 +48,28 @@ export default function GamificationPage() {
         <p className="text-[11px] font-semibold uppercase tracking-wider text-brand-mocha mb-1">
           Niveau
         </p>
-        <p className="text-2xl font-extrabold text-brand-espresso tracking-tight mb-6">
+        <p className="text-2xl font-extrabold text-brand-espresso tracking-tight mb-8">
           {levelBadge.icon} {levelBadge.name}
         </p>
 
-        <div className="relative mb-4 rounded-[2rem] bg-gradient-to-br from-brand-ink to-[#4a3428] p-8 shadow-xl">
-          <CoffeeJar totalGrains={totalGrains} size="lg" />
+        {/* Scène immersive autour du bocal */}
+        <div className="relative mb-6 w-full max-w-sm">
+          <div
+            className="absolute inset-0 rounded-[2.5rem] bg-gradient-to-br from-amber-900/90 via-[#3d2a1c] to-brand-ink blur-[1px]"
+            aria-hidden
+          />
+          <div className="relative rounded-[2.5rem] bg-gradient-to-br from-[#4a3428]/95 via-brand-ink to-[#1a100c] p-10 shadow-2xl overflow-hidden">
+            {/* Reflets ambiants */}
+            <div
+              className="pointer-events-none absolute -top-10 -right-10 h-40 w-40 rounded-full bg-amber-400/20 blur-3xl animate-pulse-glow"
+              aria-hidden
+            />
+            <div
+              className="pointer-events-none absolute -bottom-8 -left-8 h-32 w-32 rounded-full bg-amber-600/15 blur-2xl"
+              aria-hidden
+            />
+            <CoffeeJar totalGrains={totalGrains} size="lg" />
+          </div>
         </div>
 
         <p className="text-sm font-bold text-brand-espresso tabular-nums">
@@ -77,7 +93,7 @@ export default function GamificationPage() {
                   key={badge.name}
                   className={`relative rounded-2xl border p-4 flex flex-col items-center text-center transition-all ${
                     unlocked
-                      ? 'bg-brand-surface border-brand-matcha/30 shadow-md shadow-brand-matcha/10'
+                      ? 'bg-brand-surface border-amber-300/40 shadow-md shadow-amber-500/10'
                       : 'bg-brand-muted/50 border-brand-mocha/10 opacity-50'
                   }`}
                 >

@@ -30,9 +30,9 @@ export function useProfile(isAuthenticated: boolean, authLoading: boolean) {
   }, [isAuthenticated]);
 
   const save = useCallback(async (patch: ProfilePatch) => {
-    const updated = await upsertMyProfile(patch);
-    setProfile(updated);
-    return updated;
+    const result = await upsertMyProfile(patch);
+    setProfile(result.profile);
+    return result;
   }, []);
 
   return { profile, loading, refresh, save };

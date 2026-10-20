@@ -26,6 +26,11 @@ import {
   shouldShowTrophyPrompt,
 } from '@/lib/trophyPrompt';
 import { formatAddress, openDirections } from '@/lib/utils/directions';
+import {
+  laptopLabel,
+  noiseLabel,
+  wifiLabel,
+} from '@/lib/placeAmenities';
 
 interface PlaceDetailModalProps {
   place: Place;
@@ -104,10 +109,19 @@ export default function PlaceDetailModal({
   const crowd = vibe ? crowdConfig[vibe.crowd_level] : null;
 
   const features = [
-    place.wifi_speed && { icon: WifiHigh, label: `Wi-Fi ${place.wifi_speed}` },
+    place.wifi_speed && {
+      icon: WifiHigh,
+      label: `Wi-Fi ${wifiLabel(place.wifi_speed)}`,
+    },
     place.has_plugs && { icon: Plugs, label: 'Prises dispo' },
-    place.noise_level && { icon: SpeakerHigh, label: place.noise_level },
-    place.laptop_policy && { icon: Laptop, label: place.laptop_policy },
+    place.noise_level && {
+      icon: SpeakerHigh,
+      label: noiseLabel(place.noise_level),
+    },
+    place.laptop_policy && {
+      icon: Laptop,
+      label: laptopLabel(place.laptop_policy),
+    },
     place.has_terrace && { icon: SunDim, label: 'Terrasse' },
     place.is_vegan && { icon: Leaf, label: 'Vegan' },
   ].filter(Boolean) as { icon: typeof WifiHigh; label: string }[];

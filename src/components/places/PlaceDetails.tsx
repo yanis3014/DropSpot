@@ -10,6 +10,11 @@ import { useAuth } from '@/lib/hooks/useAuth';
 import { Place } from '@/lib/api/places';
 import { getSavedPlaceIds, savePlace, unsavePlace } from '@/lib/api/saved';
 import { openDirections } from '@/lib/utils/directions';
+import {
+  laptopLabel,
+  noiseLabel,
+  wifiLabel,
+} from '@/lib/placeAmenities';
 
 interface PlaceDetailsProps {
   place: Place;
@@ -51,7 +56,7 @@ export default function PlaceDetails({ place }: PlaceDetailsProps) {
     {
       icon: WifiHigh,
       label: 'Wi-Fi',
-      value: place.wifi_speed || '120 Mbps',
+      value: wifiLabel(place.wifi_speed) || '120 Mbps',
     },
     {
       icon: Plugs,
@@ -61,12 +66,12 @@ export default function PlaceDetails({ place }: PlaceDetailsProps) {
     {
       icon: SpeakerHigh,
       label: 'Ambiance',
-      value: place.noise_level || 'Calme',
+      value: noiseLabel(place.noise_level) || 'Calme',
     },
     {
       icon: Laptop,
       label: 'Laptop',
-      value: place.laptop_policy || 'Autorisé',
+      value: laptopLabel(place.laptop_policy) || 'Autorisé',
     },
   ];
 

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import Map, {
   Marker,
   useMap,
@@ -17,12 +18,11 @@ import { useAuth } from '@/lib/hooks/useAuth';
 import FavoriteButton from '@/components/places/FavoriteButton';
 import TrophyBadge, { mockTrophyForPlace } from '@/components/places/TrophyBadge';
 import { getSavedPlaceIds, savePlace, unsavePlace } from '@/lib/api/saved';
-import { getLatestVibes, CheckIn } from '@/lib/api/checkins';
-import PlaceDetailModal from '@/components/spots/PlaceDetailModal';
 import LoginModal from '@/components/auth/LoginModal';
 import { openDirections } from '@/lib/utils/directions';
 import { placeMatchesFilter } from '@/lib/filters';
 import MapSkeleton from '@/components/map/MapSkeleton';
+import { noiseLabel, wifiLabel } from '@/lib/placeAmenities';
 
 const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN;
 const MAP_STYLE = 'mapbox://styles/yanis3014/cmuldtuxb002h01s51acaf25v';
@@ -74,28 +74,32 @@ async function triggerGeolocateIfGranted(
   }
 }
 
-export default function PremiumMap() {
+const MAP_FILTERS = new Set(filterPills.map((p) => p.value));
+
+export default function PremiumMap({
+  initialFilter = null,
+}: {
+  /** Filtre issu de l'onboarding (`?filter=plugs|terrace|coffee|chill`). */
+  initialFilter?: string | null;
+}) {
+  const router = useRouter();
   const { isAuthenticated } = useAuth();
   const [selectedPlace, setSelectedPlace] = useState<Place | null>(null);
-  const [activeFilter, setActiveFilter] = useState<string | null>(null);
+  const [activeFilter, setActiveFilter] = useState<string | null>(() =>
+    initialFilter && MAP_FILTERS.has(initialFilter) ? initialFilter : null
+  );
   const [places, setPlaces] = useState<Place[]>(
     () => peekCache<Place[]>('places:map') ?? []
   );
   const [loading, setLoading] = useState(() => !peekCache('places:map'));
   const [error, setError] = useState<string | null>(null);
   const [savedIds, setSavedIds] = useState<string[]>([]);
-  const [vibes, setVibes] = useState<Record<string, CheckIn>>({});
-  const [detailPlace, setDetailPlace] = useState<Place | null>(null);
   const [showLogin, setShowLogin] = useState(false);
 
   const mapRef = useRef<MapRef>(null);
   const geolocateControlRef = useRef<MapboxGeolocateControl | null>(null);
   // Évite de re-trigger la géoloc à chaque remount / re-load du style
   const didAutoGeolocate = useRef(false);
-
-  useEffect(() => {
-    getLatestVibes().then(setVibes);
-  }, []);
 
   // Chargement unique des spots (pas de bounding box → pas de reload à chaque pan)
   useEffect(() => {
@@ -353,7 +357,8 @@ export default function PremiumMap() {
                     <span>S&apos;y rendre</span>
                   </button>
                   <button
-                    onClick={() => setDetailPlace(selectedPlace)}
+                    type="button"
+                    onClick={() => router.push(`/place/${selectedPlace.id}`)}
                     className="flex-1 flex items-center justify-center bg-brand-oat text-brand-espresso rounded-xl py-3 font-semibold shadow-sm hover:bg-brand-oat/80 active:scale-95 transition-all"
                   >
                     Voir la fiche
@@ -376,7 +381,7 @@ export default function PremiumMap() {
                     <div>
                       <p className="text-xs text-brand-mocha">Wi-Fi</p>
                       <p className="text-sm font-semibold text-brand-espresso">
-                        {selectedPlace.wifi_speed}
+                        {wifiLabel(selectedPlace.wifi_speed)}
                       </p>
                     </div>
                   </div>
@@ -398,7 +403,7 @@ export default function PremiumMap() {
                     <div>
                       <p className="text-xs text-brand-mocha">Ambiance</p>
                       <p className="text-sm font-semibold text-brand-espresso">
-                        {selectedPlace.noise_level}
+                        {noiseLabel(selectedPlace.noise_level)}
                       </p>
                     </div>
                   </div>
@@ -423,18 +428,6 @@ export default function PremiumMap() {
           </div>
         )}
       </div>
-
-      {detailPlace && (
-        <PlaceDetailModal
-          place={detailPlace}
-          vibe={vibes[detailPlace.id]}
-          isAuthenticated={isAuthenticated}
-          isSaved={savedIds.includes(detailPlace.id)}
-          onToggleSave={handleToggleSave}
-          onCheckedIn={() => getLatestVibes().then(setVibes)}
-          onClose={() => setDetailPlace(null)}
-        />
-      )}
 
       <LoginModal isOpen={showLogin} onClose={() => setShowLogin(false)} />
     </div>

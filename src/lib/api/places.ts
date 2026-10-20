@@ -25,6 +25,11 @@ export interface Place {
   address?: string;
   city?: string;
   postal_code?: string;
+  /** Horaires en texte libre (dashboard vendor). */
+  opening_hours?: string | null;
+  /** limited | regular | everywhere */
+  plugs_level?: string | null;
+  vendor_id?: string | null;
   created_at?: string;
   updated_at?: string;
 }
@@ -123,6 +128,10 @@ export function normalizePlace(row: RawPlace): Place {
     address: (row.address as string | undefined) ?? undefined,
     city: (row.city as string | undefined) ?? undefined,
     postal_code: (row.postal_code as string | undefined) ?? undefined,
+    opening_hours: (row.opening_hours as string | null | undefined) ?? null,
+    plugs_level: (row.plugs_level as string | null | undefined) ?? null,
+    vendor_id:
+      typeof row.vendor_id === 'string' ? row.vendor_id : null,
     created_at: (row.created_at as string | undefined) ?? undefined,
     updated_at: (row.updated_at as string | undefined) ?? undefined,
   };

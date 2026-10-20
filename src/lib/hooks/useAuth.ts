@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import type { User } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase/client';
 
@@ -10,6 +11,7 @@ import { supabase } from '@/lib/supabase/client';
  * state fresh afterwards (SIGNED_IN, SIGNED_OUT, TOKEN_REFRESHED...).
  */
 export function useAuth() {
+  const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -25,18 +27,31 @@ export function useAuth() {
       .catch(() => setUser(null))
       .finally(() => setLoading(false));
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => setUser(session?.user ?? null)
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) =>
+      setUser(session?.user ?? null)
     );
 
     return () => subscription.unsubscribe();
   }, []);
 
+  /**
+   * Déconnexion unifiée : clear session + état local + redirect `/login`.
+   */
   const signOut = useCallback(async () => {
-    if (!supabase) return;
-    await supabase.auth.signOut();
-    setUser(null);
-  }, []);
+    try {
+      if (supabase) {
+        await supabase.auth.signOut();
+      }
+    } catch (err) {
+      console.error('signOut error:', err);
+    } finally {
+      setUser(null);
+      router.push('/login');
+      router.refresh();
+    }
+  }, [router]);
 
   return {
     user,

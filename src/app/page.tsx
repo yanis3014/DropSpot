@@ -164,7 +164,6 @@ export default function Home() {
   const handleSignOut = async () => {
     setShowProfile(false);
     await signOut();
-    router.refresh();
   };
 
   if (loading || (isAuthenticated && profileLoading)) {

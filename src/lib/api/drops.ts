@@ -5,6 +5,11 @@ import {
   type DropTypeId,
 } from '@/lib/filters';
 import { cachedQuery } from '@/lib/cache/clientCache';
+import {
+  getActiveFlashDrops,
+  normalizeFlashDrop,
+  type FlashDrop,
+} from '@/app/dashboard-pro/lib/api/flashDrops';
 export type { DropTypeId };
 
 export interface Drop {
@@ -29,6 +34,42 @@ export interface Drop {
   current_participants?: number;
   created_at?: string;
   updated_at?: string;
+  /** Provenance : table historique `drops` ou Flash Drop vendor. */
+  source?: 'drops' | 'flash_drops';
+}
+
+/** Mappe un Flash Drop vendor vers le format Drop du feed client. */
+export function flashDropToDrop(fd: FlashDrop): Drop {
+  return {
+    id: fd.id,
+    title: fd.title,
+    description: fd.description ?? undefined,
+    drop_type: 'promo',
+    raw_drop_type: 'flash',
+    start_time: fd.starts_at,
+    end_time: fd.ends_at,
+    place_id: fd.place_id,
+    places: fd.places
+      ? {
+          name: fd.places.name,
+          image_url: fd.places.image_url,
+          address: fd.places.address,
+          city: fd.places.city,
+          category: null,
+        }
+      : undefined,
+    created_at: fd.created_at,
+    source: 'flash_drops',
+  };
+}
+
+function mergeDropsByStart(a: Drop[], b: Drop[]): Drop[] {
+  const byId = new Map<string, Drop>();
+  for (const d of [...a, ...b]) byId.set(d.id, d);
+  return [...byId.values()].sort(
+    (x, y) =>
+      new Date(x.start_time).getTime() - new Date(y.start_time).getTime()
+  );
 }
 
 type RawDrop = Record<string, unknown>;
@@ -102,18 +143,32 @@ export async function getActiveDrops(): Promise<Drop[]> {
 
       const now = new Date().toISOString();
 
-      const { data, error } = await supabase
-        .from('drops')
-        .select('*, places(name, image_url, address, city, category)')
-        .gte('end_time', now)
-        .order('start_time', { ascending: true });
+      const [legacyResult, flashResult] = await Promise.all([
+        supabase
+          .from('drops')
+          .select('*, places(name, image_url, address, city, category)')
+          .gte('end_time', now)
+          .order('start_time', { ascending: true }),
+        getActiveFlashDrops().catch((err) => {
+          console.warn('flash_drops unavailable (migration?):', err);
+          return [] as FlashDrop[];
+        }),
+      ]);
 
-      if (error) {
-        console.error('Error fetching drops:', error);
-        throw error;
+      if (legacyResult.error) {
+        console.error('Error fetching drops:', legacyResult.error);
+        // Si la table drops échoue mais flash_drops OK, on continue avec les flash
       }
 
-      return ((data ?? []) as RawDrop[]).map(normalizeDrop);
+      const legacy = legacyResult.error
+        ? []
+        : ((legacyResult.data ?? []) as RawDrop[]).map((row) => ({
+            ...normalizeDrop(row),
+            source: 'drops' as const,
+          }));
+
+      const flash = flashResult.map(flashDropToDrop);
+      return mergeDropsByStart(legacy, flash);
     });
   } catch (error) {
     console.error('Error in getActiveDrops:', error);
@@ -135,18 +190,43 @@ export async function getExploreDrops(): Promise<Drop[]> {
 
       const since = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
 
-      const { data, error } = await supabase
-        .from('drops')
-        .select('*, places(name, image_url, address, city, category)')
-        .gte('end_time', since)
-        .order('start_time', { ascending: false });
+      const [legacyResult, flashResult] = await Promise.all([
+        supabase
+          .from('drops')
+          .select('*, places(name, image_url, address, city, category)')
+          .gte('end_time', since)
+          .order('start_time', { ascending: false }),
+        // Explore : flash actifs + récemment expirés (7j)
+        supabase
+          .from('flash_drops')
+          .select(
+            'id, vendor_id, place_id, title, description, starts_at, ends_at, is_active, created_at, places(name, image_url, address, city)'
+          )
+          .gte('ends_at', since)
+          .order('starts_at', { ascending: false }),
+      ]);
 
-      if (error) {
-        console.error('Error fetching explore drops:', error);
-        throw error;
+      if (legacyResult.error) {
+        console.error('Error fetching explore drops:', legacyResult.error);
       }
 
-      return ((data ?? []) as RawDrop[]).map(normalizeDrop);
+      const legacy = legacyResult.error
+        ? []
+        : ((legacyResult.data ?? []) as RawDrop[]).map((row) => ({
+            ...normalizeDrop(row),
+            source: 'drops' as const,
+          }));
+
+      let flash: Drop[] = [];
+      if (flashResult.error) {
+        console.warn('flash_drops explore unavailable:', flashResult.error);
+      } else {
+        flash = ((flashResult.data ?? []) as Record<string, unknown>[]).map(
+          (row) => flashDropToDrop(normalizeFlashDrop(row))
+        );
+      }
+
+      return mergeDropsByStart(legacy, flash).reverse();
     });
   } catch (error) {
     console.error('Error in getExploreDrops:', error);

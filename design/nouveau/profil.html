@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="fr"><head>
+<!-- Maquette Dropspot (export Claude Design), décompressée pour lecture par Cursor. Les {{...}} sont remplis par le script text/x-dc en bas de fichier. -->
+<meta charset="utf-8">
+<title>Dropspot — Profil</title>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+.board{font-family:'Figtree',system-ui,sans-serif;color:#231915}
+.th-light{--bg:#FAF7F2;--surface:#FFFFFF;--surface2:#F1ECE4;--line:#E3DACE;--text:#231915;--text2:#685A4E;--accent:#A34B1A;--onaccent:#FFFFFF;--accentsoft:#F6E5D7;--accenttext:#86390F;--ok:#2B6A47;--shadow:0 6px 24px rgba(58,34,18,.14)}
+.th-dark{--bg:#14100D;--surface:#211914;--surface2:#2C231D;--line:#3B3029;--text:#F4EDE6;--text2:#BBAD9F;--accent:#E3905A;--onaccent:#1B0F08;--accentsoft:#3D2719;--accenttext:#F3B086;--ok:#7CC79C;--shadow:0 6px 24px rgba(0,0,0,.45)}
+.phone{position:relative;width:390px;height:844px;overflow:hidden;background:var(--bg);color:var(--text);box-shadow:0 0 0 1px rgba(40,25,15,.10),0 24px 60px rgba(40,25,15,.16);font-family:'Figtree',system-ui,sans-serif}
+.ios{border-radius:46px}.android{border-radius:32px}
+.disp{font-family:'Bricolage Grotesque','Figtree',sans-serif;letter-spacing:-.01em}
+.ic{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
+button{font:inherit;color:inherit;cursor:pointer}
+.safe{height:54px;flex:none}.android .safe{height:34px}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;height:52px;padding:0 20px;border:none;font-size:16px;font-weight:700;text-decoration:none;box-sizing:border-box;white-space:nowrap}
+.ios .btn{border-radius:14px}.android .btn{border-radius:26px}
+.btn-main{background:var(--accent);color:var(--onaccent)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:22px}
+.android .card{border-radius:18px}
+.track{height:10px;border-radius:5px;background:var(--surface2);overflow:hidden}
+.bar{height:100%;border-radius:5px;background:var(--accent)}
+.lrow{display:flex;align-items:center;gap:12px;min-height:56px;padding:0 14px}
+.lrow + .lrow{border-top:1px solid var(--line)}
+.dot{display:flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:18px;background:var(--accentsoft);color:var(--accenttext);flex:none}
+.sw{position:relative;width:51px;height:31px;padding:0;border:none;border-radius:16px;background:var(--accent);flex:none}
+.sw::after{content:'';position:absolute;top:2px;right:2px;width:27px;height:27px;border-radius:14px;background:#FFFFFF;box-shadow:0 2px 4px rgba(0,0,0,.2)}
+.android .sw{width:52px;height:32px}
+.android .sw::after{top:4px;right:4px;width:24px;height:24px;border-radius:12px;background:var(--onaccent);box-shadow:none}
+.nav{position:absolute;left:0;right:0;bottom:0;display:flex;box-sizing:border-box;z-index:5}
+.ios .nav{height:84px;padding:4px 6px 34px;background:var(--surface);border-top:1px solid var(--line)}
+.android .nav{height:100px;padding:12px 8px 24px;background:var(--surface2)}
+.tab{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;flex:1;text-decoration:none;font-size:12px;font-weight:600}
+.tab-on{color:var(--accent)}.tab-off{color:var(--text2)}.android .tab-on{color:var(--text)}
+.pill{display:flex;align-items:center;justify-content:center;width:64px;height:32px;border-radius:16px}
+.ios .pill{height:28px}
+.android .tab-on .pill{background:var(--accentsoft);color:var(--accenttext)}
+.home{position:absolute;left:50%;bottom:8px;transform:translateX(-50%);width:134px;height:5px;border-radius:3px;background:var(--text);z-index:6}
+.android .home{width:108px;height:4px;opacity:.5}
+.vlabel{font-size:15px;font-weight:600;color:#5A4E45}
+</style>
+</helmet>
+<div class="board" style="width: 1856px; height: 1080px; box-sizing: border-box; padding: 56px 64px; background: #ECE8E2; display: flex; flex-direction: column; gap: 28px">
+<div style="display: flex; align-items: baseline; gap: 18px">
+<h1 class="disp" style="margin: 0; font-size: 44px; font-weight: 800; color: #231915">5 · Profil</h1>
+<p style="margin: 0; font-size: 18px; color: #5A4E45">Tes Grains, tes contributions, tes réglages.</p>
+</div>
+<div style="display: flex; gap: 56px">
+<sc-for list="{{phones}}" as="p" hint-placeholder-count="4">
+<div style="display: flex; flex-direction: column; gap: 14px">
+<div class="vlabel">{{p.label}}</div>
+<div class="{{p.cls}}">
+<div style="display: flex; flex-direction: column; gap: 18px; padding: 0 16px">
+<div class="safe"></div>
+<div style="display: flex; align-items: center; gap: 14px; padding: 0 4px">
+<span class="disp" aria-hidden="true" style="display: flex; align-items: center; justify-content: center; width: 56px; height: 56px; border-radius: 28px; background: var(--accentsoft); color: var(--accenttext); font-size: 24px; font-weight: 800">N</span>
+<div style="display: flex; flex-direction: column; gap: 2px">
+<h2 class="disp" style="margin: 0; font-size: 26px; font-weight: 800">Niss</h2>
+<span style="font-size: 14px; color: var(--text2)">Membre depuis septembre 2026</span>
+</div>
+</div>
+<section class="card" style="display: flex; flex-direction: column; gap: 14px; padding: 18px">
+<div style="display: flex; align-items: center; justify-content: space-between">
+<div style="display: flex; align-items: center; gap: 10px">
+<span class="dot" style="width: 44px; height: 44px; border-radius: 22px"><svg class="ic" sc-camel-view-box="0 0 24 24" aria-hidden="true"><path d="{{ic.bean}}"></path></svg></span>
+<div style="display: flex; align-items: baseline; gap: 6px"><span class="disp" style="font-size: 40px; font-weight: 800; line-height: 1">340</span><span style="font-size: 16px; font-weight: 600; color: var(--text2)">Grains</span></div>
+</div>
+<span style="font-size: 14px; font-weight: 700; color: var(--accenttext); background: var(--accentsoft); padding: 6px 10px; border-radius: 10px">Explorateur</span>
+</div>
+<div style="display: flex; flex-direction: column; gap: 6px">
+<div class="track" role="img" aria-label="340 sur 500 Grains"><div class="bar" style="width: 68%"></div></div>
+<span style="font-size: 14px; color: var(--text2)">Encore 160 Grains pour devenir Habitué</span>
+</div>
+<button class="btn btn-main">Utiliser mes Grains</button>
+</section>
+<section style="display: flex; flex-direction: column; gap: 8px">
+<div style="display: flex; align-items: center; justify-content: space-between; padding: 0 4px">
+<h3 class="disp" style="margin: 0; font-size: 19px; font-weight: 700">Mes contributions</h3>
+<a href="#historique" style="display: inline-flex; align-items: center; height: 44px; font-size: 15px; font-weight: 700; color: var(--accent); text-decoration: none">Tout voir</a>
+</div>
+<div class="card">
+<sc-for list="{{contribs}}" as="c" hint-placeholder-count="3">
+<div class="lrow">
+<span class="dot"><svg class="ic" sc-camel-view-box="0 0 24 24" aria-hidden="true" style="width: 18px; height: 18px"><path d="{{c.d}}"></path></svg></span>
+<div style="display: flex; flex-direction: column; flex: 1; min-width: 0; padding: 8px 0">
+<span style="font-size: 15px; font-weight: 700">{{c.what}}</span>
+<span style="font-size: 13px; color: var(--text2)">{{c.where}}</span>
+</div>
+<span style="font-size: 15px; font-weight: 700; color: var(--accenttext)">{{c.gain}}</span>
+</div>
+</sc-for>
+</div>
+</section>
+<section style="display: flex; flex-direction: column; gap: 8px">
+<h3 class="disp" style="margin: 0; padding: 0 4px; font-size: 19px; font-weight: 700">Réglages</h3>
+<div class="card">
+<div class="lrow"><span style="flex: 1; font-size: 15px; font-weight: 600">Alertes drops</span><button class="sw" role="switch" aria-checked="true" aria-label="Alertes drops"></button></div>
+<div class="lrow"><span style="flex: 1; font-size: 15px; font-weight: 600">Thème</span><span style="font-size: 15px; color: var(--text2)">Système</span><svg class="ic" sc-camel-view-box="0 0 24 24" aria-hidden="true" style="width: 18px; height: 18px; color: var(--text2)"><path d="{{ic.chevR}}"></path></svg></div>
+<div class="lrow"><span style="flex: 1; font-size: 15px; font-weight: 600">Localisation</span><span style="font-size: 15px; color: var(--text2)">En utilisant l'app</span><svg class="ic" sc-camel-view-box="0 0 24 24" aria-hidden="true" style="width: 18px; height: 18px; color: var(--text2)"><path d="{{ic.chevR}}"></path></svg></div>
+</div>
+</section>
+</div>
+<nav class="nav" aria-label="Navigation principale">
+<sc-for list="{{tabs}}" as="t" hint-placeholder-count="4">
+<a class="tab {{t.cls}}" href="{{t.href}}"><span class="pill"><svg class="ic" sc-camel-view-box="0 0 24 24" aria-hidden="true"><path d="{{t.d}}"></path></svg></span>{{t.label}}</a>
+</sc-for>
+</nav>
+<div class="home" aria-hidden="true"></div>
+</div>
+</div>
+</sc-for>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script="" data-props="{&quot;$preview&quot;:{&quot;width&quot;:1856,&quot;height&quot;:1080}}">
+class Component extends DCLogic {
+  renderVals() {
+    const ic = {
+      bean: 'M12 3c3.9 0 7 4 7 9s-3.1 9-7 9-7-4-7-9 3.1-9 7-9zM12 3c-2 3 2 6 0 9s2 6 0 9',
+      wifi: 'M2.5 8.8a14 14 0 0 1 19 0M5.5 12.2a9.5 9.5 0 0 1 13 0M8.6 15.5a5 5 0 0 1 6.8 0M12 19.2h.01',
+      leaf: 'M5 20c0-8.5 5.5-15 15-15 0 9.5-6.5 15-15 15zM5 20l8-8',
+      plus: 'M12 5v14M5 12h14',
+      chevR: 'M9 18l6-6-6-6',
+      map: 'M9 4L3 6v14l6-2 6 2 6-2V4l-6 2-6-2zM9 4v14M15 6v14',
+      list: 'M9 6h11M9 12h11M9 18h11M4.5 6h.01M4.5 12h.01M4.5 18h.01',
+      zap: 'M13 2L4 14h7l-1 8 9-12h-7l1-8z',
+      user: 'M20 21a8 8 0 0 0-16 0M16 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0z'
+    };
+    const phones = [
+      { label: 'iPhone · Clair', cls: 'phone ios th-light' },
+      { label: 'iPhone · Sombre', cls: 'phone ios th-dark' },
+      { label: 'Android · Clair', cls: 'phone android th-light' },
+      { label: 'Android · Sombre', cls: 'phone android th-dark' }
+    ];
+    const tabs = [['Carte', 'Main.dc.html', ic.map], ['Liste', 'Liste.dc.html', ic.list], ['Drops', 'Drops.dc.html', ic.zap], ['Profil', 'Profil.dc.html', ic.user]]
+      .map(([label, href, d]) => ({ label, href, d, cls: label === 'Profil' ? 'tab-on' : 'tab-off' }));
+    const contribs = [
+      { d: ic.wifi, what: 'Wi-Fi validé', where: 'Tech Café Sophia · il y a 2 h', gain: '+10' },
+      { d: ic.leaf, what: 'Matcha corrigé', where: 'Maison Verte · hier', gain: '+20' },
+      { d: ic.plus, what: 'Café ajouté', where: 'K-Fêt Campus · 12 oct.', gain: '+50' }
+    ];
+    return { ic, phones, tabs, contribs };
+  }
+}
+</script>
+
+
+</body></html>

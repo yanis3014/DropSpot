@@ -219,11 +219,14 @@ export function placeMatchesFilter(
     return !!place.has_terrace || categories.includes('chill');
   }
   if (key === 'chill' || key === 'ambiance') {
+    const noise = normalizeKey(place.noise_level);
     return (
       categories.includes('chill') ||
       !!place.has_terrace ||
-      normalizeKey(place.noise_level).includes('calme') ||
-      normalizeKey(place.noise_level).includes('chill')
+      noise.includes('calme') ||
+      noise.includes('quiet') ||
+      noise.includes('ambient') ||
+      noise.includes('chill')
     );
   }
   if (key === 'coffee' || key === 'specialty') {

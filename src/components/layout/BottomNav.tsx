@@ -53,8 +53,19 @@ function NavItem({
   );
 }
 
+/** Routes sans barre B2C (Espace Pro + auth / onboarding). */
+const HIDDEN_PREFIXES = ['/dashboard-pro', '/login', '/onboarding'] as const;
+
 export default function BottomNav() {
   const pathname = usePathname();
+
+  if (
+    !pathname ||
+    HIDDEN_PREFIXES.some((prefix) => pathname.startsWith(prefix))
+  ) {
+    return null;
+  }
+
   const isCheckIn = pathname === '/check-in';
 
   return (

@@ -10,6 +10,7 @@ const PROTECTED_PREFIXES = [
   '/gamification',
   '/saved',
   '/onboarding',
+  '/dashboard-pro',
 ] as const;
 
 function isProtectedPath(pathname: string): boolean {

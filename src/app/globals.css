@@ -3,62 +3,82 @@
 /* Class-based dark mode (not prefers-color-scheme alone). */
 @custom-variant dark (&:where(.dark, .dark *));
 
+/* Tokens maquette design/nouveau (clair / sombre via .dark) */
 :root {
-  --ds-oat: #faf9f6;
-  --ds-espresso: #2c1e16;
-  --ds-mocha: #8b6b5d;
-  --ds-surface: #ffffff;
-  --ds-surface-muted: #f3ede6;
-  --ds-ink: #2c1e16;
-  --ds-matcha: #4a7c59;
-  --ds-terracotta: #e07a5f;
-  /* Tokens de la maquette d'accueil (design/dropspot_accueil.html) */
-  --ds-light: #fcfaf8;
-  --ds-dark: #302621;
-  --ds-green: #4f7c62;
-  --ds-greenlight: #e8f0ec;
-  --ds-purple: #7b1fa2;
-  --background: var(--ds-oat);
-  --foreground: var(--ds-espresso);
+  --bg: #faf7f2;
+  --surface: #ffffff;
+  --surface2: #f1ece4;
+  --line: #e3dace;
+  --text: #231915;
+  --text2: #685a4e;
+  --accent: #a34b1a;
+  --onaccent: #ffffff;
+  --accentsoft: #f6e5d7;
+  --accenttext: #86390f;
+  --ok: #2b6a47;
+  --pin: #2a1d16;
+  --onpin: #ffffff;
+  --map: #ece5da;
+  --shadow: 0 6px 24px rgba(58, 34, 18, 0.14);
+  --background: var(--bg);
+  --foreground: var(--text);
 }
 
 .dark {
-  /* Warm deep espresso — not pure black */
-  --ds-oat: #1a1410;
-  --ds-espresso: #f5f0eb;
-  --ds-mocha: #c4a99a;
-  --ds-surface: #2a211c;
-  --ds-surface-muted: #342a24;
-  --ds-ink: #16110e;
-  --ds-matcha: #6fa37d;
-  --ds-terracotta: #e8927a;
-  /* Variantes sombres des tokens maquette */
-  --ds-light: #1a1410;
-  --ds-dark: #f5f0eb;
-  --ds-green: #6fa37d;
-  --ds-greenlight: #26352c;
-  --ds-purple: #b45fd6;
-  --background: var(--ds-oat);
-  --foreground: var(--ds-espresso);
+  --bg: #14100d;
+  --surface: #211914;
+  --surface2: #2c231d;
+  --line: #3b3029;
+  --text: #f4ede6;
+  --text2: #bbad9f;
+  --accent: #e3905a;
+  --onaccent: #1b0f08;
+  --accentsoft: #3d2719;
+  --accenttext: #f3b086;
+  --ok: #7cc79c;
+  --pin: #f4ede6;
+  --onpin: #1b120d;
+  --map: #1c1713;
+  --shadow: 0 6px 24px rgba(0, 0, 0, 0.45);
+  --background: var(--bg);
+  --foreground: var(--text);
   color-scheme: dark;
 }
 
 @theme inline {
+  --color-ds-bg: var(--bg);
+  --color-ds-surface: var(--surface);
+  --color-ds-surface2: var(--surface2);
+  --color-ds-line: var(--line);
+  --color-ds-text: var(--text);
+  --color-ds-text2: var(--text2);
+  --color-ds-accent: var(--accent);
+  --color-ds-onaccent: var(--onaccent);
+  --color-ds-accentsoft: var(--accentsoft);
+  --color-ds-accenttext: var(--accenttext);
+  --color-ds-ok: var(--ok);
+  --color-ds-pin: var(--pin);
+  --color-ds-onpin: var(--onpin);
+  --color-ds-map: var(--map);
+  --shadow-ds: var(--shadow);
+
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --color-brand-oat: var(--ds-oat);
-  --color-brand-espresso: var(--ds-espresso);
-  --color-brand-mocha: var(--ds-mocha);
-  --color-brand-surface: var(--ds-surface);
-  --color-brand-muted: var(--ds-surface-muted);
-  --color-brand-ink: var(--ds-ink);
-  --color-brand-matcha: var(--ds-matcha);
-  --color-brand-terracotta: var(--ds-terracotta);
-  --color-brand-light: var(--ds-light);
-  --color-brand-dark: var(--ds-dark);
-  --color-brand-green: var(--ds-green);
-  --color-brand-greenlight: var(--ds-greenlight);
-  --color-brand-purple: var(--ds-purple);
+  /* Legacy brand-* aliases → new tokens (temporary) */
+  --color-brand-oat: var(--bg);
+  --color-brand-espresso: var(--text);
+  --color-brand-mocha: var(--text2);
+  --color-brand-surface: var(--surface);
+  --color-brand-muted: var(--surface2);
+  --color-brand-ink: var(--pin);
+  --color-brand-matcha: var(--ok);
+  --color-brand-terracotta: var(--accent);
+  --color-brand-light: var(--bg);
+  --color-brand-dark: var(--pin);
+  --color-brand-green: var(--ok);
+  --color-brand-greenlight: var(--accentsoft);
+  --color-brand-purple: var(--accent);
+
   --shadow-soft: 0 4px 20px -2px rgba(0, 0, 0, 0.05);
   --shadow-card:
     0 10px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.01);
@@ -67,8 +87,8 @@
   --animate-float-up: floatUp 3s ease-in-out infinite;
   --animate-float-up-delayed: floatUp 4s ease-in-out infinite 1.5s;
   --animate-pulse-glow: pulseGlow 3s ease-in-out infinite;
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-figtree);
+  --font-display: var(--font-bricolage);
 }
 
 html {

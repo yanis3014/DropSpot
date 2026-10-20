@@ -572,7 +572,7 @@ function Header({ grains }: { grains: number }) {
         </p>
       </div>
       <Link
-        href="/gamification"
+        href="/profile"
         className="flex-shrink-0 inline-flex items-center gap-1.5 bg-amber-100 border border-amber-200 text-amber-700 font-bold px-3 py-1.5 rounded-full active:scale-95 transition-all"
       >
         <span className="text-sm" aria-hidden>

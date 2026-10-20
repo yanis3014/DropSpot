@@ -1,9 +1,596 @@
+'use client';
+
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import {
+  CaretRight,
+  Check,
+  CoffeeBean,
+  Lock,
+  MapPin,
+  PencilSimple,
+  SignOut,
+  WifiHigh,
+  Star,
+} from '@phosphor-icons/react';
+import Button from '@/components/ui/Button';
+import EmptyState from '@/components/ui/EmptyState';
+import PreferencePills from '@/components/profile/PreferencePills';
+import ThemeSwitcher from '@/components/profile/ThemeSwitcher';
+import {
+  getMyContributions,
+  type ContributionItem,
+} from '@/lib/api/contributions';
+import { useAuth } from '@/lib/hooks/useAuth';
+import { useProfile } from '@/lib/hooks/useProfile';
+import {
+  badgeProgress,
+  getGrainsBalance,
+  GRAIN_BADGES,
+} from '@/lib/grains';
+import { PreferenceId } from '@/lib/preferences';
+import { useTheme } from '@/lib/theme';
+import { cn } from '@/lib/cn';
+
+const DROP_ALERTS_KEY = 'dropspot_drop_alerts';
+const PREVIEW_CONTRIBS = 3;
+
+type LocStatus = 'unknown' | 'granted' | 'prompt' | 'denied';
+
+function formatMemberSince(iso: string | null | undefined): string | null {
+  if (!iso) return null;
+  const d = new Date(iso);
+  if (!Number.isFinite(d.getTime())) return null;
+  const month = d.toLocaleDateString('fr-FR', {
+    month: 'long',
+    year: 'numeric',
+  });
+  return `Membre depuis ${month}`;
+}
+
+function formatWhen(iso: string): string {
+  const then = new Date(iso).getTime();
+  if (!Number.isFinite(then)) return '';
+  const diffSec = Math.round((Date.now() - then) / 1000);
+  const rtf = new Intl.RelativeTimeFormat('fr', { numeric: 'auto' });
+  if (Math.abs(diffSec) < 60) return rtf.format(-diffSec, 'second');
+  const diffMin = Math.round(diffSec / 60);
+  if (Math.abs(diffMin) < 60) return rtf.format(-diffMin, 'minute');
+  const diffH = Math.round(diffMin / 60);
+  if (Math.abs(diffH) < 24) return rtf.format(-diffH, 'hour');
+  const diffD = Math.round(diffH / 24);
+  if (Math.abs(diffD) < 14) return rtf.format(-diffD, 'day');
+  return new Date(iso).toLocaleDateString('fr-FR', {
+    day: 'numeric',
+    month: 'short',
+  });
+}
+
+function initialLetter(name: string): string {
+  const t = name.trim();
+  return t ? t.charAt(0).toUpperCase() : '?';
+}
+
+function readDropAlerts(): boolean {
+  if (typeof window === 'undefined') return true;
+  try {
+    const raw = localStorage.getItem(DROP_ALERTS_KEY);
+    if (raw === null) return true;
+    return raw === '1' || raw === 'true';
+  } catch {
+    return true;
+  }
+}
+
+function locLabel(status: LocStatus): string {
+  if (status === 'granted') return "En utilisant l'app";
+  if (status === 'denied') return 'Refusée';
+  if (status === 'prompt') return 'À autoriser';
+  return 'Inconnue';
+}
+
+function ContributionIcon({ item }: { item: ContributionItem }) {
+  if (item.kind === 'check_in') {
+    return <WifiHigh size={18} weight="regular" aria-hidden />;
+  }
+  return <Star size={18} weight="regular" aria-hidden />;
+}
+
 export default function ProfilePage() {
+  const router = useRouter();
+  const {
+    user,
+    isAuthenticated,
+    loading: authLoading,
+    email,
+    avatarUrl,
+    displayName,
+    signOut,
+  } = useAuth();
+  const { profile, loading: profileLoading, save } = useProfile(
+    isAuthenticated,
+    authLoading
+  );
+  const { preference } = useTheme();
+
+  const [localGrains] = useState(() => getGrainsBalance());
+  const [name, setName] = useState('');
+  const [prefs, setPrefs] = useState<PreferenceId[]>([]);
+  const [profileSyncKey, setProfileSyncKey] = useState('');
+  const [editingName, setEditingName] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [dropAlerts, setDropAlerts] = useState(readDropAlerts);
+  const [locStatus, setLocStatus] = useState<LocStatus>('unknown');
+  const [contribs, setContribs] = useState<ContributionItem[]>([]);
+  const [contribsLoading, setContribsLoading] = useState(true);
+  const [showAllContribs, setShowAllContribs] = useState(false);
+
+  const nextProfileKey = `${profile?.id ?? ''}|${profile?.updated_at ?? ''}|${profile?.full_name ?? ''}|${(profile?.preferences ?? []).join(',')}|${displayName ?? ''}`;
+  if (nextProfileKey !== profileSyncKey && (profile || displayName)) {
+    setProfileSyncKey(nextProfileKey);
+    setName(profile?.full_name ?? displayName ?? '');
+    setPrefs(profile?.preferences ?? []);
+  }
+
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    let cancelled = false;
+    getMyContributions(20).then((rows) => {
+      if (cancelled) return;
+      setContribs(rows);
+      setContribsLoading(false);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [isAuthenticated]);
+
+  useEffect(() => {
+    let cancelled = false;
+    const sync = async () => {
+      if (typeof navigator === 'undefined' || !navigator.permissions?.query) {
+        return;
+      }
+      try {
+        const result = await navigator.permissions.query({
+          name: 'geolocation' as PermissionName,
+        });
+        if (cancelled) return;
+        if (result.state === 'granted') setLocStatus('granted');
+        else if (result.state === 'denied') setLocStatus('denied');
+        else setLocStatus('prompt');
+        result.onchange = () => {
+          if (result.state === 'granted') setLocStatus('granted');
+          else if (result.state === 'denied') setLocStatus('denied');
+          else setLocStatus('prompt');
+        };
+      } catch {
+        // Permissions API may reject geolocation on some browsers
+      }
+    };
+    void sync();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const grains = profile?.grains_balance ?? localGrains;
+  const progress = useMemo(() => badgeProgress(grains), [grains]);
+  const avatar = profile?.avatar_url ?? avatarUrl;
+  const shownName = name.trim() || displayName || 'Explorateur';
+  const memberSince = formatMemberSince(
+    user?.created_at ?? profile?.onboarding_completed_at
+  );
+
+  const initialName = profile?.full_name ?? displayName ?? '';
+  const initialPrefs = profile?.preferences ?? [];
+  const dirty =
+    name.trim() !== initialName.trim() ||
+    prefs.length !== initialPrefs.length ||
+    prefs.some((p) => !initialPrefs.includes(p));
+
+  const shownContribs = isAuthenticated ? contribs : [];
+  const showContribLoading = isAuthenticated && contribsLoading;
+  const visibleContribs = showAllContribs
+    ? shownContribs
+    : shownContribs.slice(0, PREVIEW_CONTRIBS);
+
+  const themePrefLabel =
+    preference === 'light'
+      ? 'Clair'
+      : preference === 'dark'
+        ? 'Sombre'
+        : 'Système';
+
+  const toggleDropAlerts = useCallback(() => {
+    setDropAlerts((prev) => {
+      const next = !prev;
+      try {
+        localStorage.setItem(DROP_ALERTS_KEY, next ? '1' : '0');
+      } catch {
+        // ignore
+      }
+      return next;
+    });
+  }, []);
+
+  const requestLocation = useCallback(() => {
+    if (typeof navigator === 'undefined' || !navigator.geolocation) return;
+    navigator.geolocation.getCurrentPosition(
+      () => setLocStatus('granted'),
+      () => setLocStatus('denied'),
+      { enableHighAccuracy: false, timeout: 8000 }
+    );
+  }, []);
+
+  const handleSave = useCallback(async () => {
+    setSaving(true);
+    setSaveError(null);
+    try {
+      await save({
+        full_name: name.trim() || null,
+        preferences: prefs,
+        completeOnboarding: true,
+      });
+      setEditingName(false);
+      setSaved(true);
+      setTimeout(() => setSaved(false), 1500);
+    } catch (err) {
+      console.error('Profile save error:', err);
+      setSaveError("Impossible d'enregistrer. Réessaie.");
+    } finally {
+      setSaving(false);
+    }
+  }, [name, prefs, save]);
+
+  if (authLoading || profileLoading) {
+    return (
+      <main className="flex flex-1 flex-col bg-ds-bg px-4 pb-28 pt-8">
+        <div className="h-14 w-14 animate-pulse rounded-full bg-ds-surface2" />
+        <div className="mt-4 h-7 w-40 animate-pulse rounded-lg bg-ds-surface2" />
+      </main>
+    );
+  }
+
   return (
-    <main className="flex flex-1 flex-col bg-ds-bg px-5 pb-28 pt-8">
-      <h1 className="font-display text-[34px] font-extrabold leading-tight text-ds-text">
-        Profil
-      </h1>
+    <main className="flex flex-1 flex-col gap-[18px] bg-ds-bg px-4 pb-28 pt-8">
+      {/* Identity */}
+      <div className="flex items-center gap-3.5 px-1">
+        {avatar ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={avatar}
+            alt=""
+            referrerPolicy="no-referrer"
+            className="h-14 w-14 shrink-0 rounded-full object-cover"
+          />
+        ) : (
+          <span
+            aria-hidden
+            className="font-display flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-ds-accentsoft text-2xl font-extrabold text-ds-accenttext"
+          >
+            {initialLetter(shownName)}
+          </span>
+        )}
+        <div className="min-w-0 flex-1">
+          {editingName ? (
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && setEditingName(false)}
+              onBlur={() => setEditingName(false)}
+              maxLength={40}
+              autoFocus
+              className="w-full rounded-xl border-2 border-ds-accent bg-ds-surface px-3 py-1.5 font-display text-[26px] font-extrabold text-ds-text focus:outline-none"
+            />
+          ) : (
+            <button
+              type="button"
+              onClick={() => setEditingName(true)}
+              className="group flex max-w-full items-center gap-2 text-left"
+            >
+              <h1 className="font-display truncate text-[26px] font-extrabold leading-tight text-ds-text">
+                {shownName}
+              </h1>
+              <PencilSimple
+                size={16}
+                weight="bold"
+                className="shrink-0 text-ds-text2 group-hover:text-ds-text"
+              />
+            </button>
+          )}
+          {memberSince ? (
+            <p className="mt-0.5 text-sm text-ds-text2">{memberSince}</p>
+          ) : email ? (
+            <p className="mt-0.5 truncate text-sm text-ds-text2">{email}</p>
+          ) : null}
+        </div>
+      </div>
+
+      {/* Grains + level */}
+      <section className="flex flex-col gap-3.5 rounded-[22px] border border-ds-line bg-ds-surface p-[18px]">
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2.5">
+            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-ds-accentsoft text-ds-accenttext">
+              <CoffeeBean size={22} weight="regular" aria-hidden />
+            </span>
+            <div className="flex items-baseline gap-1.5">
+              <span className="font-display text-[40px] font-extrabold leading-none tabular-nums text-ds-text">
+                {grains}
+              </span>
+              <span className="text-base font-semibold text-ds-text2">
+                Grains
+              </span>
+            </div>
+          </div>
+          <span className="shrink-0 rounded-[10px] bg-ds-accentsoft px-2.5 py-1.5 text-sm font-bold text-ds-accenttext">
+            {progress.current.name}
+          </span>
+        </div>
+
+        <div className="flex flex-col gap-1.5">
+          <div
+            className="h-2.5 overflow-hidden rounded-[5px] bg-ds-surface2"
+            role="img"
+            aria-label={
+              progress.next
+                ? `${grains} sur ${progress.next.threshold} Grains`
+                : `${grains} Grains — niveau max`
+            }
+          >
+            <div
+              className="h-full rounded-[5px] bg-ds-accent transition-[width] duration-500"
+              style={{ width: `${progress.percent}%` }}
+            />
+          </div>
+          <span className="text-sm text-ds-text2">
+            {progress.next
+              ? `Encore ${progress.remaining} Grain${progress.remaining > 1 ? 's' : ''} pour devenir ${progress.next.name}`
+              : 'Niveau max atteint — légende locale !'}
+          </span>
+        </div>
+
+        <Button variant="off" disabled className="w-full">
+          Utiliser mes Grains
+        </Button>
+      </section>
+
+      {/* Badges (from gamification) */}
+      <section className="flex flex-col gap-2">
+        <h2 className="font-display px-1 text-[19px] font-bold text-ds-text">
+          Mes badges
+        </h2>
+        <div className="grid grid-cols-2 gap-2.5">
+          {GRAIN_BADGES.map((badge) => {
+            const unlocked = grains >= badge.threshold;
+            return (
+              <div
+                key={badge.name}
+                className={cn(
+                  'relative flex flex-col items-center rounded-[18px] border px-3 py-4 text-center',
+                  unlocked
+                    ? 'border-ds-line bg-ds-surface'
+                    : 'border-ds-line/60 bg-ds-surface2/50 opacity-55'
+                )}
+              >
+                {!unlocked && (
+                  <Lock
+                    size={12}
+                    weight="fill"
+                    className="absolute right-2.5 top-2.5 text-ds-text2"
+                    aria-hidden
+                  />
+                )}
+                <span
+                  className={cn(
+                    'mb-1.5 text-3xl leading-none',
+                    !unlocked && 'grayscale'
+                  )}
+                >
+                  {badge.icon}
+                </span>
+                <p
+                  className={cn(
+                    'text-sm font-extrabold',
+                    unlocked ? 'text-ds-text' : 'text-ds-text2'
+                  )}
+                >
+                  {badge.name}
+                </p>
+                <p className="mt-0.5 text-[11px] text-ds-text2">
+                  {badge.threshold === 0
+                    ? 'Débloqué'
+                    : `${badge.threshold} Grains`}
+                </p>
+              </div>
+            );
+          })}
+        </div>
+      </section>
+
+      {/* Contributions */}
+      <section className="flex flex-col gap-2">
+        <div className="flex items-center justify-between px-1">
+          <h2 className="font-display text-[19px] font-bold text-ds-text">
+            Mes contributions
+          </h2>
+          {shownContribs.length > PREVIEW_CONTRIBS ? (
+            <button
+              type="button"
+              onClick={() => setShowAllContribs((v) => !v)}
+              className="inline-flex h-11 items-center text-[15px] font-bold text-ds-accent"
+            >
+              {showAllContribs ? 'Réduire' : 'Tout voir'}
+            </button>
+          ) : null}
+        </div>
+
+        {showContribLoading ? (
+          <div className="rounded-[22px] border border-ds-line bg-ds-surface p-6">
+            <div className="h-4 w-2/3 animate-pulse rounded bg-ds-surface2" />
+          </div>
+        ) : shownContribs.length === 0 ? (
+          <div className="rounded-[22px] border border-ds-line bg-ds-surface py-8">
+            <EmptyState
+              icon={<MapPin weight="regular" />}
+              title="Aucune contribution"
+              description="Check-in près d’un café pour gagner des Grains et apparaître ici."
+              actionLabel="Voir la carte"
+              onAction={() => router.push('/map')}
+            />
+          </div>
+        ) : (
+          <div className="overflow-hidden rounded-[22px] border border-ds-line bg-ds-surface">
+            {visibleContribs.map((item, i) => (
+              <div
+                key={item.id}
+                className={cn(
+                  'flex min-h-14 items-center gap-3 px-3.5',
+                  i > 0 && 'border-t border-ds-line'
+                )}
+              >
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-ds-accentsoft text-ds-accenttext">
+                  <ContributionIcon item={item} />
+                </span>
+                <div className="min-w-0 flex-1 py-2">
+                  <p className="truncate text-[15px] font-bold text-ds-text">
+                    {item.title}
+                  </p>
+                  <p className="truncate text-[13px] text-ds-text2">
+                    {item.placeName}
+                    {item.createdAt ? ` · ${formatWhen(item.createdAt)}` : ''}
+                  </p>
+                </div>
+                {item.gain != null ? (
+                  <span className="shrink-0 text-[15px] font-bold text-ds-accenttext">
+                    +{item.gain}
+                  </span>
+                ) : null}
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
+
+      {/* Settings */}
+      <section className="flex flex-col gap-2">
+        <h2 className="font-display px-1 text-[19px] font-bold text-ds-text">
+          Réglages
+        </h2>
+        <div className="overflow-hidden rounded-[22px] border border-ds-line bg-ds-surface">
+          <div className="flex min-h-14 items-center gap-3 px-3.5">
+            <span className="flex-1 text-[15px] font-semibold text-ds-text">
+              Alertes drops
+            </span>
+            <button
+              type="button"
+              role="switch"
+              aria-checked={dropAlerts}
+              aria-label="Alertes drops"
+              onClick={toggleDropAlerts}
+              className={cn(
+                'relative h-[31px] w-[51px] shrink-0 rounded-2xl transition-colors',
+                dropAlerts ? 'bg-ds-accent' : 'bg-ds-surface2'
+              )}
+            >
+              <span
+                className={cn(
+                  'absolute top-0.5 left-0.5 h-[27px] w-[27px] rounded-[14px] bg-white shadow transition-transform',
+                  dropAlerts && 'translate-x-5'
+                )}
+              />
+            </button>
+          </div>
+
+          <div className="border-t border-ds-line px-3.5 py-3">
+            <div className="mb-2.5 flex items-center gap-2">
+              <span className="flex-1 text-[15px] font-semibold text-ds-text">
+                Thème
+              </span>
+              <span className="text-[15px] text-ds-text2">{themePrefLabel}</span>
+            </div>
+            <ThemeSwitcher />
+          </div>
+
+          <button
+            type="button"
+            onClick={requestLocation}
+            className="flex min-h-14 w-full items-center gap-3 border-t border-ds-line px-3.5 text-left"
+          >
+            <span className="flex-1 text-[15px] font-semibold text-ds-text">
+              Localisation
+            </span>
+            <span className="text-[15px] text-ds-text2">
+              {locLabel(locStatus)}
+            </span>
+            <CaretRight
+              size={18}
+              weight="regular"
+              className="shrink-0 text-ds-text2"
+              aria-hidden
+            />
+          </button>
+        </div>
+      </section>
+
+      {/* Preferences (from ProfileSheet) */}
+      <section className="flex flex-col gap-2">
+        <div className="flex items-baseline justify-between px-1">
+          <h2 className="font-display text-[19px] font-bold text-ds-text">
+            Mes styles de café
+          </h2>
+          <span className="text-xs text-ds-text2">
+            {prefs.length} sélectionné{prefs.length > 1 ? 's' : ''}
+          </span>
+        </div>
+        <PreferencePills value={prefs} onChange={setPrefs} variant="pills" />
+        <p className="px-1 text-xs text-ds-text2">
+          Le feed met en avant les spots et drops qui correspondent.
+        </p>
+        {saveError ? (
+          <p className="px-1 text-sm text-ds-accent">{saveError}</p>
+        ) : null}
+        <Button
+          variant={saved ? 'tonal' : 'main'}
+          disabled={saving || (!dirty && !saved) || prefs.length === 0}
+          onClick={() => void handleSave()}
+          className="w-full"
+        >
+          {saved ? (
+            <>
+              <Check size={20} weight="bold" />
+              Enregistré
+            </>
+          ) : saving ? (
+            'Enregistrement…'
+          ) : prefs.length === 0 ? (
+            'Choisis au moins un style'
+          ) : (
+            'Enregistrer'
+          )}
+        </Button>
+      </section>
+
+      <div className="flex flex-col gap-2 pt-2">
+        <Button
+          variant="outline"
+          onClick={() => void signOut()}
+          className="w-full"
+        >
+          <SignOut size={20} weight="bold" />
+          Se déconnecter
+        </Button>
+        <Link
+          href="/map"
+          className="py-2 text-center text-sm font-semibold text-ds-text2"
+        >
+          Retour à la carte
+        </Link>
+      </div>
     </main>
   );
 }

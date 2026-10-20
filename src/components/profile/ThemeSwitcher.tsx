@@ -1,11 +1,12 @@
 'use client';
 
 import { useTheme, type ThemePreference } from '@/lib/theme';
+import { cn } from '@/lib/cn';
 
-const options: { id: ThemePreference; label: string; emoji: string }[] = [
-  { id: 'light', label: 'Clair', emoji: '☀️' },
-  { id: 'dark', label: 'Sombre', emoji: '🌙' },
-  { id: 'system', label: 'Système', emoji: '📱' },
+const options: { id: ThemePreference; label: string }[] = [
+  { id: 'light', label: 'Clair' },
+  { id: 'dark', label: 'Sombre' },
+  { id: 'system', label: 'Système' },
 ];
 
 export default function ThemeSwitcher() {
@@ -15,7 +16,7 @@ export default function ThemeSwitcher() {
     <div
       role="radiogroup"
       aria-label="Thème d'affichage"
-      className="grid grid-cols-3 gap-2 p-1 rounded-2xl bg-brand-muted border border-brand-mocha/10"
+      className="grid grid-cols-3 gap-1.5 rounded-2xl bg-ds-surface2 p-1"
     >
       {options.map((opt) => {
         const selected = preference === opt.id;
@@ -26,13 +27,13 @@ export default function ThemeSwitcher() {
             role="radio"
             aria-checked={selected}
             onClick={() => setPreference(opt.id)}
-            className={`flex flex-col items-center gap-1 py-2.5 px-2 rounded-xl text-xs font-semibold transition-all active:scale-95 ${
+            className={cn(
+              'rounded-xl px-2 py-2.5 text-center text-xs font-semibold transition-all active:scale-95',
               selected
-                ? 'bg-brand-surface text-brand-espresso shadow-sm ring-1 ring-brand-mocha/15'
-                : 'text-brand-mocha hover:text-brand-espresso'
-            }`}
+                ? 'bg-ds-surface text-ds-text shadow-sm ring-1 ring-ds-line'
+                : 'text-ds-text2 hover:text-ds-text'
+            )}
           >
-            <span className="text-base leading-none">{opt.emoji}</span>
             {opt.label}
           </button>
         );

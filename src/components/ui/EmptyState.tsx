@@ -10,7 +10,12 @@ export interface EmptyStateProps {
   description: string;
   actionLabel: string;
   onAction?: () => void;
+  /** Optional leading icon inside the primary button (refresh, bell…). */
+  actionIcon?: ReactNode;
   actionProps?: Omit<ButtonProps, "children" | "onClick" | "variant">;
+  /** Text-style secondary action under the primary button. */
+  secondaryLabel?: string;
+  onSecondary?: () => void;
   className?: string;
 }
 
@@ -20,7 +25,10 @@ export default function EmptyState({
   description,
   actionLabel,
   onAction,
+  actionIcon,
   actionProps,
+  secondaryLabel,
+  onSecondary,
   className,
 }: EmptyStateProps) {
   return (
@@ -42,9 +50,24 @@ export default function EmptyState({
       <p className="m-0 mb-2 max-w-sm text-base leading-snug text-ds-text2">
         {description}
       </p>
-      <Button variant="main" onClick={onAction} {...actionProps}>
+      <Button
+        variant="main"
+        onClick={onAction}
+        className="w-full max-w-sm"
+        {...actionProps}
+      >
+        {actionIcon}
         {actionLabel}
       </Button>
+      {secondaryLabel ? (
+        <button
+          type="button"
+          onClick={onSecondary}
+          className="inline-flex h-11 items-center justify-center px-4 text-base font-bold text-ds-accent"
+        >
+          {secondaryLabel}
+        </button>
+      ) : null}
     </div>
   );
 }

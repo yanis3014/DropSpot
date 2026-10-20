@@ -29,11 +29,14 @@ import {
   getGrainsBalance,
   GRAIN_BADGES,
 } from '@/lib/grains';
+import {
+  getDropAlertsEnabled,
+  setDropAlertsEnabled,
+} from '@/lib/dropAlerts';
 import { PreferenceId } from '@/lib/preferences';
 import { useTheme } from '@/lib/theme';
 import { cn } from '@/lib/cn';
 
-const DROP_ALERTS_KEY = 'dropspot_drop_alerts';
 const PREVIEW_CONTRIBS = 3;
 
 type LocStatus = 'unknown' | 'granted' | 'prompt' | 'denied';
@@ -70,17 +73,6 @@ function formatWhen(iso: string): string {
 function initialLetter(name: string): string {
   const t = name.trim();
   return t ? t.charAt(0).toUpperCase() : '?';
-}
-
-function readDropAlerts(): boolean {
-  if (typeof window === 'undefined') return true;
-  try {
-    const raw = localStorage.getItem(DROP_ALERTS_KEY);
-    if (raw === null) return true;
-    return raw === '1' || raw === 'true';
-  } catch {
-    return true;
-  }
 }
 
 function locLabel(status: LocStatus): string {
@@ -122,7 +114,7 @@ export default function ProfilePage() {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
-  const [dropAlerts, setDropAlerts] = useState(readDropAlerts);
+  const [dropAlerts, setDropAlerts] = useState(getDropAlertsEnabled);
   const [locStatus, setLocStatus] = useState<LocStatus>('unknown');
   const [contribs, setContribs] = useState<ContributionItem[]>([]);
   const [contribsLoading, setContribsLoading] = useState(true);
@@ -208,11 +200,7 @@ export default function ProfilePage() {
   const toggleDropAlerts = useCallback(() => {
     setDropAlerts((prev) => {
       const next = !prev;
-      try {
-        localStorage.setItem(DROP_ALERTS_KEY, next ? '1' : '0');
-      } catch {
-        // ignore
-      }
+      setDropAlertsEnabled(next);
       return next;
     });
   }, []);

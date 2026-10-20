@@ -8,6 +8,7 @@ import {
   Clock,
   Heart,
   Leaf,
+  MagnifyingGlass,
   MapTrifold,
   Moon,
   WifiHigh,
@@ -37,6 +38,7 @@ import {
 } from "@/lib/mapFilters";
 import CafeRow, { type CafeRowFeature } from "@/components/ui/CafeRow";
 import Chip from "@/components/ui/Chip";
+import EmptyState from "@/components/ui/EmptyState";
 import { cn } from "@/lib/cn";
 
 const NEARBY_RADIUS_M = 1000;
@@ -78,7 +80,7 @@ type PlaceWithDistance = Place & { distanceM: number | null };
 
 export default function NearbyList() {
   const { isAuthenticated } = useAuth();
-  const { filters, toggleFilter } = usePlaceFilters();
+  const { filters, toggleFilter, setFilters } = usePlaceFilters();
 
   const [places, setPlaces] = useState<Place[]>(
     () => peekCache<Place[]>("places:full") ?? []
@@ -237,11 +239,22 @@ export default function NearbyList() {
           <p className="py-10 text-center text-sm text-ds-text2">
             Chargement des cafés…
           </p>
+        ) : ranked.length === 0 && favoritesOnly && !isAuthenticated ? (
+          <p className="py-10 text-center text-sm text-ds-text2">
+            Connecte-toi pour voir tes favoris.
+          </p>
+        ) : ranked.length === 0 && filters.length > 0 ? (
+          <EmptyState
+            icon={<MagnifyingGlass weight="regular" />}
+            title="Aucun café ne coche tout"
+            description="Retire un filtre pour élargir la recherche."
+            actionLabel="Effacer les filtres"
+            onAction={() => setFilters([])}
+            className="px-4 pt-[7.5rem]"
+          />
         ) : ranked.length === 0 ? (
           <p className="py-10 text-center text-sm text-ds-text2">
-            {favoritesOnly && !isAuthenticated
-              ? "Connecte-toi pour voir tes favoris."
-              : "Aucun café ne coche tout."}
+            Aucun café à proximité pour l&apos;instant.
           </p>
         ) : (
           ranked.map((place) => {

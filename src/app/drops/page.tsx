@@ -2,11 +2,19 @@
 
 import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
-import { ArrowRight, Clock } from "@phosphor-icons/react";
+import {
+  ArrowClockwise,
+  ArrowRight,
+  Bell,
+  Clock,
+  Lightning,
+  WifiSlash,
+} from "@phosphor-icons/react";
 import DropDetailModal from "@/components/drops/DropDetailModal";
 import LoginModal from "@/components/auth/LoginModal";
 import Button from "@/components/ui/Button";
 import Chip from "@/components/ui/Chip";
+import EmptyState from "@/components/ui/EmptyState";
 import GrainsBadge from "@/components/ui/GrainsBadge";
 import { useAuth } from "@/lib/hooks/useAuth";
 import { useProfile } from "@/lib/hooks/useProfile";
@@ -16,6 +24,7 @@ import {
   formatCountdown,
   getDropTiming,
 } from "@/lib/api/drops";
+import { setDropAlertsEnabled } from "@/lib/dropAlerts";
 import { dropMatchesFilter, normalizeKey } from "@/lib/filters";
 import { getGrainsBalance } from "@/lib/grains";
 import { openDirections } from "@/lib/utils/directions";
@@ -137,20 +146,25 @@ export default function DropsPage() {
   const [claimedDrops, setClaimedDrops] = useState<string[]>(readStoredClaims);
   const [showLogin, setShowLogin] = useState(false);
   const [localGrains] = useState(() => getGrainsBalance());
+  const [alertsJustEnabled, setAlertsJustEnabled] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
-    const load = async () => {
-      try {
-        setLoading(true);
-        setDrops(await getExploreDrops());
-      } catch (error) {
+    let cancelled = false;
+    getExploreDrops()
+      .then((data) => {
+        if (!cancelled) setDrops(data);
+      })
+      .catch((error) => {
         console.error("Error loading drops:", error);
-      } finally {
-        setLoading(false);
-      }
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
     };
-    void load();
-  }, []);
+  }, [reloadKey]);
 
   useEffect(() => {
     if (drops.length === 0 || !online) return;
@@ -199,6 +213,16 @@ export default function DropsPage() {
     });
   };
 
+  const handleRetry = () => {
+    setLoading(true);
+    setReloadKey((k) => k + 1);
+  };
+
+  const handleEnableAlerts = () => {
+    setDropAlertsEnabled(true);
+    setAlertsJustEnabled(true);
+  };
+
   return (
     <div className="flex flex-1 flex-col bg-ds-bg pb-28 text-ds-text">
       <div className="flex items-center justify-between px-5 pb-1 pt-8">
@@ -222,25 +246,38 @@ export default function DropsPage() {
           role="status"
           className="mx-4 mb-3 flex items-center gap-2.5 rounded-[14px] bg-ds-surface2 px-3.5 py-3 text-sm font-semibold text-ds-text"
         >
+          <WifiSlash size={18} weight="regular" aria-hidden />
           Hors ligne · les offres se mettront à jour au retour du réseau
         </div>
       ) : null}
 
-      <div className="flex gap-2 overflow-x-auto scrollbar-hide px-4 pb-3.5">
-        {DROP_CHIPS.map((c) => (
-          <Chip
-            key={c.id}
-            active={chip === c.id}
-            onClick={() => setChip(c.id)}
-          >
-            {c.label}
-          </Chip>
-        ))}
-        <div className="w-2 shrink-0" aria-hidden />
-      </div>
+      {online ? (
+        <div className="flex gap-2 overflow-x-auto scrollbar-hide px-4 pb-3.5">
+          {DROP_CHIPS.map((c) => (
+            <Chip
+              key={c.id}
+              active={chip === c.id}
+              onClick={() => setChip(c.id)}
+            >
+              {c.label}
+            </Chip>
+          ))}
+          <div className="w-2 shrink-0" aria-hidden />
+        </div>
+      ) : null}
 
       <div className="flex flex-col gap-3 px-4">
-        {loading ? (
+        {!online ? (
+          <EmptyState
+            icon={<WifiSlash weight="regular" />}
+            title="Pas de connexion"
+            description="Les drops reviennent dès que le réseau est là."
+            actionLabel="Réessayer"
+            actionIcon={<ArrowClockwise size={20} weight="regular" />}
+            onAction={handleRetry}
+            className="px-4 pt-[8rem]"
+          />
+        ) : loading ? (
           [1, 2, 3].map((i) => (
             <div
               key={i}
@@ -248,14 +285,18 @@ export default function DropsPage() {
             />
           ))
         ) : filtered.length === 0 ? (
-          <div className="rounded-[22px] border border-dashed border-ds-line bg-ds-surface px-6 py-12 text-center">
-            <p className="font-display text-lg font-bold text-ds-text">
-              Aucun drop pour l&apos;instant
-            </p>
-            <p className="mt-1 text-sm text-ds-text2">
-              On te prévient dès qu&apos;une offre tombe près de toi.
-            </p>
-          </div>
+          <EmptyState
+            icon={<Lightning weight="regular" />}
+            title={"Aucun drop pour l'instant"}
+            description={"On te prévient dès qu'une offre tombe près de toi."}
+            actionLabel={
+              alertsJustEnabled ? "Alertes activées" : "Activer les alertes"
+            }
+            actionIcon={<Bell size={20} weight="regular" />}
+            onAction={handleEnableAlerts}
+            actionProps={alertsJustEnabled ? { disabled: true } : undefined}
+            className="px-4 pt-[12rem]"
+          />
         ) : (
           filtered.map((drop) => {
             const remaining = msRemaining(drop.end_time, now);

@@ -24,6 +24,7 @@ import {
   Coffee,
   Crosshair,
   Leaf,
+  GpsSlash,
   Moon,
   WifiHigh,
 } from "@phosphor-icons/react";
@@ -38,12 +39,18 @@ import {
 } from "@/lib/cafePresentation";
 import { AMENITY_FILTER_IDS, type AmenityFilterId } from "@/lib/mapFilters";
 import { usePlaceFilters } from "@/lib/hooks/usePlaceFilters";
-import { distanceMeters, formatDistance, type LatLng } from "@/lib/geo";
+import {
+  distanceMeters,
+  formatDistance,
+  getCurrentPosition,
+  type LatLng,
+} from "@/lib/geo";
 import { useTheme } from "@/lib/theme";
 import MapSkeleton from "@/components/map/MapSkeleton";
 import MapPin from "@/components/ui/MapPin";
 import CafeRow, { type CafeRowFeature } from "@/components/ui/CafeRow";
 import Chip from "@/components/ui/Chip";
+import EmptyState from "@/components/ui/EmptyState";
 import { cn } from "@/lib/cn";
 
 const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN;
@@ -154,10 +161,13 @@ export default function PremiumMap() {
   const [loading, setLoading] = useState(() => !peekCache("places:full"));
   const [error, setError] = useState<string | null>(null);
   const [userCoords, setUserCoords] = useState<LatLng | null>(null);
+  const [geoDenied, setGeoDenied] = useState(false);
+  const [locBannerDismissed, setLocBannerDismissed] = useState(false);
 
   const mapRef = useRef<MapRef>(null);
   const geolocateControlRef = useRef<MapboxGeolocateControl | null>(null);
   const didAutoGeolocate = useRef(false);
+  const showLocDenied = geoDenied && !locBannerDismissed && !userCoords;
 
   const mapStyle = theme === "dark" ? MAP_STYLE_DARK : MAP_STYLE_LIGHT;
 
@@ -186,6 +196,35 @@ export default function PremiumMap() {
     };
   }, []);
 
+  useEffect(() => {
+    let cancelled = false;
+    const syncPermission = async () => {
+      if (typeof navigator === "undefined" || !navigator.permissions?.query) {
+        return;
+      }
+      try {
+        const status = await navigator.permissions.query({
+          name: "geolocation" as PermissionName,
+        });
+        if (cancelled) return;
+        if (status.state === "denied") setGeoDenied(true);
+        status.onchange = () => {
+          if (status.state === "denied") setGeoDenied(true);
+          else if (status.state === "granted") {
+            setGeoDenied(false);
+            setLocBannerDismissed(false);
+          }
+        };
+      } catch {
+        // Permissions API may reject geolocation on some browsers
+      }
+    };
+    void syncPermission();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   const handleMapLoad = useCallback(() => {
     if (didAutoGeolocate.current) return;
     didAutoGeolocate.current = true;
@@ -197,6 +236,25 @@ export default function PremiumMap() {
   const handleNearMe = () => {
     geolocateControlRef.current?.trigger();
   };
+
+  const handleEnableLocation = useCallback(async () => {
+    setLocBannerDismissed(false);
+    const result = await getCurrentPosition();
+    if (result.ok) {
+      setGeoDenied(false);
+      setUserCoords(result.coords);
+      geolocateControlRef.current?.trigger();
+      mapRef.current?.flyTo({
+        center: [result.coords.lng, result.coords.lat],
+        zoom: 14,
+        duration: 1000,
+      });
+      return;
+    }
+    if (result.reason === "denied") {
+      setGeoDenied(true);
+    }
+  }, []);
 
   const handleMarkerClick = async (
     e: { originalEvent: { stopPropagation: () => void } },
@@ -292,10 +350,14 @@ export default function PremiumMap() {
           positionOptions={{ enableHighAccuracy: true }}
           style={{ display: "none" }}
           onGeolocate={(e) => {
+            setGeoDenied(false);
             setUserCoords({
               lat: e.coords.latitude,
               lng: e.coords.longitude,
             });
+          }}
+          onError={() => {
+            setGeoDenied(true);
           }}
         />
 
@@ -352,22 +414,39 @@ export default function PremiumMap() {
         </div>
       </div>
 
-      <button
-        type="button"
-        onClick={handleNearMe}
-        className={cn(
-          "absolute left-1/2 z-20 flex h-[52px] -translate-x-1/2 items-center justify-center gap-2 rounded-[26px] bg-ds-accent px-5 text-base font-bold text-ds-onaccent shadow-ds",
-          selectedPlace ? "bottom-[13.5rem]" : "bottom-28"
-        )}
-      >
-        <Crosshair size={22} weight="regular" aria-hidden />
-        Près de moi
-      </button>
+      {!showLocDenied ? (
+        <button
+          type="button"
+          onClick={handleNearMe}
+          className={cn(
+            "absolute left-1/2 z-20 flex h-[52px] -translate-x-1/2 items-center justify-center gap-2 rounded-[26px] bg-ds-accent px-5 text-base font-bold text-ds-onaccent shadow-ds",
+            selectedPlace ? "bottom-[13.5rem]" : "bottom-28"
+          )}
+        >
+          <Crosshair size={22} weight="regular" aria-hidden />
+          Près de moi
+        </button>
+      ) : null}
+
+      {showLocDenied ? (
+        <div className="absolute inset-x-4 bottom-28 z-30 rounded-3xl bg-ds-surface px-5 pb-3.5 pt-6 shadow-ds">
+          <EmptyState
+            icon={<GpsSlash weight="regular" />}
+            title="Localisation désactivée"
+            description="Active-la pour voir les cafés autour de toi."
+            actionLabel="Activer la localisation"
+            onAction={() => void handleEnableLocation()}
+            secondaryLabel="Chercher une adresse"
+            onSecondary={() => router.push("/list")}
+            className="px-1"
+          />
+        </div>
+      ) : null}
 
       <div
         className={cn(
           "absolute inset-x-4 z-30 transition-transform duration-300",
-          selectedPlace
+          selectedPlace && !showLocDenied
             ? "bottom-24 translate-y-0"
             : "bottom-24 translate-y-[140%]"
         )}

@@ -1,8 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
+import { Suspense } from "react";
 import { Lightning, List, MapTrifold, User } from "@phosphor-icons/react";
+import { FILTERS_PARAM } from "@/lib/mapFilters";
 import { cn } from "@/lib/cn";
 
 const items = [
@@ -15,8 +17,29 @@ const items = [
 /** Routes without the B2C tab bar (Espace Pro + auth / onboarding). */
 const HIDDEN_PREFIXES = ["/dashboard-pro", "/login", "/onboarding"] as const;
 
-export default function BottomNav() {
+/** Keep shared `?filters=` when switching Carte ↔ Liste. */
+function hrefWithSharedFilters(
+  href: string,
+  pathname: string,
+  filters: string | null
+): string {
+  if (!filters) return href;
+  if (
+    (href === "/map" || href === "/list") &&
+    (pathname === "/map" ||
+      pathname === "/list" ||
+      pathname.startsWith("/map/") ||
+      pathname.startsWith("/list/"))
+  ) {
+    return `${href}?${FILTERS_PARAM}=${encodeURIComponent(filters)}`;
+  }
+  return href;
+}
+
+function BottomNavInner() {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const filters = searchParams.get(FILTERS_PARAM);
 
   if (
     !pathname ||
@@ -33,11 +56,12 @@ export default function BottomNav() {
       {items.map(({ href, label, icon: Icon }) => {
         const isActive =
           pathname === href || pathname.startsWith(`${href}/`);
+        const target = hrefWithSharedFilters(href, pathname, filters);
 
         return (
           <Link
             key={href}
-            href={href}
+            href={target}
             className={cn(
               "flex flex-1 flex-col items-center justify-center gap-1 py-1 text-xs font-semibold no-underline transition-colors active:scale-95",
               isActive ? "text-ds-accent" : "text-ds-text2"
@@ -51,5 +75,13 @@ export default function BottomNav() {
         );
       })}
     </nav>
+  );
+}
+
+export default function BottomNav() {
+  return (
+    <Suspense fallback={null}>
+      <BottomNavInner />
+    </Suspense>
   );
 }

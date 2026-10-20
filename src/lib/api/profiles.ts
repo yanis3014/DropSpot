@@ -4,9 +4,7 @@ import {
   emptyOnboardingAnswers,
   parseOnboardingAnswers,
   type OnboardingAnswers,
-  WELCOME_GRAINS,
 } from '@/lib/onboarding';
-import { addGrains } from '@/lib/grains';
 
 export interface Profile {
   id: string;
@@ -74,7 +72,10 @@ export interface ProfilePatch {
   onboarding_answers?: OnboardingAnswers;
   /** Set to true to stamp onboarding_completed_at. */
   completeOnboarding?: boolean;
-  /** Crédite +50 Grains une seule fois (première finalisation). */
+  /**
+   * After onboarding is completed, ask the server RPC to credit +50 Grains
+   * once (`claim_welcome_grains`). Never written from the client.
+   */
   claimWelcomeGrains?: boolean;
 }
 
@@ -95,45 +96,20 @@ export async function upsertMyProfile(
 
   const { completeOnboarding, claimWelcomeGrains, ...fields } = patch;
 
-  const { data: existing } = await supabase
-    .from('profiles')
-    .select('grains_balance, welcome_grains_claimed_at')
-    .eq('id', user.id)
-    .maybeSingle();
-
-  const alreadyClaimed = Boolean(
-    (existing as { welcome_grains_claimed_at?: string | null } | null)
-      ?.welcome_grains_claimed_at
-  );
-  const currentGrains = (() => {
-    const g = (existing as { grains_balance?: number } | null)?.grains_balance;
-    return typeof g === 'number' && Number.isFinite(g)
-      ? Math.max(0, Math.floor(g))
-      : 0;
-  })();
-
-  // Bonus uniquement à la 1ère complétion d'onboarding
-  const awardWelcome =
-    Boolean(completeOnboarding) &&
-    Boolean(claimWelcomeGrains) &&
-    !alreadyClaimed;
-
+  // Never send grains_balance / welcome_grains_claimed_at — server-owned columns.
   const payload: Record<string, unknown> = { id: user.id, ...fields };
+  delete payload.grains_balance;
+  delete payload.welcome_grains_claimed_at;
+
   if (completeOnboarding) {
     payload.onboarding_completed_at = new Date().toISOString();
   }
 
-  let welcomeGrainsAwarded = 0;
-  if (awardWelcome) {
-    welcomeGrainsAwarded = WELCOME_GRAINS;
-    payload.grains_balance = currentGrains + WELCOME_GRAINS;
-    payload.welcome_grains_claimed_at = new Date().toISOString();
-    if (fields.onboarding_answers) {
-      payload.onboarding_answers = {
-        ...fields.onboarding_answers,
-        welcomeBonus: true,
-      };
-    }
+  if (claimWelcomeGrains && fields.onboarding_answers) {
+    payload.onboarding_answers = {
+      ...fields.onboarding_answers,
+      welcomeBonus: true,
+    };
   }
 
   const { data, error } = await supabase
@@ -156,6 +132,9 @@ export async function upsertMyProfile(
       if (completeOnboarding) {
         fallbackPayload.onboarding_completed_at = new Date().toISOString();
       }
+      if (fields.onboarding_answers) {
+        fallbackPayload.onboarding_answers = payload.onboarding_answers;
+      }
       const fallback = await supabase
         .from('profiles')
         .upsert(fallbackPayload, { onConflict: 'id' })
@@ -165,32 +144,48 @@ export async function upsertMyProfile(
         console.error('Error saving profile:', fallback.error);
         throw fallback.error;
       }
-      if (awardWelcome) {
-        welcomeGrainsAwarded = WELCOME_GRAINS;
-        addGrains(WELCOME_GRAINS);
+
+      let welcomeGrainsAwarded = 0;
+      if (completeOnboarding && claimWelcomeGrains) {
+        welcomeGrainsAwarded = await claimWelcomeGrainsRpc();
       }
-      return {
-        profile: normalize({
+
+      const refreshed = (await getMyProfile()) ??
+        normalize({
           ...(fallback.data as Record<string, unknown>),
           onboarding_answers:
             fields.onboarding_answers ?? emptyOnboardingAnswers(),
-          grains_balance: awardWelcome
-            ? currentGrains + WELCOME_GRAINS
-            : currentGrains,
-        }),
-        welcomeGrainsAwarded,
-      };
+        });
+
+      return { profile: refreshed, welcomeGrainsAwarded };
     }
     console.error('Error saving profile:', error);
     throw error;
   }
 
-  if (welcomeGrainsAwarded > 0) {
-    addGrains(welcomeGrainsAwarded);
+  let welcomeGrainsAwarded = 0;
+  if (completeOnboarding && claimWelcomeGrains) {
+    welcomeGrainsAwarded = await claimWelcomeGrainsRpc();
   }
 
+  const refreshed =
+    (await getMyProfile()) ?? normalize(data as Record<string, unknown>);
+
   return {
-    profile: normalize(data as Record<string, unknown>),
+    profile: refreshed,
     welcomeGrainsAwarded,
   };
+}
+
+/** Server-side welcome credit; returns 0 if already claimed / not eligible. */
+async function claimWelcomeGrainsRpc(): Promise<number> {
+  if (!supabase) return 0;
+  const { data, error } = await supabase.rpc('claim_welcome_grains');
+  if (error) {
+    console.error('claim_welcome_grains RPC error:', error);
+    return 0;
+  }
+  return typeof data === 'number' && Number.isFinite(data)
+    ? Math.max(0, Math.floor(data))
+    : 0;
 }

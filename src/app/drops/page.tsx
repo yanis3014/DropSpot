@@ -26,7 +26,6 @@ import {
 } from "@/lib/api/drops";
 import { setDropAlertsEnabled } from "@/lib/dropAlerts";
 import { dropMatchesFilter, normalizeKey } from "@/lib/filters";
-import { getGrainsBalance } from "@/lib/grains";
 import { openDirections } from "@/lib/utils/directions";
 import { cn } from "@/lib/cn";
 
@@ -132,7 +131,10 @@ function readStoredClaims(): string[] {
 
 export default function DropsPage() {
   const { isAuthenticated, loading: authLoading } = useAuth();
-  const { profile } = useProfile(isAuthenticated, authLoading);
+  const { profile, loading: profileLoading } = useProfile(
+    isAuthenticated,
+    authLoading
+  );
   const online = useSyncExternalStore(
     subscribeOnline,
     getOnlineSnapshot,
@@ -145,7 +147,6 @@ export default function DropsPage() {
   const [selectedDrop, setSelectedDrop] = useState<Drop | null>(null);
   const [claimedDrops, setClaimedDrops] = useState<string[]>(readStoredClaims);
   const [showLogin, setShowLogin] = useState(false);
-  const [localGrains] = useState(() => getGrainsBalance());
   const [alertsJustEnabled, setAlertsJustEnabled] = useState(false);
   const [reloadKey, setReloadKey] = useState(0);
 
@@ -172,7 +173,9 @@ export default function DropsPage() {
     return () => clearInterval(interval);
   }, [drops.length, online]);
 
-  const grainsBalance = profile?.grains_balance ?? localGrains;
+  const grainsBalance = profile?.grains_balance ?? 0;
+  const showGrainsBadge =
+    isAuthenticated && !authLoading && !profileLoading && profile != null;
 
   const filtered = useMemo(() => {
     return drops
@@ -229,13 +232,15 @@ export default function DropsPage() {
         <h1 className="font-display text-[34px] font-extrabold leading-tight text-ds-text">
           Drops flash
         </h1>
-        <Link
-          href="/profile"
-          aria-label={`${grainsBalance} Grains, voir mon profil`}
-          className="no-underline"
-        >
-          <GrainsBadge balance={grainsBalance} />
-        </Link>
+        {showGrainsBadge ? (
+          <Link
+            href="/profile"
+            aria-label={`${grainsBalance} Grains, voir mon profil`}
+            className="no-underline"
+          >
+            <GrainsBadge balance={grainsBalance} />
+          </Link>
+        ) : null}
       </div>
       <p className="m-0 px-5 pb-3.5 text-[15px] text-ds-text2">
         Offres éphémères à moins de 1 km

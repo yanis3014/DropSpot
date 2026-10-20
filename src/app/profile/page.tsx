@@ -24,11 +24,7 @@ import {
 } from '@/lib/api/contributions';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { useProfile } from '@/lib/hooks/useProfile';
-import {
-  badgeProgress,
-  getGrainsBalance,
-  GRAIN_BADGES,
-} from '@/lib/grains';
+import { badgeProgress, GRAIN_BADGES } from '@/lib/grains';
 import {
   getDropAlertsEnabled,
   setDropAlertsEnabled,
@@ -106,7 +102,6 @@ export default function ProfilePage() {
   );
   const { preference } = useTheme();
 
-  const [localGrains] = useState(() => getGrainsBalance());
   const [name, setName] = useState('');
   const [prefs, setPrefs] = useState<PreferenceId[]>([]);
   const [profileSyncKey, setProfileSyncKey] = useState('');
@@ -169,7 +164,7 @@ export default function ProfilePage() {
     };
   }, []);
 
-  const grains = profile?.grains_balance ?? localGrains;
+  const grains = profile?.grains_balance ?? 0;
   const progress = useMemo(() => badgeProgress(grains), [grains]);
   const avatar = profile?.avatar_url ?? avatarUrl;
   const shownName = name.trim() || displayName || 'Explorateur';
@@ -236,9 +231,26 @@ export default function ProfilePage() {
 
   if (authLoading || profileLoading) {
     return (
-      <main className="flex flex-1 flex-col bg-ds-bg px-4 pb-28 pt-8">
-        <div className="h-14 w-14 animate-pulse rounded-full bg-ds-surface2" />
-        <div className="mt-4 h-7 w-40 animate-pulse rounded-lg bg-ds-surface2" />
+      <main className="flex flex-1 flex-col gap-[18px] bg-ds-bg px-4 pb-28 pt-8">
+        <div className="flex items-center gap-3.5 px-1">
+          <div className="h-14 w-14 animate-pulse rounded-full bg-ds-surface2" />
+          <div className="flex flex-1 flex-col gap-2">
+            <div className="h-7 w-40 animate-pulse rounded-lg bg-ds-surface2" />
+            <div className="h-4 w-48 animate-pulse rounded bg-ds-surface2" />
+          </div>
+        </div>
+        <div className="flex flex-col gap-3.5 rounded-[22px] border border-ds-line bg-ds-surface p-[18px]">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2.5">
+              <div className="h-11 w-11 animate-pulse rounded-full bg-ds-surface2" />
+              <div className="h-10 w-28 animate-pulse rounded-lg bg-ds-surface2" />
+            </div>
+            <div className="h-8 w-24 animate-pulse rounded-[10px] bg-ds-surface2" />
+          </div>
+          <div className="h-2.5 w-full animate-pulse rounded-[5px] bg-ds-surface2" />
+          <div className="h-4 w-3/4 animate-pulse rounded bg-ds-surface2" />
+          <div className="h-[52px] w-full animate-pulse rounded-[14px] bg-ds-surface2" />
+        </div>
       </main>
     );
   }

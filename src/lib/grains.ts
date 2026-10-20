@@ -7,6 +7,12 @@ export const GRAINS_COOLDOWN_MS = 3 * 60 * 60 * 1000;
 /** Physical presence required to earn grains. */
 export const GRAINS_PROXIMITY_M = 100;
 
+/**
+ * @deprecated Le solde fait foi côté serveur (`profiles.grains_balance`).
+ * localStorage n’est plus une source de vérité (risque de double crédit).
+ * Conservé temporairement pour le check-in UI tant qu’il n’est pas branché
+ * sur le ledger serveur.
+ */
 export function getGrainsBalance(): number {
   if (typeof window === 'undefined') return 0;
   try {
@@ -18,6 +24,11 @@ export function getGrainsBalance(): number {
   }
 }
 
+/**
+ * @deprecated Le solde fait foi côté serveur (`profiles.grains_balance` +
+ * `grains_transactions` / RPC). Ne plus créditer depuis le client.
+ * Conservé temporairement pour le check-in UI.
+ */
 export function addGrains(amount: number): number {
   if (amount <= 0) return getGrainsBalance();
   const next = Math.max(0, getGrainsBalance() + Math.floor(amount));

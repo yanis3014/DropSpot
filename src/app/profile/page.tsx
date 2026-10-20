@@ -525,7 +525,6 @@ export default function ProfilePage() {
         </div>
       </section>
 
-      {/* Preferences (from ProfileSheet) */}
       <section className="flex flex-col gap-2">
         <div className="flex items-baseline justify-between px-1">
           <h2 className="font-display text-[19px] font-bold text-ds-text">

@@ -65,9 +65,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
         <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon.png" />
       </head>
-      <body className="min-h-full flex flex-col bg-brand-oat text-brand-espresso font-sans">
+      <body className="min-h-full flex flex-col bg-ds-bg text-ds-text font-sans">
         <ThemeProvider>
-          <div className="max-w-md mx-auto w-full min-h-full flex flex-col bg-brand-oat">
+          <div className="max-w-md mx-auto w-full min-h-full flex flex-col bg-ds-bg">
             {children}
             <BottomNav />
           </div>

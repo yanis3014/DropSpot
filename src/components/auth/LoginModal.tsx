@@ -81,20 +81,20 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
       />
 
       {/* Modal panel */}
-      <div className="relative w-full max-w-sm bg-brand-oat rounded-3xl shadow-2xl p-6 max-h-[90dvh] overflow-y-auto">
+      <div className="relative w-full max-w-sm bg-ds-bg rounded-3xl shadow-2xl p-6 max-h-[90dvh] overflow-y-auto">
         <button
           onClick={onClose}
           aria-label="Fermer"
-          className="absolute top-3 right-3 p-2 rounded-full text-brand-mocha hover:bg-brand-surface/60 hover:text-brand-espresso transition-colors"
+          className="absolute top-3 right-3 p-2 rounded-full text-ds-text2 hover:bg-ds-surface/60 hover:text-ds-text transition-colors"
         >
           <X size={20} weight="bold" />
         </button>
 
         <div className="text-center mb-6">
-          <h2 className="text-2xl font-extrabold text-brand-espresso tracking-tight">
+          <h2 className="text-2xl font-extrabold text-ds-text tracking-tight">
             DropSpot
           </h2>
-          <p className="text-sm text-brand-mocha mt-1">
+          <p className="text-sm text-ds-text2 mt-1">
             Connecte-toi pour enregistrer tes spots.
           </p>
         </div>
@@ -110,10 +110,10 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
           <button
             onClick={handleGoogleLogin}
             disabled={loading || !supabase}
-            className="w-full flex items-center justify-center gap-3 bg-brand-surface border border-brand-mocha/15 rounded-xl py-3 px-4 shadow-sm hover:shadow-md transition-all active:scale-95 disabled:opacity-50"
+            className="w-full flex items-center justify-center gap-3 bg-ds-surface border border-ds-text2/15 rounded-xl py-3 px-4 shadow-sm hover:shadow-md transition-all active:scale-95 disabled:opacity-50"
           >
-            <GoogleLogo size={20} weight="fill" className="text-brand-espresso" />
-            <span className="text-brand-espresso font-medium">Continuer avec Google</span>
+            <GoogleLogo size={20} weight="fill" className="text-ds-text" />
+            <span className="text-ds-text font-medium">Continuer avec Google</span>
           </button>
 
           <button
@@ -129,10 +129,10 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
         {/* Divider */}
         <div className="relative mb-5">
           <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-brand-mocha/20" />
+            <div className="w-full border-t border-ds-text2/20" />
           </div>
           <div className="relative flex justify-center text-sm">
-            <span className="px-4 bg-brand-oat text-brand-mocha">ou</span>
+            <span className="px-4 bg-ds-bg text-ds-text2">ou</span>
           </div>
         </div>
 
@@ -143,13 +143,13 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
             placeholder="ton@email.com"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full px-4 py-3 rounded-xl border border-brand-mocha/15 bg-brand-surface focus:border-brand-matcha focus:outline-none focus:ring-2 focus:ring-brand-matcha/20 transition-all"
+            className="w-full px-4 py-3 rounded-xl border border-ds-text2/15 bg-ds-surface focus:border-ds-ok focus:outline-none focus:ring-2 focus:ring-ds-ok/20 transition-all"
             disabled={loading || !supabase}
           />
           <button
             type="submit"
             disabled={loading || !email || !supabase}
-            className="w-full flex items-center justify-center gap-2 bg-brand-matcha text-white rounded-xl py-3 px-4 shadow-sm hover:bg-brand-matcha/90 transition-all active:scale-95 disabled:opacity-50"
+            className="w-full flex items-center justify-center gap-2 bg-ds-ok text-white rounded-xl py-3 px-4 shadow-sm hover:bg-ds-ok/90 transition-all active:scale-95 disabled:opacity-50"
           >
             <Envelope size={20} weight="fill" />
             <span className="font-medium">Recevoir un lien magique</span>
@@ -158,7 +158,7 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
 
         <button
           onClick={onClose}
-          className="w-full text-sm text-brand-mocha underline hover:text-brand-espresso transition-colors"
+          className="w-full text-sm text-ds-text2 underline hover:text-ds-text transition-colors"
         >
           Explorer l&apos;app sans compte pour l&apos;instant
         </button>

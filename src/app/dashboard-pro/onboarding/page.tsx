@@ -38,7 +38,7 @@ export default function DashboardProOnboardingPage() {
   if (loading || (profile && checkingPlaces)) {
     return (
       <div className="flex-1 flex items-center justify-center min-h-[50vh]">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-green" />
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-ds-ok" />
       </div>
     );
   }
@@ -46,13 +46,13 @@ export default function DashboardProOnboardingPage() {
   if (denied) {
     return (
       <div className="px-5 pt-8">
-        <Link href="/" className="text-sm font-semibold text-brand-mocha">
+        <Link href="/" className="text-sm font-semibold text-ds-text2">
           ← Retour
         </Link>
-        <p className="mt-6 font-bold text-brand-espresso">
+        <p className="mt-6 font-bold text-ds-text">
           Accès restaurateur requis
         </p>
-        <p className="mt-2 text-sm text-brand-mocha">
+        <p className="mt-2 text-sm text-ds-text2">
           Seuls les comptes <strong>vendor</strong> ou <strong>owner</strong>{' '}
           peuvent configurer un établissement.
         </p>
@@ -75,7 +75,7 @@ export default function DashboardProOnboardingPage() {
         <button
           type="button"
           onClick={() => void signOut()}
-          className="text-xs font-semibold text-brand-mocha hover:text-brand-espresso shrink-0"
+          className="text-xs font-semibold text-ds-text2 hover:text-ds-text shrink-0"
         >
           Déconnexion
         </button>

@@ -35,8 +35,8 @@ export default function SplashScreen() {
       }`}
     >
       {/* Ambient glow */}
-      <div className="absolute w-64 h-64 rounded-full bg-brand-terracotta/15 blur-3xl" />
-      <div className="absolute bottom-24 w-48 h-48 rounded-full bg-brand-matcha/10 blur-3xl" />
+      <div className="absolute w-64 h-64 rounded-full bg-ds-accent/15 blur-3xl" />
+      <div className="absolute bottom-24 w-48 h-48 rounded-full bg-ds-ok/10 blur-3xl" />
 
       {/* Logo block */}
       <div
@@ -46,15 +46,15 @@ export default function SplashScreen() {
       >
         {/* Icon tile with pulse ring */}
         <div className="relative mb-5">
-          <span className="absolute inset-0 rounded-3xl bg-brand-matcha/40 animate-ping [animation-duration:2s]" />
-          <div className="relative w-20 h-20 rounded-3xl bg-gradient-to-br from-brand-matcha to-brand-matcha/80 flex items-center justify-center shadow-2xl shadow-brand-matcha/30">
+          <span className="absolute inset-0 rounded-3xl bg-ds-ok/40 animate-ping [animation-duration:2s]" />
+          <div className="relative w-20 h-20 rounded-3xl bg-gradient-to-br from-ds-ok to-ds-ok/80 flex items-center justify-center shadow-2xl shadow-ds-ok/30">
             <Coffee size={40} weight="duotone" className="text-white" />
           </div>
         </div>
 
         {/* Wordmark */}
         <h1 className="text-4xl font-extrabold tracking-tight text-white">
-          Drop<span className="text-brand-terracotta">Spot</span>
+          Drop<span className="text-ds-accent">Spot</span>
         </h1>
         <p className="mt-2 text-sm text-white/50 font-medium tracking-wide">
           Ton spot. Ta vibe.
@@ -64,7 +64,7 @@ export default function SplashScreen() {
       {/* Progress bar */}
       <div className="absolute bottom-20 w-28 h-1 rounded-full bg-white/10 overflow-hidden">
         <div
-          className={`h-full rounded-full bg-gradient-to-r from-brand-matcha to-brand-terracotta transition-all ease-linear ${
+          className={`h-full rounded-full bg-gradient-to-r from-ds-ok to-ds-accent transition-all ease-linear ${
             entered ? 'w-full' : 'w-0'
           }`}
           style={{ transitionDuration: `${SPLASH_DURATION_MS}ms` }}

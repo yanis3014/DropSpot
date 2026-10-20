@@ -117,23 +117,23 @@ export default function PlacePage() {
 
   if (loading || authLoading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[100dvh] gap-3 bg-brand-oat">
-        <Spinner size={28} className="animate-spin text-brand-green" />
-        <p className="text-sm text-brand-mocha">Chargement du café…</p>
+      <div className="flex flex-col items-center justify-center min-h-[100dvh] gap-3 bg-ds-bg">
+        <Spinner size={28} className="animate-spin text-ds-ok" />
+        <p className="text-sm text-ds-text2">Chargement du café…</p>
       </div>
     );
   }
 
   if (error || !place) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[100dvh] gap-4 px-6 bg-brand-oat text-center">
-        <p className="text-base font-bold text-brand-espresso">
+      <div className="flex flex-col items-center justify-center min-h-[100dvh] gap-4 px-6 bg-ds-bg text-center">
+        <p className="text-base font-bold text-ds-text">
           {error ?? 'Café introuvable'}
         </p>
         <button
           type="button"
           onClick={() => router.push('/map')}
-          className="rounded-xl bg-brand-dark text-white font-bold text-sm px-5 py-3 active:scale-[0.98] transition-all"
+          className="rounded-xl bg-ds-pin text-white font-bold text-sm px-5 py-3 active:scale-[0.98] transition-all"
         >
           Retour à la carte
         </button>

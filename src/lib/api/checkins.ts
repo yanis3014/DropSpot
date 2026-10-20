@@ -29,7 +29,7 @@ export const crowdConfig: Record<
     label: 'Calme',
     sublabel: 'Peu de monde',
     emoji: '👻',
-    classes: 'bg-brand-matcha/10 text-brand-matcha',
+    classes: 'bg-ds-ok/10 text-ds-ok',
   },
   moderate: {
     label: 'Animé',
@@ -41,7 +41,7 @@ export const crowdConfig: Record<
     label: 'Blindé',
     sublabel: 'Complet',
     emoji: '🥵',
-    classes: 'bg-brand-terracotta/10 text-brand-terracotta',
+    classes: 'bg-ds-accent/10 text-ds-accent',
   },
 };
 

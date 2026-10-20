@@ -267,12 +267,12 @@ export default function VendorOnboardingWizard() {
             <li key={label} className="flex-1 min-w-0">
               <div
                 className={`h-1.5 rounded-full transition-colors ${
-                  done || active ? 'bg-brand-green' : 'bg-brand-mocha/15'
+                  done || active ? 'bg-ds-ok' : 'bg-ds-text2/15'
                 }`}
               />
               <p
                 className={`mt-1.5 text-[10px] font-bold truncate ${
-                  active ? 'text-brand-espresso' : 'text-brand-mocha'
+                  active ? 'text-ds-text' : 'text-ds-text2'
                 }`}
               >
                 {label}
@@ -283,7 +283,7 @@ export default function VendorOnboardingWizard() {
       </ol>
 
       {error && (
-        <p className="text-sm font-medium text-brand-terracotta bg-brand-terracotta/10 rounded-xl px-3 py-2">
+        <p className="text-sm font-medium text-ds-accent bg-ds-accent/10 rounded-xl px-3 py-2">
           {error}
         </p>
       )}
@@ -291,7 +291,7 @@ export default function VendorOnboardingWizard() {
       {/* Étape A */}
       {step === 0 && (
         <div className="space-y-4">
-          <p className="text-sm text-brand-mocha leading-relaxed">
+          <p className="text-sm text-ds-text2 leading-relaxed">
             Associe ton premier café pour publier des Flash Drops et valider les
             offres en caisse.
           </p>
@@ -302,15 +302,15 @@ export default function VendorOnboardingWizard() {
               onClick={() => chooseMode('claim')}
               className={`text-left rounded-2xl border p-4 transition-all active:scale-[0.99] ${
                 mode === 'claim'
-                  ? 'border-brand-green bg-brand-green/5 shadow-soft'
-                  : 'border-brand-mocha/15 bg-brand-surface hover:border-brand-green/30'
+                  ? 'border-ds-ok bg-ds-ok/5 shadow-soft'
+                  : 'border-ds-text2/15 bg-ds-surface hover:border-ds-ok/30'
               }`}
             >
-              <span className="flex items-center gap-2 font-extrabold text-brand-espresso">
-                <MagnifyingGlass size={20} weight="duotone" className="text-brand-green" />
+              <span className="flex items-center gap-2 font-extrabold text-ds-text">
+                <MagnifyingGlass size={20} weight="duotone" className="text-ds-ok" />
                 Revendiquer un café existant
               </span>
-              <span className="block text-xs text-brand-mocha mt-1">
+              <span className="block text-xs text-ds-text2 mt-1">
                 Choisis un spot déjà listé sur DropSpot (sans propriétaire).
               </span>
             </button>
@@ -320,24 +320,24 @@ export default function VendorOnboardingWizard() {
               onClick={() => chooseMode('create')}
               className={`text-left rounded-2xl border p-4 transition-all active:scale-[0.99] ${
                 mode === 'create'
-                  ? 'border-brand-green bg-brand-green/5 shadow-soft'
-                  : 'border-brand-mocha/15 bg-brand-surface hover:border-brand-green/30'
+                  ? 'border-ds-ok bg-ds-ok/5 shadow-soft'
+                  : 'border-ds-text2/15 bg-ds-surface hover:border-ds-ok/30'
               }`}
             >
-              <span className="flex items-center gap-2 font-extrabold text-brand-espresso">
-                <PlusCircle size={20} weight="duotone" className="text-brand-green" />
+              <span className="flex items-center gap-2 font-extrabold text-ds-text">
+                <PlusCircle size={20} weight="duotone" className="text-ds-ok" />
                 Ajouter un nouveau café
               </span>
-              <span className="block text-xs text-brand-mocha mt-1">
+              <span className="block text-xs text-ds-text2 mt-1">
                 Crée ta fiche depuis zéro (Nice par défaut pour la carte).
               </span>
             </button>
           </div>
 
           {mode === 'claim' && (
-            <div className="rounded-2xl border border-brand-mocha/10 bg-brand-surface p-4 space-y-3">
+            <div className="rounded-2xl border border-ds-text2/10 bg-ds-surface p-4 space-y-3">
               <label className="block space-y-1.5">
-                <span className="text-xs font-bold uppercase tracking-wider text-brand-mocha">
+                <span className="text-xs font-bold uppercase tracking-wider text-ds-text2">
                   Rechercher
                 </span>
                 <input
@@ -345,27 +345,27 @@ export default function VendorOnboardingWizard() {
                   value={claimQuery}
                   onChange={(e) => setClaimQuery(e.target.value)}
                   placeholder="Nom, adresse, ville…"
-                  className="w-full rounded-xl border border-brand-mocha/15 bg-brand-oat px-3.5 py-2.5 text-sm text-brand-espresso outline-none focus:border-brand-green/40 focus:ring-2 focus:ring-brand-green/15"
+                  className="w-full rounded-xl border border-ds-text2/15 bg-ds-bg px-3.5 py-2.5 text-sm text-ds-text outline-none focus:border-ds-ok/40 focus:ring-2 focus:ring-ds-ok/15"
                 />
               </label>
 
               {loadingList ? (
                 <div className="flex justify-center py-6">
-                  <Spinner size={24} className="animate-spin text-brand-green" />
+                  <Spinner size={24} className="animate-spin text-ds-ok" />
                 </div>
               ) : filteredUnclaimed.length === 0 ? (
-                <p className="text-sm text-brand-mocha text-center py-4">
+                <p className="text-sm text-ds-text2 text-center py-4">
                   Aucun café libre trouvé — crée plutôt un nouvel établissement.
                 </p>
               ) : (
                 <label className="block space-y-1.5">
-                  <span className="text-xs font-bold uppercase tracking-wider text-brand-mocha">
+                  <span className="text-xs font-bold uppercase tracking-wider text-ds-text2">
                     Café
                   </span>
                   <select
                     value={selectedPlaceId}
                     onChange={(e) => setSelectedPlaceId(e.target.value)}
-                    className="w-full rounded-xl border border-brand-mocha/15 bg-brand-oat px-3.5 py-2.5 text-sm text-brand-espresso outline-none focus:border-brand-green/40 focus:ring-2 focus:ring-brand-green/15"
+                    className="w-full rounded-xl border border-ds-text2/15 bg-ds-bg px-3.5 py-2.5 text-sm text-ds-text outline-none focus:border-ds-ok/40 focus:ring-2 focus:ring-ds-ok/15"
                   >
                     <option value="">Sélectionne un café…</option>
                     {filteredUnclaimed.map((p) => (
@@ -384,16 +384,16 @@ export default function VendorOnboardingWizard() {
 
       {/* Étape B */}
       {step === 1 && (
-        <div className="rounded-2xl border border-brand-mocha/10 bg-brand-surface p-5 space-y-4 shadow-soft">
+        <div className="rounded-2xl border border-ds-text2/10 bg-ds-surface p-5 space-y-4 shadow-soft">
           <div className="flex items-center gap-2 mb-1">
-            <Storefront size={20} weight="duotone" className="text-brand-green" />
-            <h2 className="text-base font-extrabold text-brand-espresso">
+            <Storefront size={20} weight="duotone" className="text-ds-ok" />
+            <h2 className="text-base font-extrabold text-ds-text">
               Informations pratiques
             </h2>
           </div>
 
           <label className="block space-y-1.5">
-            <span className="text-xs font-bold uppercase tracking-wider text-brand-mocha">
+            <span className="text-xs font-bold uppercase tracking-wider text-ds-text2">
               Nom de l’établissement
             </span>
             <input
@@ -402,12 +402,12 @@ export default function VendorOnboardingWizard() {
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Bloom Specialty Coffee"
-              className="w-full rounded-xl border border-brand-mocha/15 bg-brand-oat px-3.5 py-2.5 text-sm text-brand-espresso outline-none focus:border-brand-green/40 focus:ring-2 focus:ring-brand-green/15"
+              className="w-full rounded-xl border border-ds-text2/15 bg-ds-bg px-3.5 py-2.5 text-sm text-ds-text outline-none focus:border-ds-ok/40 focus:ring-2 focus:ring-ds-ok/15"
             />
           </label>
 
           <label className="block space-y-1.5">
-            <span className="text-xs font-bold uppercase tracking-wider text-brand-mocha">
+            <span className="text-xs font-bold uppercase tracking-wider text-ds-text2">
               Adresse complète
             </span>
             <input
@@ -416,12 +416,12 @@ export default function VendorOnboardingWizard() {
               value={address}
               onChange={(e) => setAddress(e.target.value)}
               placeholder="4 Bd Victor Hugo"
-              className="w-full rounded-xl border border-brand-mocha/15 bg-brand-oat px-3.5 py-2.5 text-sm text-brand-espresso outline-none focus:border-brand-green/40 focus:ring-2 focus:ring-brand-green/15"
+              className="w-full rounded-xl border border-ds-text2/15 bg-ds-bg px-3.5 py-2.5 text-sm text-ds-text outline-none focus:border-ds-ok/40 focus:ring-2 focus:ring-ds-ok/15"
             />
           </label>
 
           <label className="block space-y-1.5">
-            <span className="text-xs font-bold uppercase tracking-wider text-brand-mocha">
+            <span className="text-xs font-bold uppercase tracking-wider text-ds-text2">
               Ville
             </span>
             <input
@@ -429,12 +429,12 @@ export default function VendorOnboardingWizard() {
               value={city}
               onChange={(e) => setCity(e.target.value)}
               placeholder="Nice"
-              className="w-full rounded-xl border border-brand-mocha/15 bg-brand-oat px-3.5 py-2.5 text-sm text-brand-espresso outline-none focus:border-brand-green/40 focus:ring-2 focus:ring-brand-green/15"
+              className="w-full rounded-xl border border-ds-text2/15 bg-ds-bg px-3.5 py-2.5 text-sm text-ds-text outline-none focus:border-ds-ok/40 focus:ring-2 focus:ring-ds-ok/15"
             />
           </label>
 
           <label className="block space-y-1.5">
-            <span className="text-xs font-bold uppercase tracking-wider text-brand-mocha">
+            <span className="text-xs font-bold uppercase tracking-wider text-ds-text2">
               Description (étudiants / nomades)
             </span>
             <textarea
@@ -442,12 +442,12 @@ export default function VendorOnboardingWizard() {
               onChange={(e) => setDescription(e.target.value)}
               rows={3}
               placeholder="Cadre calme, prises à chaque table, idéal pour bosser…"
-              className="w-full rounded-xl border border-brand-mocha/15 bg-brand-oat px-3.5 py-2.5 text-sm text-brand-espresso outline-none focus:border-brand-green/40 focus:ring-2 focus:ring-brand-green/15 resize-none"
+              className="w-full rounded-xl border border-ds-text2/15 bg-ds-bg px-3.5 py-2.5 text-sm text-ds-text outline-none focus:border-ds-ok/40 focus:ring-2 focus:ring-ds-ok/15 resize-none"
             />
           </label>
 
           <label className="block space-y-1.5">
-            <span className="text-xs font-bold uppercase tracking-wider text-brand-mocha">
+            <span className="text-xs font-bold uppercase tracking-wider text-ds-text2">
               Horaires
             </span>
             <input
@@ -455,12 +455,12 @@ export default function VendorOnboardingWizard() {
               value={openingHours}
               onChange={(e) => setOpeningHours(e.target.value)}
               placeholder="Lun–Ven 8h–19h · Sam 9h–18h"
-              className="w-full rounded-xl border border-brand-mocha/15 bg-brand-oat px-3.5 py-2.5 text-sm text-brand-espresso outline-none focus:border-brand-green/40 focus:ring-2 focus:ring-brand-green/15"
+              className="w-full rounded-xl border border-ds-text2/15 bg-ds-bg px-3.5 py-2.5 text-sm text-ds-text outline-none focus:border-ds-ok/40 focus:ring-2 focus:ring-ds-ok/15"
             />
           </label>
 
           <fieldset className="space-y-1.5">
-            <legend className="text-xs font-bold uppercase tracking-wider text-brand-mocha">
+            <legend className="text-xs font-bold uppercase tracking-wider text-ds-text2">
               Prises
             </legend>
             <div className="grid grid-cols-2 gap-2">
@@ -471,8 +471,8 @@ export default function VendorOnboardingWizard() {
                   onClick={() => setPlugsLevel(o.value as PlugsLevel)}
                   className={`rounded-xl py-2.5 text-sm font-semibold border transition-all ${
                     plugsLevel === o.value
-                      ? 'bg-brand-dark text-white border-brand-dark'
-                      : 'bg-brand-oat text-brand-espresso border-brand-mocha/15'
+                      ? 'bg-ds-pin text-white border-ds-pin'
+                      : 'bg-ds-bg text-ds-text border-ds-text2/15'
                   }`}
                 >
                   {o.label}
@@ -483,7 +483,7 @@ export default function VendorOnboardingWizard() {
 
           <div className="grid grid-cols-2 gap-3">
             <label className="block space-y-1.5">
-              <span className="text-xs font-bold uppercase tracking-wider text-brand-mocha">
+              <span className="text-xs font-bold uppercase tracking-wider text-ds-text2">
                 Wi-Fi
               </span>
               <select
@@ -491,7 +491,7 @@ export default function VendorOnboardingWizard() {
                 onChange={(e) =>
                   setWifiSpeed((e.target.value || '') as WifiSpeedState)
                 }
-                className="w-full rounded-xl border border-brand-mocha/15 bg-brand-oat px-3 py-2.5 text-sm text-brand-espresso outline-none"
+                className="w-full rounded-xl border border-ds-text2/15 bg-ds-bg px-3 py-2.5 text-sm text-ds-text outline-none"
               >
                 {WIFI_OPTIONS.map((o) => (
                   <option key={o.value || 'empty'} value={o.value}>
@@ -501,7 +501,7 @@ export default function VendorOnboardingWizard() {
               </select>
             </label>
             <label className="block space-y-1.5">
-              <span className="text-xs font-bold uppercase tracking-wider text-brand-mocha">
+              <span className="text-xs font-bold uppercase tracking-wider text-ds-text2">
                 Ambiance
               </span>
               <select
@@ -509,7 +509,7 @@ export default function VendorOnboardingWizard() {
                 onChange={(e) =>
                   setNoiseLevel((e.target.value || '') as NoiseLevelState)
                 }
-                className="w-full rounded-xl border border-brand-mocha/15 bg-brand-oat px-3 py-2.5 text-sm text-brand-espresso outline-none"
+                className="w-full rounded-xl border border-ds-text2/15 bg-ds-bg px-3 py-2.5 text-sm text-ds-text outline-none"
               >
                 {NOISE_OPTIONS.map((o) => (
                   <option key={o.value || 'empty'} value={o.value}>
@@ -525,9 +525,9 @@ export default function VendorOnboardingWizard() {
               type="checkbox"
               checked={hasVegan}
               onChange={(e) => setHasVegan(e.target.checked)}
-              className="rounded border-brand-mocha/30 text-brand-green focus:ring-brand-green/30"
+              className="rounded border-ds-text2/30 text-ds-ok focus:ring-ds-ok/30"
             />
-            <span className="text-sm font-semibold text-brand-espresso">
+            <span className="text-sm font-semibold text-ds-text">
               Options véganes
             </span>
           </label>
@@ -536,17 +536,17 @@ export default function VendorOnboardingWizard() {
 
       {/* Étape C */}
       {step === 2 && (
-        <div className="rounded-2xl border border-brand-mocha/10 bg-brand-surface p-5 space-y-4 shadow-soft">
-          <h2 className="text-base font-extrabold text-brand-espresso flex items-center gap-2">
-            <ImageIcon size={20} weight="duotone" className="text-brand-green" />
+        <div className="rounded-2xl border border-ds-text2/10 bg-ds-surface p-5 space-y-4 shadow-soft">
+          <h2 className="text-base font-extrabold text-ds-text flex items-center gap-2">
+            <ImageIcon size={20} weight="duotone" className="text-ds-ok" />
             Photo de couverture
           </h2>
-          <p className="text-xs text-brand-mocha">
+          <p className="text-xs text-ds-text2">
             Optionnel — tu pourras la changer plus tard dans Fiche café.
           </p>
 
           <div
-            className="relative aspect-[16/10] rounded-2xl overflow-hidden border border-dashed border-brand-mocha/25 bg-brand-oat flex items-center justify-center"
+            className="relative aspect-[16/10] rounded-2xl overflow-hidden border border-dashed border-ds-text2/25 bg-ds-bg flex items-center justify-center"
           >
             {coverPreview ? (
               // eslint-disable-next-line @next/next/no-img-element
@@ -556,7 +556,7 @@ export default function VendorOnboardingWizard() {
                 className="absolute inset-0 h-full w-full object-cover"
               />
             ) : (
-              <span className="text-sm text-brand-mocha px-4 text-center">
+              <span className="text-sm text-ds-text2 px-4 text-center">
                 Aucune image sélectionnée
               </span>
             )}
@@ -572,7 +572,7 @@ export default function VendorOnboardingWizard() {
           <button
             type="button"
             onClick={() => fileRef.current?.click()}
-            className="w-full rounded-xl border border-brand-mocha/15 bg-brand-oat py-3 text-sm font-bold text-brand-espresso hover:border-brand-green/30 transition-colors"
+            className="w-full rounded-xl border border-ds-text2/15 bg-ds-bg py-3 text-sm font-bold text-ds-text hover:border-ds-ok/30 transition-colors"
           >
             {coverPreview ? 'Changer la photo' : 'Uploader une photo'}
           </button>
@@ -583,35 +583,35 @@ export default function VendorOnboardingWizard() {
       {step === 3 && (
         <form
           onSubmit={handleFinalize}
-          className="rounded-2xl border border-brand-mocha/10 bg-brand-surface p-5 space-y-4 shadow-soft"
+          className="rounded-2xl border border-ds-text2/10 bg-ds-surface p-5 space-y-4 shadow-soft"
         >
-          <h2 className="text-base font-extrabold text-brand-espresso flex items-center gap-2">
-            <CheckCircle size={20} weight="duotone" className="text-brand-green" />
+          <h2 className="text-base font-extrabold text-ds-text flex items-center gap-2">
+            <CheckCircle size={20} weight="duotone" className="text-ds-ok" />
             Récapitulatif
           </h2>
 
           <dl className="space-y-2 text-sm">
             <div className="flex justify-between gap-3">
-              <dt className="text-brand-mocha">Mode</dt>
-              <dd className="font-bold text-brand-espresso text-right">
+              <dt className="text-ds-text2">Mode</dt>
+              <dd className="font-bold text-ds-text text-right">
                 {mode === 'claim' ? 'Revendication' : 'Nouveau café'}
               </dd>
             </div>
             <div className="flex justify-between gap-3">
-              <dt className="text-brand-mocha">Nom</dt>
-              <dd className="font-bold text-brand-espresso text-right">{name}</dd>
+              <dt className="text-ds-text2">Nom</dt>
+              <dd className="font-bold text-ds-text text-right">{name}</dd>
             </div>
             <div className="flex justify-between gap-3">
-              <dt className="text-brand-mocha">Adresse</dt>
-              <dd className="font-semibold text-brand-espresso text-right">
+              <dt className="text-ds-text2">Adresse</dt>
+              <dd className="font-semibold text-ds-text text-right">
                 {address}
                 {city ? `, ${city}` : ''}
               </dd>
             </div>
             {(wifiSpeed || noiseLevel || plugsLevel) && (
               <div className="flex justify-between gap-3">
-                <dt className="text-brand-mocha">Équipements</dt>
-                <dd className="font-semibold text-brand-espresso text-right text-xs">
+                <dt className="text-ds-text2">Équipements</dt>
+                <dd className="font-semibold text-ds-text text-right text-xs">
                   {[
                     plugsLevel && plugsLabel(plugsLevel),
                     wifiSpeed && `Wi-Fi ${wifiLabel(wifiSpeed)}`,
@@ -627,7 +627,7 @@ export default function VendorOnboardingWizard() {
           <button
             type="submit"
             disabled={submitting}
-            className="w-full flex items-center justify-center gap-2 bg-brand-green text-white font-bold text-sm py-3.5 rounded-xl shadow-md hover:bg-brand-green/90 active:scale-[0.98] transition-all disabled:opacity-50"
+            className="w-full flex items-center justify-center gap-2 bg-ds-ok text-white font-bold text-sm py-3.5 rounded-xl shadow-md hover:bg-ds-ok/90 active:scale-[0.98] transition-all disabled:opacity-50"
           >
             {submitting ? (
               <>
@@ -651,7 +651,7 @@ export default function VendorOnboardingWizard() {
             <button
               type="button"
               onClick={goBack}
-              className="flex-1 flex items-center justify-center gap-1.5 rounded-xl border border-brand-mocha/15 bg-brand-surface py-3 text-sm font-bold text-brand-espresso"
+              className="flex-1 flex items-center justify-center gap-1.5 rounded-xl border border-ds-text2/15 bg-ds-surface py-3 text-sm font-bold text-ds-text"
             >
               <ArrowLeft size={16} weight="bold" />
               Retour
@@ -662,7 +662,7 @@ export default function VendorOnboardingWizard() {
           <button
             type="button"
             onClick={goNext}
-            className="flex-[1.4] flex items-center justify-center gap-1.5 rounded-xl bg-brand-dark text-white py-3 text-sm font-bold active:scale-[0.98] transition-all"
+            className="flex-[1.4] flex items-center justify-center gap-1.5 rounded-xl bg-ds-pin text-white py-3 text-sm font-bold active:scale-[0.98] transition-all"
           >
             Continuer
             <ArrowRight size={16} weight="bold" />
@@ -675,7 +675,7 @@ export default function VendorOnboardingWizard() {
           type="button"
           onClick={goBack}
           disabled={submitting}
-          className="w-full flex items-center justify-center gap-1.5 rounded-xl border border-brand-mocha/15 bg-brand-surface py-3 text-sm font-bold text-brand-espresso disabled:opacity-50"
+          className="w-full flex items-center justify-center gap-1.5 rounded-xl border border-ds-text2/15 bg-ds-surface py-3 text-sm font-bold text-ds-text disabled:opacity-50"
         >
           <ArrowLeft size={16} weight="bold" />
           Retour

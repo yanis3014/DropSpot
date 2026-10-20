@@ -10,7 +10,7 @@ export type PlaceCategoryId =
   | 'chill'
   | 'event';
 
-/** Canonical drop types used by DropCard / filters. */
+/** Canonical drop types used by drops filters. */
 export type DropTypeId = 'promo' | 'sport' | 'event';
 
 const placeCategoryAliases: Record<string, PlaceCategoryId> = {

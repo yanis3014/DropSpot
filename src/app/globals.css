@@ -64,20 +64,6 @@
 
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  /* Legacy brand-* aliases → new tokens (temporary) */
-  --color-brand-oat: var(--bg);
-  --color-brand-espresso: var(--text);
-  --color-brand-mocha: var(--text2);
-  --color-brand-surface: var(--surface);
-  --color-brand-muted: var(--surface2);
-  --color-brand-ink: var(--pin);
-  --color-brand-matcha: var(--ok);
-  --color-brand-terracotta: var(--accent);
-  --color-brand-light: var(--bg);
-  --color-brand-dark: var(--pin);
-  --color-brand-green: var(--ok);
-  --color-brand-greenlight: var(--accentsoft);
-  --color-brand-purple: var(--accent);
 
   --shadow-soft: 0 4px 20px -2px rgba(0, 0, 0, 0.05);
   --shadow-card:

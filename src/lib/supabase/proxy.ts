@@ -7,8 +7,6 @@ import { NextResponse, type NextRequest } from 'next/server';
  */
 const PROTECTED_PREFIXES = [
   '/check-in',
-  '/gamification',
-  '/saved',
   '/profile',
   '/onboarding',
   '/dashboard-pro',

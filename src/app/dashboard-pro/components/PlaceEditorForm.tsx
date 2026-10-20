@@ -236,7 +236,7 @@ export default function PlaceEditorForm({
 
   if (places.length === 0) {
     return (
-      <div className="rounded-2xl border border-dashed border-gray-300 bg-white/50 p-6 text-center text-sm text-brand-mocha">
+      <div className="rounded-2xl border border-dashed border-gray-300 bg-white/50 p-6 text-center text-sm text-ds-text2">
         Aucun spot à gérer. Lie un café avec{' '}
         <code className="text-[10px]">places.vendor_id</code> dans Supabase.
       </div>
@@ -246,17 +246,17 @@ export default function PlaceEditorForm({
   return (
     <form
       onSubmit={handleSubmit}
-      className="rounded-2xl border border-brand-mocha/10 bg-brand-surface p-5 shadow-soft space-y-4"
+      className="rounded-2xl border border-ds-text2/10 bg-ds-surface p-5 shadow-soft space-y-4"
     >
       <div className="flex items-center gap-2 mb-1">
-        <div className="w-9 h-9 rounded-full bg-brand-greenlight text-brand-green flex items-center justify-center">
+        <div className="w-9 h-9 rounded-full bg-ds-accentsoft text-ds-ok flex items-center justify-center">
           <Storefront size={18} weight="duotone" />
         </div>
         <div>
-          <h2 className="text-base font-extrabold text-brand-espresso">
+          <h2 className="text-base font-extrabold text-ds-text">
             Fiche établissement
           </h2>
-          <p className="text-xs text-brand-mocha">
+          <p className="text-xs text-ds-text2">
             Visible par les étudiants dans l&apos;app
           </p>
         </div>
@@ -264,13 +264,13 @@ export default function PlaceEditorForm({
 
       {places.length > 1 && (
         <label className="block space-y-1.5">
-          <span className="text-xs font-bold uppercase tracking-wider text-brand-mocha">
+          <span className="text-xs font-bold uppercase tracking-wider text-ds-text2">
             Spot
           </span>
           <select
             value={placeId}
             onChange={(e) => setPlaceId(e.target.value)}
-            className="w-full rounded-xl border border-brand-mocha/15 bg-brand-oat px-3.5 py-2.5 text-sm outline-none"
+            className="w-full rounded-xl border border-ds-text2/15 bg-ds-bg px-3.5 py-2.5 text-sm outline-none"
           >
             {places.map((p) => (
               <option key={p.id} value={p.id}>
@@ -282,18 +282,18 @@ export default function PlaceEditorForm({
       )}
 
       {selected && (
-        <p className="text-sm font-bold text-brand-espresso">{selected.name}</p>
+        <p className="text-sm font-bold text-ds-text">{selected.name}</p>
       )}
 
       {/* Galeries multi-photos */}
       <div className="space-y-5 pt-1">
         <div className="flex items-center gap-2">
-          <ImageIcon size={16} weight="duotone" className="text-brand-green" />
-          <h3 className="text-sm font-extrabold text-brand-espresso">
+          <ImageIcon size={16} weight="duotone" className="text-ds-ok" />
+          <h3 className="text-sm font-extrabold text-ds-text">
             Galerie photos
           </h3>
           {mediaLoading && (
-            <Spinner size={14} className="animate-spin text-brand-mocha" />
+            <Spinner size={14} className="animate-spin text-ds-text2" />
           )}
         </div>
 
@@ -305,18 +305,18 @@ export default function PlaceEditorForm({
           return (
             <div
               key={section.category}
-              className="rounded-xl border border-brand-mocha/10 bg-brand-oat/50 p-3 space-y-2.5"
+              className="rounded-xl border border-ds-text2/10 bg-ds-bg/50 p-3 space-y-2.5"
             >
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0">
-                  <p className="text-xs font-bold uppercase tracking-wider text-brand-mocha">
+                  <p className="text-xs font-bold uppercase tracking-wider text-ds-text2">
                     {section.title}
                   </p>
-                  <p className="text-[11px] text-brand-mocha/80 mt-0.5">
+                  <p className="text-[11px] text-ds-text2/80 mt-0.5">
                     {section.hint}
                   </p>
                 </div>
-                <span className="text-[10px] font-bold text-brand-mocha tabular-nums shrink-0">
+                <span className="text-[10px] font-bold text-ds-text2 tabular-nums shrink-0">
                   {items.length}/{MAX_PHOTOS_PER_CATEGORY}
                 </span>
               </div>
@@ -325,7 +325,7 @@ export default function PlaceEditorForm({
                 {items.map((item, index) => (
                   <div
                     key={item.id}
-                    className="relative aspect-square rounded-lg overflow-hidden bg-brand-muted group"
+                    className="relative aspect-square rounded-lg overflow-hidden bg-ds-surface2 group"
                   >
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
@@ -334,7 +334,7 @@ export default function PlaceEditorForm({
                       className="w-full h-full object-cover"
                     />
                     {section.category === 'venue' && index === 0 && (
-                      <span className="absolute left-1 bottom-1 text-[9px] font-bold uppercase tracking-wide bg-brand-ink/80 text-white px-1.5 py-0.5 rounded">
+                      <span className="absolute left-1 bottom-1 text-[9px] font-bold uppercase tracking-wide bg-ds-pin/80 text-white px-1.5 py-0.5 rounded">
                         Cover
                       </span>
                     )}
@@ -343,7 +343,7 @@ export default function PlaceEditorForm({
                       disabled={deletingId === item.id}
                       onClick={() => void handleDelete(item)}
                       aria-label="Supprimer la photo"
-                      className="absolute top-1 right-1 w-7 h-7 flex items-center justify-center rounded-full bg-brand-surface/95 shadow text-brand-terracotta active:scale-95 disabled:opacity-50"
+                      className="absolute top-1 right-1 w-7 h-7 flex items-center justify-center rounded-full bg-ds-surface/95 shadow text-ds-accent active:scale-95 disabled:opacity-50"
                     >
                       {deletingId === item.id ? (
                         <Spinner size={12} className="animate-spin" />
@@ -359,7 +359,7 @@ export default function PlaceEditorForm({
                     type="button"
                     disabled={busy || !selected}
                     onClick={() => fileRefs.current[section.category]?.click()}
-                    className="aspect-square rounded-lg border border-dashed border-brand-mocha/25 bg-brand-surface flex flex-col items-center justify-center gap-1 text-brand-mocha active:scale-95 disabled:opacity-50"
+                    className="aspect-square rounded-lg border border-dashed border-ds-text2/25 bg-ds-surface flex flex-col items-center justify-center gap-1 text-ds-text2 active:scale-95 disabled:opacity-50"
                   >
                     {busy ? (
                       <Spinner size={18} className="animate-spin" />
@@ -392,7 +392,7 @@ export default function PlaceEditorForm({
       </div>
 
       <label className="block space-y-1.5">
-        <span className="text-xs font-bold uppercase tracking-wider text-brand-mocha">
+        <span className="text-xs font-bold uppercase tracking-wider text-ds-text2">
           Description
         </span>
         <textarea
@@ -400,12 +400,12 @@ export default function PlaceEditorForm({
           onChange={(e) => setDescription(e.target.value)}
           rows={4}
           placeholder="Ambiance, histoire, spécialités…"
-          className="w-full rounded-xl border border-brand-mocha/15 bg-brand-oat px-3.5 py-2.5 text-sm outline-none resize-none"
+          className="w-full rounded-xl border border-ds-text2/15 bg-ds-bg px-3.5 py-2.5 text-sm outline-none resize-none"
         />
       </label>
 
       <label className="block space-y-1.5">
-        <span className="text-xs font-bold uppercase tracking-wider text-brand-mocha">
+        <span className="text-xs font-bold uppercase tracking-wider text-ds-text2">
           Horaires
         </span>
         <input
@@ -413,12 +413,12 @@ export default function PlaceEditorForm({
           value={openingHours}
           onChange={(e) => setOpeningHours(e.target.value)}
           placeholder="Lun–Ven 8h–18h · Sam 9h–14h"
-          className="w-full rounded-xl border border-brand-mocha/15 bg-brand-oat px-3.5 py-2.5 text-sm outline-none"
+          className="w-full rounded-xl border border-ds-text2/15 bg-ds-bg px-3.5 py-2.5 text-sm outline-none"
         />
       </label>
 
       <label className="block space-y-1.5">
-        <span className="text-xs font-bold uppercase tracking-wider text-brand-mocha">
+        <span className="text-xs font-bold uppercase tracking-wider text-ds-text2">
           Prises
         </span>
         <select
@@ -426,7 +426,7 @@ export default function PlaceEditorForm({
           onChange={(e) =>
             setPlugsLevel((e.target.value || '') as PlugsLevelState)
           }
-          className="w-full rounded-xl border border-brand-mocha/15 bg-brand-oat px-3.5 py-2.5 text-sm outline-none"
+          className="w-full rounded-xl border border-ds-text2/15 bg-ds-bg px-3.5 py-2.5 text-sm outline-none"
         >
           {PLUGS_OPTIONS.map((o) => (
             <option key={o.value || 'empty'} value={o.value}>
@@ -437,7 +437,7 @@ export default function PlaceEditorForm({
       </label>
 
       <label className="block space-y-1.5">
-        <span className="text-xs font-bold uppercase tracking-wider text-brand-mocha">
+        <span className="text-xs font-bold uppercase tracking-wider text-ds-text2">
           Wi-Fi
         </span>
         <select
@@ -445,7 +445,7 @@ export default function PlaceEditorForm({
           onChange={(e) =>
             setWifiSpeed((e.target.value || '') as WifiSpeedState)
           }
-          className="w-full rounded-xl border border-brand-mocha/15 bg-brand-oat px-3.5 py-2.5 text-sm outline-none"
+          className="w-full rounded-xl border border-ds-text2/15 bg-ds-bg px-3.5 py-2.5 text-sm outline-none"
         >
           {WIFI_OPTIONS.map((o) => (
             <option key={o.value || 'empty'} value={o.value}>
@@ -456,7 +456,7 @@ export default function PlaceEditorForm({
       </label>
 
       <label className="block space-y-1.5">
-        <span className="text-xs font-bold uppercase tracking-wider text-brand-mocha">
+        <span className="text-xs font-bold uppercase tracking-wider text-ds-text2">
           Ambiance
         </span>
         <select
@@ -464,7 +464,7 @@ export default function PlaceEditorForm({
           onChange={(e) =>
             setNoiseLevel((e.target.value || '') as NoiseLevelState)
           }
-          className="w-full rounded-xl border border-brand-mocha/15 bg-brand-oat px-3.5 py-2.5 text-sm outline-none"
+          className="w-full rounded-xl border border-ds-text2/15 bg-ds-bg px-3.5 py-2.5 text-sm outline-none"
         >
           {NOISE_OPTIONS.map((o) => (
             <option key={o.value || 'empty'} value={o.value}>
@@ -474,24 +474,24 @@ export default function PlaceEditorForm({
         </select>
       </label>
 
-      <label className="inline-flex items-center gap-2 text-sm font-semibold text-brand-espresso cursor-pointer">
+      <label className="inline-flex items-center gap-2 text-sm font-semibold text-ds-text cursor-pointer">
         <input
           type="checkbox"
           checked={hasVegan}
           onChange={(e) => setHasVegan(e.target.checked)}
-          className="rounded border-brand-mocha/30 text-brand-green focus:ring-brand-green/30"
+          className="rounded border-ds-text2/30 text-ds-ok focus:ring-ds-ok/30"
         />
         Options véganes
       </label>
 
       {error && (
-        <p className="text-sm font-medium text-brand-terracotta bg-brand-terracotta/10 rounded-xl px-3 py-2 flex items-start gap-2">
+        <p className="text-sm font-medium text-ds-accent bg-ds-accent/10 rounded-xl px-3 py-2 flex items-start gap-2">
           <X size={16} weight="bold" className="mt-0.5 shrink-0" />
           {error}
         </p>
       )}
       {success && (
-        <p className="text-sm font-medium text-brand-green bg-brand-green/10 rounded-xl px-3 py-2">
+        <p className="text-sm font-medium text-ds-ok bg-ds-ok/10 rounded-xl px-3 py-2">
           {success}
         </p>
       )}
@@ -499,7 +499,7 @@ export default function PlaceEditorForm({
       <button
         type="submit"
         disabled={saving || !selected}
-        className="w-full flex items-center justify-center gap-2 bg-brand-dark text-white font-bold text-sm py-3 rounded-xl shadow-md active:scale-[0.98] transition-all disabled:opacity-50"
+        className="w-full flex items-center justify-center gap-2 bg-ds-pin text-white font-bold text-sm py-3 rounded-xl shadow-md active:scale-[0.98] transition-all disabled:opacity-50"
       >
         {saving ? (
           <>

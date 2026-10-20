@@ -36,17 +36,17 @@ export const dropTypeConfig: Record<DropTypeId, DropTypeConfig> = {
   sport: {
     label: 'Sport',
     icon: Sneaker,
-    classes: 'bg-brand-terracotta/10 text-brand-terracotta',
+    classes: 'bg-ds-accent/10 text-ds-accent',
   },
   promo: {
     label: 'Promo',
     icon: Tag,
-    classes: 'bg-brand-matcha/10 text-brand-matcha',
+    classes: 'bg-ds-ok/10 text-ds-ok',
   },
   event: {
     label: 'Événement',
     icon: Confetti,
-    classes: 'bg-brand-mocha/10 text-brand-mocha',
+    classes: 'bg-ds-text2/10 text-ds-text2',
   },
 };
 
@@ -54,7 +54,7 @@ export const dropTypeConfig: Record<DropTypeId, DropTypeConfig> = {
 export const defaultDropTypeConfig: DropTypeConfig = {
   label: 'Drop',
   icon: Sparkle,
-  classes: 'bg-brand-mocha/10 text-brand-mocha',
+  classes: 'bg-ds-text2/10 text-ds-text2',
 };
 
 export function getDropTypeConfig(dropType: string | null | undefined): DropTypeConfig {
@@ -100,7 +100,7 @@ export default function DropDetailModal({
       />
 
       <div
-        className={`relative w-full max-w-md bg-brand-oat rounded-t-3xl overflow-hidden shadow-2xl transition-transform duration-300 ease-out max-h-[85dvh] flex flex-col ${
+        className={`relative w-full max-w-md bg-ds-bg rounded-t-3xl overflow-hidden shadow-2xl transition-transform duration-300 ease-out max-h-[85dvh] flex flex-col ${
           visible ? 'translate-y-0' : 'translate-y-full'
         }`}
       >
@@ -112,18 +112,18 @@ export default function DropDetailModal({
               className="absolute inset-0 w-full h-full object-cover"
             />
           )}
-          <div className="absolute inset-0 bg-gradient-to-t from-brand-oat via-transparent to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-ds-bg via-transparent to-transparent" />
 
           <button
             onClick={handleClose}
             aria-label="Fermer"
-            className="absolute top-4 right-4 bg-brand-surface/90 backdrop-blur-sm rounded-full p-2 shadow-md hover:bg-brand-surface active:scale-95 transition-all"
+            className="absolute top-4 right-4 bg-ds-surface/90 backdrop-blur-sm rounded-full p-2 shadow-md hover:bg-ds-surface active:scale-95 transition-all"
           >
-            <X size={20} weight="bold" className="text-brand-espresso" />
+            <X size={20} weight="bold" className="text-ds-text" />
           </button>
 
           <div
-            className={`absolute top-4 left-4 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-brand-surface/90 backdrop-blur-sm ${typeConfig.classes}`}
+            className={`absolute top-4 left-4 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-ds-surface/90 backdrop-blur-sm ${typeConfig.classes}`}
           >
             <TypeIcon size={14} weight="fill" />
             {typeConfig.label}
@@ -131,56 +131,56 @@ export default function DropDetailModal({
         </div>
 
         <div className="flex-1 overflow-y-auto p-5 pb-6 -mt-4 relative">
-          <h2 className="text-2xl font-extrabold text-brand-espresso tracking-tight mb-1">
+          <h2 className="text-2xl font-extrabold text-ds-text tracking-tight mb-1">
             {drop.title}
           </h2>
 
-          <p className="flex items-center gap-1.5 text-sm text-brand-mocha mb-4">
-            <MapPin size={16} weight="fill" className="text-brand-terracotta flex-shrink-0" />
+          <p className="flex items-center gap-1.5 text-sm text-ds-text2 mb-4">
+            <MapPin size={16} weight="fill" className="text-ds-accent flex-shrink-0" />
             {drop.places?.name || 'Lieu à déterminer'}
           </p>
 
-          <div className="bg-brand-surface rounded-2xl border border-brand-mocha/10 shadow-sm divide-y divide-brand-mocha/5 mb-4">
+          <div className="bg-ds-surface rounded-2xl border border-ds-text2/10 shadow-sm divide-y divide-ds-text2/5 mb-4">
             <div className="flex items-center gap-3 p-3.5">
-              <div className="w-9 h-9 rounded-xl bg-brand-matcha/10 flex items-center justify-center flex-shrink-0">
-                <CalendarBlank size={18} weight="duotone" className="text-brand-matcha" />
+              <div className="w-9 h-9 rounded-xl bg-ds-ok/10 flex items-center justify-center flex-shrink-0">
+                <CalendarBlank size={18} weight="duotone" className="text-ds-ok" />
               </div>
               <div>
-                <p className="text-[11px] text-brand-mocha font-medium">Début</p>
-                <p className="text-sm font-semibold text-brand-espresso">
+                <p className="text-[11px] text-ds-text2 font-medium">Début</p>
+                <p className="text-sm font-semibold text-ds-text">
                   {formatDateTime(drop.start_time)}
                 </p>
               </div>
             </div>
             <div className="flex items-center gap-3 p-3.5">
-              <div className="w-9 h-9 rounded-xl bg-brand-terracotta/10 flex items-center justify-center flex-shrink-0">
-                <Timer size={18} weight="duotone" className="text-brand-terracotta" />
+              <div className="w-9 h-9 rounded-xl bg-ds-accent/10 flex items-center justify-center flex-shrink-0">
+                <Timer size={18} weight="duotone" className="text-ds-accent" />
               </div>
               <div className="flex-1">
-                <p className="text-[11px] text-brand-mocha font-medium">
+                <p className="text-[11px] text-ds-text2 font-medium">
                   {live ? 'Se termine dans' : 'Fin'}
                 </p>
-                <p className="text-sm font-semibold text-brand-espresso">
+                <p className="text-sm font-semibold text-ds-text">
                   {live ? countdown : formatDateTime(drop.end_time)}
                 </p>
               </div>
               {live && (
                 <span className="relative flex h-2.5 w-2.5 flex-shrink-0">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-terracotta opacity-75" />
-                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-brand-terracotta" />
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-ds-accent opacity-75" />
+                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-ds-accent" />
                 </span>
               )}
             </div>
           </div>
 
           {drop.description && (
-            <p className="text-sm text-brand-mocha leading-relaxed mb-4">
+            <p className="text-sm text-ds-text2 leading-relaxed mb-4">
               {drop.description}
             </p>
           )}
 
           {drop.capacity && (
-            <div className="flex items-center gap-2 text-sm text-brand-mocha mb-4">
+            <div className="flex items-center gap-2 text-sm text-ds-text2 mb-4">
               <Users size={16} weight="duotone" />
               <span>
                 {drop.current_participants ?? 0} / {drop.capacity} participants
@@ -189,16 +189,16 @@ export default function DropDetailModal({
           )}
         </div>
 
-        <div className="p-5 pt-3 border-t border-brand-mocha/10 bg-brand-surface flex-shrink-0">
+        <div className="p-5 pt-3 border-t border-ds-text2/10 bg-ds-surface flex-shrink-0">
           {isClaimed ? (
-            <div className="w-full flex items-center justify-center gap-2 bg-brand-matcha/10 text-brand-matcha font-bold py-4 rounded-2xl">
+            <div className="w-full flex items-center justify-center gap-2 bg-ds-ok/10 text-ds-ok font-bold py-4 rounded-2xl">
               <CheckCircle size={22} weight="fill" />
               Inscrit — on t&apos;attend ! ✅
             </div>
           ) : isAuthenticated ? (
             <button
               onClick={onClaim}
-              className="w-full bg-brand-matcha text-white font-bold py-4 rounded-2xl shadow-lg shadow-brand-matcha/25 hover:bg-brand-matcha/90 active:scale-[0.98] transition-all"
+              className="w-full bg-ds-ok text-white font-bold py-4 rounded-2xl shadow-lg shadow-ds-ok/25 hover:bg-ds-ok/90 active:scale-[0.98] transition-all"
             >
               {drop.drop_type === 'promo'
                 ? 'Réclamer ce drop'
@@ -209,7 +209,7 @@ export default function DropDetailModal({
           ) : (
             <button
               onClick={onClaim}
-              className="w-full flex items-center justify-center gap-2 bg-brand-ink text-white font-bold py-4 rounded-2xl shadow-lg hover:bg-brand-ink/90 active:scale-[0.98] transition-all"
+              className="w-full flex items-center justify-center gap-2 bg-ds-pin text-white font-bold py-4 rounded-2xl shadow-lg hover:bg-ds-pin/90 active:scale-[0.98] transition-all"
             >
               <LockKey size={18} weight="fill" />
               Connecte-toi pour participer

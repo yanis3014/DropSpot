@@ -12,10 +12,12 @@ import {
 import { supabase } from '@/lib/supabase/client';
 import { useAuth } from '@/lib/hooks/useAuth';
 import ThemeSwitcher from '@/components/profile/ThemeSwitcher';
+import Button from '@/components/ui/Button';
 import {
   resolvePostAuthDestination,
   safeRedirectPath,
 } from '@/lib/auth/redirect';
+import { cn } from '@/lib/cn';
 
 type AuthMode = 'login' | 'signup';
 
@@ -23,8 +25,8 @@ export default function LoginPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen bg-brand-oat flex items-center justify-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-matcha" />
+        <div className="flex min-h-screen items-center justify-center bg-ds-bg">
+          <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-ds-accent" />
         </div>
       }
     >
@@ -61,7 +63,6 @@ function LoginPageContent() {
     return `${window.location.origin}/auth/callback?${params.toString()}`;
   };
 
-  /** Options OAuth : role dans user_metadata + intent dans le callback URL. */
   const oauthOptions = () => {
     const role = selectedRole();
     return {
@@ -70,7 +71,6 @@ function LoginPageContent() {
     };
   };
 
-  // Déjà connecté → redirection intelligente selon le rôle
   useEffect(() => {
     if (authLoading || !isAuthenticated || !user || !supabase) return;
     let cancelled = false;
@@ -134,7 +134,6 @@ function LoginPageContent() {
     }
   };
 
-  /** Connexion email / mot de passe + redirect selon rôle */
   const handlePasswordLogin = async (e: FormEvent) => {
     e.preventDefault();
     if (!supabase || !email || !password) return;
@@ -164,7 +163,6 @@ function LoginPageContent() {
     }
   };
 
-  /** Inscription + role vendor si professionnel */
   const handleSignup = async (e: FormEvent) => {
     e.preventDefault();
     if (!supabase || !email || !password) return;
@@ -187,7 +185,6 @@ function LoginPageContent() {
       if (signUpError) throw signUpError;
 
       const userId = data.user?.id;
-      // Si session immédiate (confirm email désactivé), peaufine le rôle + redirect
       if (data.session && userId) {
         await supabase.from('profiles').upsert(
           { id: userId, role },
@@ -241,124 +238,128 @@ function LoginPageContent() {
     }
   };
 
+  const inputClass =
+    'w-full rounded-[14px] border border-ds-line bg-ds-surface px-4 py-3.5 text-base text-ds-text placeholder:text-ds-text2 focus:border-ds-accent focus:outline-none focus:ring-2 focus:ring-ds-accent/20';
+
   return (
-    <div className="min-h-screen bg-brand-oat flex flex-col items-center justify-center p-6">
+    <main className="flex min-h-screen flex-col items-center justify-center bg-ds-bg px-5 py-10">
       <div className="w-full max-w-sm">
-        <div className="text-center mb-6">
-          <h1 className="text-3xl font-extrabold text-brand-espresso tracking-tight">
+        <div className="mb-8 text-center">
+          <h1 className="font-display text-[34px] font-extrabold leading-tight text-ds-text">
             DropSpot
           </h1>
+          <p className="mt-2 text-[15px] text-ds-text2">
+            {mode === 'login'
+              ? 'Connecte-toi à ton compte'
+              : 'Crée ton compte'}
+          </p>
         </div>
 
-        <h2 className="text-xl font-bold text-brand-espresso text-center mb-6">
-          {mode === 'login'
-            ? 'Connecte-toi à ton compte'
-            : 'Crée ton compte DropSpot'}
-        </h2>
-
-        {/* Onglets Connexion / Inscription */}
-        <div className="flex gap-1 p-1 mb-6 rounded-2xl bg-brand-muted/70 border border-brand-mocha/10">
+        <div
+          role="tablist"
+          aria-label="Mode d'authentification"
+          className="mb-6 grid grid-cols-2 gap-1.5 rounded-2xl bg-ds-surface2 p-1"
+        >
           <button
             type="button"
+            role="tab"
+            aria-selected={mode === 'login'}
             onClick={() => {
               setMode('login');
               clearFeedback();
             }}
-            className={`flex-1 flex items-center justify-center gap-1.5 rounded-xl py-2.5 text-sm font-bold transition-all ${
+            className={cn(
+              'inline-flex items-center justify-center gap-1.5 rounded-xl py-2.5 text-sm font-bold transition-all',
               mode === 'login'
-                ? 'bg-brand-surface text-brand-espresso shadow-sm'
-                : 'text-brand-mocha'
-            }`}
+                ? 'bg-ds-surface text-ds-text shadow-sm ring-1 ring-ds-line'
+                : 'text-ds-text2'
+            )}
           >
             <User size={16} weight={mode === 'login' ? 'fill' : 'regular'} />
             Connexion
           </button>
           <button
             type="button"
+            role="tab"
+            aria-selected={mode === 'signup'}
             onClick={() => {
               setMode('signup');
               clearFeedback();
             }}
-            className={`flex-1 flex items-center justify-center gap-1.5 rounded-xl py-2.5 text-sm font-bold transition-all ${
+            className={cn(
+              'inline-flex items-center justify-center gap-1.5 rounded-xl py-2.5 text-sm font-bold transition-all',
               mode === 'signup'
-                ? 'bg-brand-surface text-brand-espresso shadow-sm'
-                : 'text-brand-mocha'
-            }`}
+                ? 'bg-ds-surface text-ds-text shadow-sm ring-1 ring-ds-line'
+                : 'text-ds-text2'
+            )}
           >
             Inscription
           </button>
         </div>
 
         {!supabase && (
-          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-6 text-sm text-yellow-800 text-center">
-            ⚠️ Supabase n&apos;est pas configuré.
+          <div className="mb-5 rounded-[14px] border border-ds-line bg-ds-accentsoft px-3.5 py-3 text-center text-sm font-medium text-ds-accenttext">
+            Supabase n&apos;est pas configuré.
           </div>
         )}
 
-        {/* Toggle pro avant OAuth (inscription) pour que Google/Apple portent le bon rôle */}
         {mode === 'signup' && (
-          <label className="flex items-start gap-3 rounded-2xl border border-brand-mocha/15 bg-brand-surface px-3.5 py-3 mb-5 cursor-pointer hover:border-brand-green/30 transition-colors">
+          <label className="mb-5 flex cursor-pointer items-start gap-3 rounded-[18px] border border-ds-line bg-ds-surface px-3.5 py-3.5">
             <input
               type="checkbox"
               checked={isProfessional}
               onChange={(e) => setIsProfessional(e.target.checked)}
-              className="mt-0.5 rounded border-brand-mocha/30 text-brand-green focus:ring-brand-green/30"
+              className="mt-0.5 rounded border-ds-line text-ds-accent focus:ring-ds-accent/30"
             />
             <span className="min-w-0">
-              <span className="flex items-center gap-1.5 text-sm font-bold text-brand-espresso">
-                <Storefront size={16} weight="duotone" className="text-brand-green" />
+              <span className="flex items-center gap-1.5 text-sm font-bold text-ds-text">
+                <Storefront size={16} weight="regular" className="text-ds-accent" />
                 Je suis un professionnel
               </span>
-              <span className="block text-xs text-brand-mocha mt-0.5 leading-relaxed">
+              <span className="mt-0.5 block text-xs leading-relaxed text-ds-text2">
                 Coche avant Google/Apple pour créer un compte Restaurateur
               </span>
             </span>
           </label>
         )}
 
-        {/* OAuth */}
-        <div className="space-y-3 mb-5">
+        <div className="mb-5 flex flex-col gap-2.5">
+          <Button
+            variant="outline"
+            onClick={() => void handleGoogleLogin()}
+            disabled={loading || !supabase}
+            className="w-full"
+          >
+            <GoogleLogo size={20} weight="fill" aria-hidden />
+            {mode === 'signup' && isProfessional
+              ? "S'inscrire avec Google"
+              : 'Continuer avec Google'}
+          </Button>
           <button
             type="button"
-            onClick={handleGoogleLogin}
+            onClick={() => void handleAppleLogin()}
             disabled={loading || !supabase}
-            className="w-full flex items-center justify-center gap-3 bg-brand-surface border border-brand-mocha/15 rounded-xl py-3 px-4 shadow-sm hover:shadow-md transition-all active:scale-95 disabled:opacity-50"
+            className="inline-flex h-[52px] w-full items-center justify-center gap-2 rounded-[14px] bg-ds-pin px-5 text-base font-bold text-ds-onpin transition-opacity disabled:pointer-events-none disabled:opacity-50"
           >
-            <GoogleLogo size={20} weight="fill" className="text-brand-espresso" />
-            <span className="text-brand-espresso font-medium">
-              {mode === 'signup' && isProfessional
-                ? "S'inscrire avec Google"
-                : 'Continuer avec Google'}
-            </span>
-          </button>
-          <button
-            type="button"
-            onClick={handleAppleLogin}
-            disabled={loading || !supabase}
-            className="w-full flex items-center justify-center gap-3 bg-black rounded-xl py-3 px-4 shadow-sm hover:shadow-md transition-all active:scale-95 disabled:opacity-50"
-          >
-            <AppleLogo size={20} weight="fill" className="text-white" />
-            <span className="text-white font-medium">
-              {mode === 'signup' && isProfessional
-                ? "S'inscrire avec Apple"
-                : 'Continuer avec Apple'}
-            </span>
+            <AppleLogo size={20} weight="fill" aria-hidden />
+            {mode === 'signup' && isProfessional
+              ? "S'inscrire avec Apple"
+              : 'Continuer avec Apple'}
           </button>
         </div>
 
         <div className="relative mb-5">
           <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-brand-mocha/20" />
+            <div className="w-full border-t border-ds-line" />
           </div>
           <div className="relative flex justify-center text-sm">
-            <span className="px-4 bg-brand-oat text-brand-mocha">ou</span>
+            <span className="bg-ds-bg px-4 text-ds-text2">ou</span>
           </div>
         </div>
 
-        {/* Formulaire email / mot de passe */}
         <form
           onSubmit={mode === 'login' ? handlePasswordLogin : handleSignup}
-          className="space-y-3 mb-4"
+          className="mb-4 flex flex-col gap-2.5"
         >
           <input
             type="email"
@@ -366,7 +367,7 @@ function LoginPageContent() {
             placeholder="ton@email.com"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full px-4 py-3 rounded-xl border border-brand-mocha/15 bg-brand-surface text-brand-espresso focus:border-brand-matcha focus:outline-none focus:ring-2 focus:ring-brand-matcha/20 transition-all"
+            className={inputClass}
             disabled={loading || !supabase}
             required
           />
@@ -378,16 +379,17 @@ function LoginPageContent() {
             placeholder="Mot de passe"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full px-4 py-3 rounded-xl border border-brand-mocha/15 bg-brand-surface text-brand-espresso focus:border-brand-matcha focus:outline-none focus:ring-2 focus:ring-brand-matcha/20 transition-all"
+            className={inputClass}
             disabled={loading || !supabase}
             required
             minLength={6}
           />
 
-          <button
+          <Button
             type="submit"
+            variant="main"
             disabled={loading || !email || !password || !supabase}
-            className="w-full bg-brand-matcha text-white font-bold rounded-xl py-3 px-4 shadow-sm hover:bg-brand-matcha/90 transition-all active:scale-95 disabled:opacity-50"
+            className="w-full"
           >
             {loading
               ? 'Patiente…'
@@ -396,36 +398,35 @@ function LoginPageContent() {
                 : isProfessional
                   ? 'Créer mon compte restaurateur'
                   : 'Créer mon compte'}
-          </button>
+          </Button>
         </form>
 
-        {/* Lien magique (optionnel, connexion seulement) */}
         {mode === 'login' && (
           <form onSubmit={handleMagicLink} className="mb-5">
             <button
               type="submit"
               disabled={loading || !email || !supabase}
-              className="w-full flex items-center justify-center gap-2 text-sm font-semibold text-brand-mocha hover:text-brand-espresso py-2 transition-colors disabled:opacity-50"
+              className="inline-flex h-11 w-full items-center justify-center gap-2 text-sm font-bold text-ds-text2 transition-colors hover:text-ds-text disabled:opacity-50"
             >
-              <Envelope size={16} weight="fill" />
+              <Envelope size={16} weight="regular" aria-hidden />
               Recevoir un lien magique à la place
             </button>
           </form>
         )}
 
-        {error && (
-          <p className="mb-4 text-sm font-medium text-brand-terracotta bg-brand-terracotta/10 rounded-xl px-3 py-2 text-center">
+        {error ? (
+          <p className="mb-4 rounded-[14px] bg-ds-accentsoft px-3.5 py-2.5 text-center text-sm font-medium text-ds-accenttext">
             {error}
           </p>
-        )}
-        {message && (
-          <p className="mb-4 text-sm font-medium text-brand-green bg-brand-green/10 rounded-xl px-3 py-2 text-center">
+        ) : null}
+        {message ? (
+          <p className="mb-4 rounded-[14px] bg-ds-ok/10 px-3.5 py-2.5 text-center text-sm font-medium text-ds-ok">
             {message}
           </p>
-        )}
+        ) : null}
 
         <div className="mb-6">
-          <p className="text-xs font-semibold uppercase tracking-wider text-brand-mocha text-center mb-2">
+          <p className="mb-2 text-center text-xs font-semibold uppercase tracking-wider text-ds-text2">
             Apparence
           </p>
           <ThemeSwitcher />
@@ -434,13 +435,13 @@ function LoginPageContent() {
         <div className="text-center">
           <button
             type="button"
-            onClick={() => router.push('/')}
-            className="text-sm text-brand-mocha underline hover:text-brand-espresso transition-colors"
+            onClick={() => router.push('/map')}
+            className="text-sm font-semibold text-ds-text2 underline decoration-ds-line underline-offset-2 hover:text-ds-text"
           >
             Explorer l&apos;app sans compte pour l&apos;instant
           </button>
         </div>
       </div>
-    </div>
+    </main>
   );
 }

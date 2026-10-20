@@ -73,7 +73,7 @@ function actionClasses(kind: ActionKind): string {
   switch (kind) {
     case 'update':
     case 'checkin':
-      return 'bg-brand-green text-white font-bold text-sm px-4 py-2.5 rounded-xl shadow-md hover:bg-brand-green/90 active:scale-95 transition-all';
+      return 'bg-ds-ok text-white font-bold text-sm px-4 py-2.5 rounded-xl shadow-md hover:bg-ds-ok/90 active:scale-95 transition-all';
     case 'too_far':
     case 'busy':
     case 'no_gps':
@@ -233,7 +233,7 @@ export default function CheckInPage() {
   if (authLoading) {
     return (
       <div className="flex-1 flex items-center justify-center pb-20">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-matcha" />
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-ds-ok" />
       </div>
     );
   }
@@ -247,20 +247,20 @@ export default function CheckInPage() {
 
       <div className="px-5 mt-1">
         {session && (
-          <div className="mb-4 rounded-2xl border border-brand-matcha/25 bg-brand-matcha/8 p-3.5">
-            <p className="text-[11px] font-bold uppercase tracking-wider text-brand-matcha">
+          <div className="mb-4 rounded-2xl border border-ds-ok/25 bg-ds-ok/8 p-3.5">
+            <p className="text-[11px] font-bold uppercase tracking-wider text-ds-ok">
               Session active
             </p>
-            <p className="text-sm font-extrabold text-brand-espresso mt-0.5">
+            <p className="text-sm font-extrabold text-ds-text mt-0.5">
               {session.placeName}
             </p>
-            <p className="text-[11px] text-brand-mocha mt-0.5">
+            <p className="text-[11px] text-ds-text2 mt-0.5">
               Expire dans {remaining}
             </p>
             <button
               type="button"
               onClick={handleEndSession}
-              className="mt-2.5 text-xs font-bold text-brand-terracotta hover:underline"
+              className="mt-2.5 text-xs font-bold text-ds-accent hover:underline"
             >
               Terminer ma session
             </button>
@@ -268,25 +268,25 @@ export default function CheckInPage() {
         )}
 
         <div className="flex items-center gap-2">
-          <div className="flex-1 flex items-center gap-3 bg-brand-surface rounded-2xl px-4 py-3 shadow-sm border border-brand-mocha/10 focus-within:border-brand-matcha/40 transition-all">
+          <div className="flex-1 flex items-center gap-3 bg-ds-surface rounded-2xl px-4 py-3 shadow-sm border border-ds-text2/10 focus-within:border-ds-ok/40 transition-all">
             <MagnifyingGlass
               size={18}
               weight="bold"
-              className="text-brand-mocha flex-shrink-0"
+              className="text-ds-text2 flex-shrink-0"
             />
             <input
               type="search"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Chercher un café…"
-              className="flex-1 min-w-0 bg-transparent outline-none text-sm text-brand-espresso placeholder:text-brand-mocha/50"
+              className="flex-1 min-w-0 bg-transparent outline-none text-sm text-ds-text placeholder:text-ds-text2/50"
             />
             {searchQuery && (
               <button
                 type="button"
                 onClick={() => setSearchQuery('')}
                 aria-label="Effacer"
-                className="text-brand-mocha/60 hover:text-brand-espresso"
+                className="text-ds-text2/60 hover:text-ds-text"
               >
                 <X size={16} weight="bold" />
               </button>
@@ -296,7 +296,7 @@ export default function CheckInPage() {
             type="button"
             onClick={() => void locateGps()}
             aria-label="Actualiser le GPS"
-            className="w-11 h-11 flex-shrink-0 rounded-2xl bg-brand-surface border border-brand-mocha/10 flex items-center justify-center text-brand-matcha shadow-sm active:scale-95 transition-all"
+            className="w-11 h-11 flex-shrink-0 rounded-2xl bg-ds-surface border border-ds-text2/10 flex items-center justify-center text-ds-ok shadow-sm active:scale-95 transition-all"
           >
             <Crosshair
               size={20}
@@ -307,7 +307,7 @@ export default function CheckInPage() {
         </div>
 
         {!gpsLoading && gpsDenied && (
-          <p className="mt-2 text-[11px] text-brand-mocha">
+          <p className="mt-2 text-[11px] text-ds-text2">
             GPS refusé — active-le pour check-in à proximité.
           </p>
         )}
@@ -318,7 +318,7 @@ export default function CheckInPage() {
             <NearbySpotsSkeleton />
           ) : searching ? (
             <section>
-              <h2 className="text-sm font-extrabold text-brand-espresso mb-2.5">
+              <h2 className="text-sm font-extrabold text-ds-text mb-2.5">
                 Résultats
               </h2>
               {placesLoading ? (
@@ -347,9 +347,9 @@ export default function CheckInPage() {
             <>
               {nearbyPlaces.length > 0 && (
                 <section>
-                  <h2 className="text-sm font-extrabold text-brand-espresso mb-2.5 flex items-center gap-1.5">
+                  <h2 className="text-sm font-extrabold text-ds-text mb-2.5 flex items-center gap-1.5">
                     <span aria-hidden>📍</span> Autour de toi
-                    <span className="text-[11px] font-semibold text-brand-mocha">
+                    <span className="text-[11px] font-semibold text-ds-text2">
                       ({nearbyPlaces.length})
                     </span>
                   </h2>
@@ -369,7 +369,7 @@ export default function CheckInPage() {
               )}
 
               {userCoords && nearbyPlaces.length === 0 && (
-                <p className="text-sm text-brand-mocha text-center py-2">
+                <p className="text-sm text-ds-text2 text-center py-2">
                   Aucun café à moins de 100 m — rapproche-toi ou ajoute un spot.
                 </p>
               )}
@@ -386,7 +386,7 @@ export default function CheckInPage() {
       </div>
 
       {toast && (
-        <div className="fixed bottom-24 left-1/2 z-[70] -translate-x-1/2 w-[min(92vw,22rem)] rounded-2xl bg-brand-ink text-white px-4 py-3 shadow-xl text-center text-sm font-bold">
+        <div className="fixed bottom-24 left-1/2 z-[70] -translate-x-1/2 w-[min(92vw,22rem)] rounded-2xl bg-ds-pin text-white px-4 py-3 shadow-xl text-center text-sm font-bold">
           {toast}
         </div>
       )}
@@ -440,11 +440,11 @@ function PlaceRow({
       disabled={disabled}
       className={`w-full text-left flex items-center gap-3 rounded-2xl p-2.5 transition-all ${
         highlight
-          ? 'bg-brand-green/5 border border-brand-green/20 hover:border-brand-green/40'
+          ? 'bg-ds-ok/5 border border-ds-ok/20 hover:border-ds-ok/40'
           : 'bg-white border border-gray-100 opacity-80'
       } ${disabled ? 'cursor-not-allowed' : 'active:scale-[0.99]'}`}
     >
-      <div className="w-14 h-14 rounded-xl overflow-hidden flex-shrink-0 bg-brand-oat">
+      <div className="w-14 h-14 rounded-xl overflow-hidden flex-shrink-0 bg-ds-bg">
         {place.image_url ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
@@ -456,19 +456,19 @@ function PlaceRow({
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center">
-            <Coffee size={22} weight="duotone" className="text-brand-mocha/40" />
+            <Coffee size={22} weight="duotone" className="text-ds-text2/40" />
           </div>
         )}
       </div>
       <div className="flex-1 min-w-0">
-        <p className="font-bold text-brand-espresso text-sm truncate">
+        <p className="font-bold text-ds-text text-sm truncate">
           {place.name}
         </p>
-        <p className="text-[11px] text-brand-mocha truncate mt-0.5">
+        <p className="text-[11px] text-ds-text2 truncate mt-0.5">
           {vibe ? formatVibeSummary(vibe) : 'Aucune vibe récente'}
         </p>
         {place.distanceM != null && (
-          <p className="text-[10px] text-brand-mocha/70 mt-0.5">
+          <p className="text-[10px] text-ds-text2/70 mt-0.5">
             {formatDistance(place.distanceM)}
           </p>
         )}
@@ -486,7 +486,7 @@ function PlaceRow({
 function PlaceRowSkeleton() {
   return (
     <div
-      className="w-full flex items-center gap-3 rounded-2xl p-2.5 border border-brand-green/10 bg-brand-green/[0.03] animate-pulse"
+      className="w-full flex items-center gap-3 rounded-2xl p-2.5 border border-ds-ok/10 bg-ds-ok/[0.03] animate-pulse"
       aria-hidden
     >
       <div className="w-14 h-14 rounded-xl bg-gray-100 flex-shrink-0" />
@@ -514,8 +514,8 @@ function NearbySpotsSkeleton({ hideTitle = false }: { hideTitle?: boolean }) {
           <PlaceRowSkeleton key={i} />
         ))}
       </div>
-      <p className="mt-3 text-center text-[11px] font-medium text-brand-mocha flex items-center justify-center gap-1.5">
-        <span className="inline-block w-1.5 h-1.5 rounded-full bg-brand-green animate-pulse" />
+      <p className="mt-3 text-center text-[11px] font-medium text-ds-text2 flex items-center justify-center gap-1.5">
+        <span className="inline-block w-1.5 h-1.5 rounded-full bg-ds-ok animate-pulse" />
         Recherche des spots autour de toi…
       </p>
     </section>
@@ -527,21 +527,21 @@ function MissingSpotCard({ onPress }: { onPress: () => void }) {
     <button
       type="button"
       onClick={onPress}
-      className="w-full border-2 border-dashed border-gray-300 bg-gray-50/50 rounded-2xl p-4 flex items-center justify-between transition-all hover:bg-gray-50 hover:border-brand-green/50 cursor-pointer active:scale-[0.98]"
+      className="w-full border-2 border-dashed border-gray-300 bg-gray-50/50 rounded-2xl p-4 flex items-center justify-between transition-all hover:bg-gray-50 hover:border-ds-ok/50 cursor-pointer active:scale-[0.98]"
     >
       <div className="flex items-center gap-3 min-w-0">
         <div className="w-10 h-10 rounded-full bg-white border border-gray-200 flex items-center justify-center text-gray-400 shadow-sm flex-shrink-0">
           <Storefront size={20} weight="duotone" />
         </div>
         <div className="text-left min-w-0">
-          <p className="font-bold text-brand-dark text-sm">Spot manquant ?</p>
+          <p className="font-bold text-ds-pin text-sm">Spot manquant ?</p>
           <p className="text-xs text-gray-500 mt-0.5">
             Ajoute-le et gagne des Grains
           </p>
         </div>
       </div>
       <span
-        className="w-8 h-8 rounded-full bg-brand-dark text-white flex items-center justify-center shadow-md flex-shrink-0"
+        className="w-8 h-8 rounded-full bg-ds-pin text-white flex items-center justify-center shadow-md flex-shrink-0"
         aria-hidden
       >
         <Plus size={16} weight="bold" />
@@ -553,9 +553,9 @@ function MissingSpotCard({ onPress }: { onPress: () => void }) {
 function EmptyState() {
   return (
     <div className="text-center py-10">
-      <Coffee size={32} weight="duotone" className="text-brand-mocha/40 mx-auto mb-3" />
-      <p className="font-semibold text-brand-espresso">Aucun résultat</p>
-      <p className="text-sm text-brand-mocha mt-1">Essaie un autre nom.</p>
+      <Coffee size={32} weight="duotone" className="text-ds-text2/40 mx-auto mb-3" />
+      <p className="font-semibold text-ds-text">Aucun résultat</p>
+      <p className="text-sm text-ds-text2 mt-1">Essaie un autre nom.</p>
     </div>
   );
 }
@@ -564,10 +564,10 @@ function Header({ grains }: { grains: number }) {
   return (
     <div className="px-5 pt-6 pb-3 flex items-start justify-between gap-3">
       <div className="min-w-0">
-        <h1 className="text-2xl font-extrabold text-brand-espresso tracking-tight">
+        <h1 className="text-2xl font-extrabold text-ds-text tracking-tight">
           Check-in
         </h1>
-        <p className="text-sm text-brand-mocha mt-1">
+        <p className="text-sm text-ds-text2 mt-1">
           Confirme ta présence et gagne des Grains.
         </p>
       </div>

@@ -104,10 +104,10 @@ export default function IosInstallPrompt() {
       aria-live="polite"
     >
       <div className="pointer-events-auto w-full max-w-md rounded-2xl border border-white/40 bg-white/75 dark:bg-[#2a211c]/85 backdrop-blur-xl shadow-[0_8px_32px_rgba(0,0,0,0.18)] px-3.5 py-3 flex items-start gap-2.5">
-        <p className="flex-1 min-w-0 text-[13px] leading-snug text-brand-espresso font-medium">
+        <p className="flex-1 min-w-0 text-[13px] leading-snug text-ds-text font-medium">
           Pour installer l&apos;app, touchez{' '}
-          <span className="inline-flex items-center gap-0.5 mx-0.5 px-1.5 py-0.5 rounded-md bg-brand-matcha/10 text-brand-matcha font-bold align-middle">
-            <ShareIcon className="text-brand-matcha" />
+          <span className="inline-flex items-center gap-0.5 mx-0.5 px-1.5 py-0.5 rounded-md bg-ds-ok/10 text-ds-ok font-bold align-middle">
+            <ShareIcon className="text-ds-ok" />
           </span>{' '}
           puis &apos;Sur l&apos;écran d&apos;accueil&apos; 📱
         </p>
@@ -115,7 +115,7 @@ export default function IosInstallPrompt() {
           type="button"
           onClick={dismiss}
           aria-label="Fermer"
-          className="flex-shrink-0 w-7 h-7 rounded-full bg-brand-mocha/10 text-brand-mocha flex items-center justify-center active:scale-90 transition-transform"
+          className="flex-shrink-0 w-7 h-7 rounded-full bg-ds-text2/10 text-ds-text2 flex items-center justify-center active:scale-90 transition-transform"
         >
           <X size={14} weight="bold" />
         </button>

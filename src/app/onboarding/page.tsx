@@ -36,13 +36,16 @@ import {
   type ZoneId,
 } from '@/lib/onboarding';
 import type { UpsertProfileResult } from '@/lib/api/profiles';
+import Button from '@/components/ui/Button';
+import Chip from '@/components/ui/Chip';
+import { cn } from '@/lib/cn';
 
 type Step = 1 | 2 | 3 | 4 | 5;
 
 function FullScreenSpinner() {
   return (
-    <div className="fixed inset-0 z-[80] bg-brand-oat flex items-center justify-center">
-      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-matcha" />
+    <div className="fixed inset-0 z-[80] flex items-center justify-center bg-ds-bg">
+      <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-ds-accent" />
     </div>
   );
 }
@@ -64,52 +67,34 @@ function ChoiceCard({
     <button
       type="button"
       onClick={onClick}
-      className={`w-full text-left rounded-2xl border px-4 py-3.5 transition-all active:scale-[0.98] ${
+      aria-pressed={selected}
+      className={cn(
+        'w-full rounded-[18px] border px-4 py-3.5 text-left transition-all active:scale-[0.98]',
         selected
-          ? 'border-brand-matcha bg-brand-matcha/10 shadow-soft'
-          : 'border-brand-mocha/15 bg-brand-surface hover:border-brand-matcha/35'
-      }`}
+          ? 'border-transparent bg-ds-accentsoft shadow-ds'
+          : 'border-ds-line bg-ds-surface hover:border-ds-accent/40'
+      )}
     >
       <span className="flex items-start gap-3">
-        {emoji && <span className="text-2xl leading-none mt-0.5">{emoji}</span>}
+        {emoji ? (
+          <span className="mt-0.5 text-2xl leading-none">{emoji}</span>
+        ) : null}
         <span className="min-w-0">
-          <span className="block text-sm font-extrabold text-brand-espresso">
+          <span
+            className={cn(
+              'block text-sm font-extrabold',
+              selected ? 'text-ds-accenttext' : 'text-ds-text'
+            )}
+          >
             {label}
           </span>
-          {hint && (
-            <span className="block text-xs text-brand-mocha mt-0.5 leading-relaxed">
+          {hint ? (
+            <span className="mt-0.5 block text-xs leading-relaxed text-ds-text2">
               {hint}
             </span>
-          )}
+          ) : null}
         </span>
       </span>
-    </button>
-  );
-}
-
-function Chip({
-  selected,
-  onClick,
-  emoji,
-  label,
-}: {
-  selected: boolean;
-  onClick: () => void;
-  emoji?: string;
-  label: string;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`inline-flex items-center gap-1.5 rounded-full px-3.5 py-2 text-sm font-bold border transition-all active:scale-95 ${
-        selected
-          ? 'bg-brand-ink text-white border-brand-ink'
-          : 'bg-brand-surface text-brand-espresso border-brand-mocha/15'
-      }`}
-    >
-      {emoji && <span>{emoji}</span>}
-      {label}
     </button>
   );
 }
@@ -286,34 +271,34 @@ function WizardForm({
     AVATAR_PRESETS.find((a) => a.id === answers.avatarPreset)?.emoji ?? '☕';
 
   return (
-    <div className="fixed inset-0 z-[80] bg-brand-oat flex flex-col">
-      <div className="max-w-md w-full mx-auto flex-1 flex flex-col px-6 pt-6 pb-8 overflow-hidden">
-        {/* Progress */}
+    <div className="fixed inset-0 z-[80] flex flex-col bg-ds-bg">
+      <div className="mx-auto flex w-full max-w-md flex-1 flex-col overflow-hidden px-5 pb-8 pt-6">
         {step < 5 && (
-          <div className="flex items-center gap-3 mb-6 shrink-0">
+          <div className="mb-6 flex shrink-0 items-center gap-3">
             {step > 1 ? (
               <button
                 type="button"
                 onClick={goBack}
                 aria-label="Retour"
-                className="w-9 h-9 -ml-2 rounded-full flex items-center justify-center text-brand-mocha hover:bg-brand-surface transition-colors"
+                className="-ml-2 flex h-11 w-11 items-center justify-center rounded-full text-ds-text2 hover:bg-ds-surface2"
               >
                 <ArrowLeft size={20} weight="bold" />
               </button>
             ) : (
-              <span className="w-9 h-9 -ml-2" />
+              <span className="-ml-2 h-11 w-11" />
             )}
-            <div className="flex-1 flex gap-1.5">
+            <div className="flex flex-1 gap-1.5">
               {[1, 2, 3, 4].map((s) => (
                 <span
                   key={s}
-                  className={`h-1.5 flex-1 rounded-full transition-all duration-500 ${
-                    s <= progressStep ? 'bg-brand-matcha' : 'bg-brand-espresso/10'
-                  }`}
+                  className={cn(
+                    'h-1.5 flex-1 rounded-full transition-all duration-500',
+                    s <= progressStep ? 'bg-ds-accent' : 'bg-ds-surface2'
+                  )}
                 />
               ))}
             </div>
-            <span className="text-xs font-semibold text-brand-mocha tabular-nums w-9 text-right">
+            <span className="w-9 text-right text-xs font-semibold tabular-nums text-ds-text2">
               {progressStep}/4
             </span>
           </div>
@@ -323,10 +308,10 @@ function WizardForm({
           {/* Étape 1 — Mood */}
           {step === 1 && (
             <div key="s1" className="flex-1 flex flex-col animate-step">
-              <h1 className="text-2xl font-extrabold text-brand-espresso tracking-tight">
+              <h1 className="font-display text-[28px] font-extrabold leading-tight text-ds-text">
                 {isEdit ? 'Ton mood du moment' : 'Bienvenue sur DropSpot'}
               </h1>
-              <p className="text-brand-mocha mt-2 mb-5 text-sm leading-relaxed">
+              <p className="mb-5 mt-2 text-[15px] leading-relaxed text-ds-text2">
                 Tu recherches plutôt un endroit pour :
               </p>
               <div className="space-y-2.5 pb-4">
@@ -348,16 +333,16 @@ function WizardForm({
           {step === 2 && (
             <div key="s2" className="flex-1 flex flex-col animate-step space-y-6 pb-4">
               <div>
-                <h1 className="text-2xl font-extrabold text-brand-espresso tracking-tight">
+                <h1 className="font-display text-[28px] font-extrabold leading-tight text-ds-text">
                   Tes critères de confort
                 </h1>
-                <p className="text-brand-mocha mt-2 text-sm">
+                <p className="mt-2 text-[15px] text-ds-text2">
                   On affine les spots et Flash Drops pour toi.
                 </p>
               </div>
 
               <section className="space-y-2.5">
-                <h2 className="text-xs font-bold uppercase tracking-wider text-brand-mocha">
+                <h2 className="text-xs font-bold uppercase tracking-wider text-ds-text2">
                   Wi-Fi &amp; Prises
                 </h2>
                 {WIFI_OPTIONS.map((opt) => (
@@ -374,14 +359,14 @@ function WizardForm({
               </section>
 
               <section className="space-y-2.5">
-                <h2 className="text-xs font-bold uppercase tracking-wider text-brand-mocha">
+                <h2 className="text-xs font-bold uppercase tracking-wider text-ds-text2">
                   Cadre &amp; Ambiance
                 </h2>
                 <div className="flex flex-wrap gap-2">
                   {AMBIANCE_OPTIONS.map((opt) => (
                     <Chip
                       key={opt.id}
-                      selected={answers.ambiances.includes(opt.id)}
+                      active={answers.ambiances.includes(opt.id)}
                       onClick={() =>
                         patchAnswers({
                           ambiances: toggleInList(
@@ -390,22 +375,22 @@ function WizardForm({
                           ),
                         })
                       }
-                      emoji={opt.emoji}
-                      label={opt.label}
-                    />
+                    >
+                      {opt.emoji} {opt.label}
+                    </Chip>
                   ))}
                 </div>
               </section>
 
               <section className="space-y-2.5">
-                <h2 className="text-xs font-bold uppercase tracking-wider text-brand-mocha">
+                <h2 className="text-xs font-bold uppercase tracking-wider text-ds-text2">
                   Boissons &amp; snacks
                 </h2>
                 <div className="flex flex-wrap gap-2">
                   {DRINK_OPTIONS.map((opt) => (
                     <Chip
                       key={opt.id}
-                      selected={answers.drinks.includes(opt.id)}
+                      active={answers.drinks.includes(opt.id)}
                       onClick={() =>
                         patchAnswers({
                           drinks: toggleInList(
@@ -414,9 +399,9 @@ function WizardForm({
                           ),
                         })
                       }
-                      emoji={opt.emoji}
-                      label={opt.label}
-                    />
+                    >
+                      {opt.emoji} {opt.label}
+                    </Chip>
                   ))}
                 </div>
               </section>
@@ -427,10 +412,10 @@ function WizardForm({
           {step === 3 && (
             <div key="s3" className="flex-1 flex flex-col animate-step space-y-5 pb-4">
               <div>
-                <h1 className="text-2xl font-extrabold text-brand-espresso tracking-tight">
+                <h1 className="font-display text-[28px] font-extrabold leading-tight text-ds-text">
                   Où tu traines ?
                 </h1>
-                <p className="text-brand-mocha mt-2 text-sm">
+                <p className="mt-2 text-[15px] text-ds-text2">
                   Quartiers d’intérêt — tu peux en choisir plusieurs.
                 </p>
               </div>
@@ -452,29 +437,25 @@ function WizardForm({
                 ))}
               </div>
 
-              <button
-                type="button"
+              <Button
+                variant={answers.geoEnabled ? 'tonal' : 'outline'}
                 onClick={() => void enableGeo()}
                 disabled={geoLoading}
-                className={`w-full flex items-center justify-center gap-2 rounded-2xl border px-4 py-3.5 text-sm font-bold transition-all active:scale-[0.98] disabled:opacity-60 ${
-                  answers.geoEnabled
-                    ? 'border-brand-matcha bg-brand-matcha/10 text-brand-espresso'
-                    : 'border-brand-mocha/15 bg-brand-surface text-brand-espresso'
-                }`}
+                className="w-full whitespace-normal text-sm leading-snug"
               >
                 {geoLoading ? (
                   <Spinner size={18} className="animate-spin" />
                 ) : answers.geoEnabled ? (
-                  <CheckCircle size={18} weight="fill" className="text-brand-matcha" />
+                  <CheckCircle size={18} weight="fill" aria-hidden />
                 ) : (
-                  <NavigationArrow size={18} weight="fill" className="text-brand-matcha" />
+                  <NavigationArrow size={18} weight="regular" aria-hidden />
                 )}
                 {answers.geoEnabled
                   ? 'Position activée'
-                  : 'Activer la position pour voir les spots et Flash Drops autour de toi'}
-              </button>
+                  : 'Activer la position pour voir les spots autour de toi'}
+              </Button>
               {geoMessage && (
-                <p className="text-xs text-brand-mocha text-center leading-relaxed">
+                <p className="text-xs text-ds-text2 text-center leading-relaxed">
                   {geoMessage}
                 </p>
               )}
@@ -484,43 +465,43 @@ function WizardForm({
           {/* Étape 4 — Profil + bonus */}
           {step === 4 && (
             <div key="s4" className="flex-1 flex flex-col animate-step pb-4">
-              <h1 className="text-2xl font-extrabold text-brand-espresso tracking-tight">
+              <h1 className="font-display text-[28px] font-extrabold leading-tight text-ds-text">
                 Ton identité DropSpot
               </h1>
-              <p className="text-brand-mocha mt-2 mb-5 text-sm">
+              <p className="mb-5 mt-2 text-[15px] text-ds-text2">
                 Pseudo + avatar — puis{' '}
-                <strong className="text-brand-espresso">
+                <strong className="text-ds-text">
                   +{WELCOME_GRAINS} Grains
                 </strong>{' '}
                 de bienvenue.
               </p>
 
-              <div className="flex justify-center mb-4">
+              <div className="mb-4 flex justify-center">
                 {avatar ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
                     src={avatar}
                     alt=""
                     referrerPolicy="no-referrer"
-                    className="w-20 h-20 rounded-full object-cover ring-4 ring-brand-surface shadow-lg"
+                    className="h-20 w-20 rounded-full object-cover shadow-ds ring-4 ring-ds-surface"
                   />
                 ) : (
-                  <div className="w-20 h-20 rounded-full bg-brand-surface ring-4 ring-brand-surface shadow-lg flex items-center justify-center text-3xl">
+                  <div className="flex h-20 w-20 items-center justify-center rounded-full bg-ds-accentsoft text-3xl shadow-ds ring-4 ring-ds-surface">
                     {answers.avatarPreset ? (
                       avatarEmoji
                     ) : (
                       <UserCircle
                         size={48}
-                        weight="duotone"
-                        className="text-brand-matcha"
+                        weight="regular"
+                        className="text-ds-accenttext"
                       />
                     )}
                   </div>
                 )}
               </div>
 
-              <label className="block mb-5">
-                <span className="text-xs font-semibold uppercase tracking-wider text-brand-mocha">
+              <label className="mb-5 block">
+                <span className="text-xs font-semibold uppercase tracking-wider text-ds-text2">
                   Pseudo
                 </span>
                 <input
@@ -529,14 +510,14 @@ function WizardForm({
                   onChange={(e) => setName(e.target.value)}
                   placeholder="Ton prénom ou un pseudo"
                   maxLength={40}
-                  className="mt-2 w-full bg-brand-surface rounded-2xl px-5 py-3.5 text-base font-semibold text-brand-espresso border-2 border-transparent focus:border-brand-matcha focus:outline-none shadow-sm transition-all placeholder:font-normal placeholder:text-brand-mocha/50"
+                  className="mt-2 w-full rounded-[14px] border border-ds-line bg-ds-surface px-4 py-3.5 text-base font-semibold text-ds-text placeholder:font-normal placeholder:text-ds-text2 focus:border-ds-accent focus:outline-none focus:ring-2 focus:ring-ds-accent/20"
                 />
               </label>
 
-              <p className="text-xs font-bold uppercase tracking-wider text-brand-mocha mb-2">
+              <p className="mb-2 text-xs font-bold uppercase tracking-wider text-ds-text2">
                 Avatar
               </p>
-              <div className="flex flex-wrap gap-2 mb-4">
+              <div className="mb-4 flex flex-wrap gap-2">
                 {AVATAR_PRESETS.map((a) => (
                   <button
                     key={a.id}
@@ -544,11 +525,12 @@ function WizardForm({
                     onClick={() =>
                       patchAnswers({ avatarPreset: a.id as AvatarPreset })
                     }
-                    className={`w-12 h-12 rounded-2xl text-xl flex items-center justify-center border transition-all ${
+                    className={cn(
+                      'flex h-12 w-12 items-center justify-center rounded-[14px] border text-xl transition-all',
                       answers.avatarPreset === a.id
-                        ? 'border-brand-matcha bg-brand-matcha/15 scale-105'
-                        : 'border-brand-mocha/15 bg-brand-surface'
-                    }`}
+                        ? 'scale-105 border-transparent bg-ds-accentsoft'
+                        : 'border-ds-line bg-ds-surface'
+                    )}
                     aria-label={a.label}
                   >
                     {a.emoji}
@@ -557,99 +539,99 @@ function WizardForm({
               </div>
 
               {!isEdit && !alreadyClaimedWelcome && (
-                <div className="rounded-2xl border border-amber-200/80 bg-amber-50 px-4 py-3 flex items-center gap-3">
-                  <span className="text-2xl">🫘</span>
+                <div className="flex items-center gap-3 rounded-[18px] border border-ds-line bg-ds-accentsoft px-4 py-3">
+                  <span className="text-2xl" aria-hidden>
+                    🫘
+                  </span>
                   <div>
-                    <p className="text-sm font-extrabold text-brand-espresso">
+                    <p className="text-sm font-extrabold text-ds-accenttext">
                       Bonus de bienvenue
                     </p>
-                    <p className="text-xs text-brand-mocha">
-                      +{WELCOME_GRAINS} Grains ajoutés à ton bocal dès la
-                      finalisation.
+                    <p className="text-xs text-ds-text2">
+                      +{WELCOME_GRAINS} Grains dès la finalisation.
                     </p>
                   </div>
                 </div>
               )}
 
-              {error && (
-                <p className="text-sm text-brand-terracotta text-center mt-3">
+              {error ? (
+                <p className="mt-3 text-center text-sm text-ds-accenttext">
                   {error}
                 </p>
-              )}
+              ) : null}
             </div>
           )}
 
-          {/* Étape 5 — Célébration */}
           {step === 5 && (
             <div
               key="s5"
-              className="flex-1 flex flex-col items-center justify-center text-center animate-pop px-2"
+              className="animate-pop flex flex-1 flex-col items-center justify-center px-2 text-center"
             >
-              <div className="relative w-28 h-28 mb-5">
-                <div className="absolute inset-0 rounded-full bg-brand-matcha/15 animate-pulse" />
+              <div className="relative mb-5 h-28 w-28">
+                <div className="absolute inset-0 animate-pulse rounded-full bg-ds-accentsoft" />
                 <div className="absolute inset-0 flex items-center justify-center">
                   {saving ? (
                     <Spinner
                       size={40}
-                      className="animate-spin text-brand-matcha"
+                      className="animate-spin text-ds-accent"
                     />
                   ) : (
                     <CheckCircle
                       size={64}
                       weight="fill"
-                      className="text-brand-matcha"
+                      className="text-ds-ok"
                     />
                   )}
                 </div>
               </div>
 
-              <h1 className="text-3xl font-extrabold text-brand-espresso tracking-tight">
-                {saving ? 'On prépare ton feed…' : 'Tout est prêt !'}
+              <h1 className="font-display text-[28px] font-extrabold leading-tight text-ds-text">
+                {saving ? 'On prépare ta carte…' : 'Tout est prêt !'}
               </h1>
-              <p className="text-brand-mocha mt-2 text-sm">
+              <p className="mt-2 text-[15px] text-ds-text2">
                 {saving
                   ? 'Une seconde.'
                   : awarded > 0
-                    ? `+${awarded} Grains dans ton bocal 🎉`
+                    ? `+${awarded} Grains dans ton solde`
                     : 'Tes spots t’attendent sur la carte.'}
               </p>
 
-              {!saving && awarded > 0 && (
-                <div className="mt-6 rounded-2xl bg-brand-surface border border-brand-mocha/10 px-6 py-4 shadow-soft animate-pop">
-                  <p className="text-4xl font-black text-amber-700 tabular-nums">
+              {!saving && awarded > 0 ? (
+                <div className="animate-pop mt-6 rounded-[18px] border border-ds-line bg-ds-surface px-6 py-4 shadow-ds">
+                  <p className="font-display text-4xl font-extrabold tabular-nums text-ds-accenttext">
                     +{awarded}
                   </p>
-                  <p className="text-xs font-bold uppercase tracking-wider text-brand-mocha mt-1">
+                  <p className="mt-1 text-xs font-bold uppercase tracking-wider text-ds-text2">
                     Grains de bienvenue
                   </p>
                 </div>
-              )}
+              ) : null}
 
-              {!saving && (
-                <p className="mt-6 text-xs text-brand-mocha flex items-center gap-1.5">
-                  <MapPin size={14} weight="fill" />
+              {!saving ? (
+                <p className="mt-6 flex items-center gap-1.5 text-xs text-ds-text2">
+                  <MapPin size={14} weight="regular" aria-hidden />
                   Redirection vers la carte…
                 </p>
-              )}
+              ) : null}
             </div>
           )}
         </div>
 
-        {step < 5 && (
-          <button
-            type="button"
+        {step < 5 ? (
+          <Button
+            variant="main"
             onClick={goNext}
             disabled={!canContinue}
-            className="mt-4 w-full shrink-0 flex items-center justify-center gap-2 bg-brand-ink text-white font-bold py-4 rounded-2xl shadow-lg hover:bg-brand-ink/90 active:scale-[0.98] transition-all disabled:opacity-40 disabled:active:scale-100"
+            className="mt-4 w-full shrink-0"
           >
             {step === 4
               ? isEdit
                 ? 'Enregistrer'
                 : 'Finaliser & récupérer mes Grains'
               : 'Continuer'}
-            <ArrowRight size={18} weight="bold" />
-          </button>
-        )}
+            <ArrowRight size={18} weight="bold" aria-hidden />
+          </Button>
+        ) : null}
       </div>
     </div>
   );

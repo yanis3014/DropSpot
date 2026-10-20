@@ -92,6 +92,7 @@ begin
     raise exception 'FAIL: A was able to set grains_balance';
   exception
     when others then
+      if sqlerrm like 'FAIL:%' then raise; end if;
       if sqlerrm like '%grains_balance%' then
         null; -- expected
       else
@@ -105,6 +106,7 @@ begin
     raise exception 'FAIL: A was able to set welcome_grains_claimed_at';
   exception
     when others then
+      if sqlerrm like 'FAIL:%' then raise; end if;
       if sqlerrm like '%welcome_grains_claimed_at%' then
         null;
       else
@@ -118,6 +120,7 @@ begin
     raise exception 'FAIL: A was able to set role=owner';
   exception
     when others then
+      if sqlerrm like 'FAIL:%' then raise; end if;
       if sqlerrm like '%role%' then
         null;
       else
@@ -155,6 +158,7 @@ begin
     raise exception 'FAIL: A was able to go vendor → user';
   exception
     when others then
+      if sqlerrm like 'FAIL:%' then raise; end if;
       if sqlerrm like '%role%' then
         null;
       else
@@ -181,6 +185,7 @@ begin
     raise exception 'FAIL: A became vendor after onboarding';
   exception
     when others then
+      if sqlerrm like 'FAIL:%' then raise; end if;
       if sqlerrm like '%role%' then
         null;
       else

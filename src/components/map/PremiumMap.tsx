@@ -1,38 +1,101 @@
-'use client';
+"use client";
 
-import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
+import {
+  useState,
+  useEffect,
+  useMemo,
+  useRef,
+  useCallback,
+  type ReactNode,
+} from "react";
+import { useRouter } from "next/navigation";
 import Map, {
   Marker,
   useMap,
   GeolocateControl,
   type ErrorEvent,
   type MapRef,
-} from 'react-map-gl';
-import type { GeolocateControl as MapboxGeolocateControl } from 'mapbox-gl';
-import 'mapbox-gl/dist/mapbox-gl.css';
-import { Coffee, X, LockKey, MapPin, WifiHigh, Plugs, SpeakerHigh } from '@phosphor-icons/react';
-import { getMapPlaces, getPlaceById, Place, hasValidCoordinates } from '@/lib/api/places';
-import { peekCache } from '@/lib/cache/clientCache';
-import { useAuth } from '@/lib/hooks/useAuth';
-import FavoriteButton from '@/components/places/FavoriteButton';
-import TrophyBadge, { mockTrophyForPlace } from '@/components/places/TrophyBadge';
-import { getSavedPlaceIds, savePlace, unsavePlace } from '@/lib/api/saved';
-import LoginModal from '@/components/auth/LoginModal';
-import { openDirections } from '@/lib/utils/directions';
-import { placeMatchesFilter } from '@/lib/filters';
-import MapSkeleton from '@/components/map/MapSkeleton';
-import { noiseLabel, wifiLabel } from '@/lib/placeAmenities';
+} from "react-map-gl";
+import type { GeolocateControl as MapboxGeolocateControl } from "mapbox-gl";
+import "mapbox-gl/dist/mapbox-gl.css";
+import {
+  CalendarBlank,
+  Clock,
+  Coffee,
+  Crosshair,
+  Leaf,
+  Moon,
+  WifiHigh,
+} from "@phosphor-icons/react";
+import { getPlaces, getPlaceById, type Place } from "@/lib/api/places";
+import { peekCache } from "@/lib/cache/clientCache";
+import { hasValidCoordinates, placeMatchesFilters } from "@/lib/filters";
+import {
+  cafeFeatureIds,
+  cafeOpenStatus,
+  pinKindFor,
+  type CafeFeatureId,
+} from "@/lib/cafePresentation";
+import { AMENITY_FILTER_IDS, type AmenityFilterId } from "@/lib/mapFilters";
+import { usePlaceFilters } from "@/lib/hooks/usePlaceFilters";
+import { distanceMeters, formatDistance, type LatLng } from "@/lib/geo";
+import { useTheme } from "@/lib/theme";
+import MapSkeleton from "@/components/map/MapSkeleton";
+import MapPin from "@/components/ui/MapPin";
+import CafeRow, { type CafeRowFeature } from "@/components/ui/CafeRow";
+import Chip from "@/components/ui/Chip";
+import { cn } from "@/lib/cn";
 
 const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN;
-const MAP_STYLE = 'mapbox://styles/yanis3014/cmuldtuxb002h01s51acaf25v';
+const MAP_STYLE_LIGHT = "mapbox://styles/yanis3014/cmuldtuxb002h01s51acaf25v";
+const MAP_STYLE_DARK = "mapbox://styles/mapbox/dark-v11";
 
-const filterPills = [
-  { label: '🔌 Prises', value: 'plugs' },
-  { label: '☀️ Terrasse', value: 'terrace' },
-  { label: '☕️ Café', value: 'coffee' },
-  { label: '🎵 Ambiance', value: 'chill' },
+const FILTER_CHIPS: {
+  id: AmenityFilterId;
+  label: string;
+  Icon: typeof WifiHigh;
+}[] = [
+  { id: "wifi", label: "Wi-Fi", Icon: WifiHigh },
+  { id: "matcha", label: "Matcha", Icon: Leaf },
+  { id: "calme", label: "Calme", Icon: Moon },
+  { id: "open_now", label: "Ouvert maintenant", Icon: Clock },
 ];
+
+const FEATURE_ICONS: Record<CafeFeatureId, ReactNode> = {
+  wifi: <WifiHigh size={15} weight="regular" />,
+  matcha: <Leaf size={15} weight="regular" />,
+  calme: <Moon size={15} weight="regular" />,
+  activites: <CalendarBlank size={15} weight="regular" />,
+};
+
+const FEATURE_LABELS: Record<CafeFeatureId, string> = {
+  wifi: "Wi-Fi",
+  matcha: "Matcha",
+  calme: "Calme",
+  activites: "Activités",
+};
+
+function cafeFeatures(place: Place): CafeRowFeature[] {
+  return cafeFeatureIds(place).map((id) => ({
+    icon: FEATURE_ICONS[id],
+    label: FEATURE_LABELS[id],
+  }));
+}
+
+function pinIconFor(place: Place): ReactNode {
+  switch (pinKindFor(place)) {
+    case "wifi":
+      return <WifiHigh size={20} weight="regular" />;
+    case "matcha":
+      return <Leaf size={20} weight="regular" />;
+    case "calme":
+      return <Moon size={20} weight="regular" />;
+    case "activites":
+      return <CalendarBlank size={20} weight="regular" />;
+    default:
+      return <Coffee size={20} weight="regular" />;
+  }
+}
 
 function FlyToPlace({ place }: { place: Place }) {
   const { current: map } = useMap();
@@ -43,124 +106,96 @@ function FlyToPlace({ place }: { place: Place }) {
       center: [place.lng, place.lat] as [number, number],
       zoom: 15,
       duration: 1000,
-      offset: [0, -150],
+      offset: [0, -120],
     });
   }, [map, place]);
 
   return null;
 }
 
-// react-map-gl already calls map.remove() on unmount; in-flight tile requests then
-// reject with AbortError ("Actor removed"), which is expected teardown noise.
 function handleMapError(event: ErrorEvent) {
   const err = event.error as { name?: string; message?: string } | undefined;
-  if (err?.name === 'AbortError' || err?.message?.includes('Actor removed')) return;
-  console.error('Mapbox error:', event.error);
+  if (err?.name === "AbortError" || err?.message?.includes("Actor removed"))
+    return;
+  console.error("Mapbox error:", event.error);
 }
 
-/** Auto-déclenche le GeolocateControl si la permission GPS est déjà accordée. */
 async function triggerGeolocateIfGranted(
   control: MapboxGeolocateControl | null
 ) {
   if (!control) return;
   try {
-    if (typeof navigator === 'undefined' || !navigator.permissions) return;
-    const status = await navigator.permissions.query({ name: 'geolocation' });
-    if (status.state === 'granted') {
+    if (typeof navigator === "undefined" || !navigator.permissions) return;
+    const status = await navigator.permissions.query({ name: "geolocation" });
+    if (status.state === "granted") {
       control.trigger();
     }
   } catch (err) {
-    console.warn('Error checking geolocation permission:', err);
+    console.warn("Error checking geolocation permission:", err);
   }
 }
 
-const MAP_FILTERS = new Set(filterPills.map((p) => p.value));
-
-export default function PremiumMap({
-  initialFilter = null,
-}: {
-  /** Filtre issu de l'onboarding (`?filter=plugs|terrace|coffee|chill`). */
-  initialFilter?: string | null;
-}) {
+export default function PremiumMap() {
   const router = useRouter();
-  const { isAuthenticated } = useAuth();
+  const { resolved: theme } = useTheme();
+  const { filters, toggleFilter } = usePlaceFilters();
+
+  const amenityFilters = useMemo(
+    () => filters.filter((f): f is AmenityFilterId =>
+      (AMENITY_FILTER_IDS as readonly string[]).includes(f)
+    ),
+    [filters]
+  );
+
   const [selectedPlace, setSelectedPlace] = useState<Place | null>(null);
-  const [activeFilter, setActiveFilter] = useState<string | null>(() =>
-    initialFilter && MAP_FILTERS.has(initialFilter) ? initialFilter : null
-  );
   const [places, setPlaces] = useState<Place[]>(
-    () => peekCache<Place[]>('places:map') ?? []
+    () => peekCache<Place[]>("places:full") ?? []
   );
-  const [loading, setLoading] = useState(() => !peekCache('places:map'));
+  const [loading, setLoading] = useState(() => !peekCache("places:full"));
   const [error, setError] = useState<string | null>(null);
-  const [savedIds, setSavedIds] = useState<string[]>([]);
-  const [showLogin, setShowLogin] = useState(false);
+  const [userCoords, setUserCoords] = useState<LatLng | null>(null);
 
   const mapRef = useRef<MapRef>(null);
   const geolocateControlRef = useRef<MapboxGeolocateControl | null>(null);
-  // Évite de re-trigger la géoloc à chaque remount / re-load du style
   const didAutoGeolocate = useRef(false);
 
-  // Chargement unique des spots (pas de bounding box → pas de reload à chaque pan)
+  const mapStyle = theme === "dark" ? MAP_STYLE_DARK : MAP_STYLE_LIGHT;
+
   useEffect(() => {
     let cancelled = false;
 
     const fetchPlaces = async () => {
       try {
-        if (!peekCache('places:map')) setLoading(true);
-        const data = await getMapPlaces();
+        if (!peekCache("places:full")) setLoading(true);
+        const data = await getPlaces({ withCoordinatesOnly: true });
         if (cancelled) return;
         setPlaces(data);
-        if (data.length === 0) setError('No places found in database');
+        if (data.length === 0) setError("Aucun café trouvé");
         else setError(null);
       } catch (err) {
-        console.error('Error fetching places:', err);
-        if (!cancelled) setError('Failed to load places');
+        console.error("Error fetching places:", err);
+        if (!cancelled) setError("Impossible de charger les cafés");
       } finally {
         if (!cancelled) setLoading(false);
       }
     };
 
-    fetchPlaces();
+    void fetchPlaces();
     return () => {
       cancelled = true;
     };
   }, []);
 
-  useEffect(() => {
-    if (!isAuthenticated) return;
-    getSavedPlaceIds()
-      .then(setSavedIds)
-      .catch((err) => console.error('Error fetching saved places:', err));
-  }, [isAuthenticated]);
-
-  // Déclenche la géoloc native Mapbox une fois la carte prête (point bleu + bouton)
   const handleMapLoad = useCallback(() => {
     if (didAutoGeolocate.current) return;
     didAutoGeolocate.current = true;
-    // Un tick pour laisser le GeolocateControl s'attacher à la map
     requestAnimationFrame(() => {
       void triggerGeolocateIfGranted(geolocateControlRef.current);
     });
   }, []);
 
-  const handleToggleSave = async (placeId: string) => {
-    const isSaved = savedIds.includes(placeId);
-    setSavedIds((prev) =>
-      isSaved ? prev.filter((id) => id !== placeId) : [...prev, placeId]
-    );
-    try {
-      if (isSaved) {
-        await unsavePlace(placeId);
-      } else {
-        await savePlace(placeId);
-      }
-    } catch (err) {
-      console.error('Error toggling favorite:', err);
-      setSavedIds((prev) =>
-        isSaved ? [...prev, placeId] : prev.filter((id) => id !== placeId)
-      );
-    }
+  const handleNearMe = () => {
+    geolocateControlRef.current?.trigger();
   };
 
   const handleMarkerClick = async (
@@ -169,43 +204,44 @@ export default function PremiumMap({
   ) => {
     e.originalEvent.stopPropagation();
     setSelectedPlace(place);
-    // Hydrate image + rich fields on demand (map query is marker-light).
     try {
       const full = await getPlaceById(place.id);
       if (full) setSelectedPlace(full);
     } catch (err) {
-      console.error('Error hydrating place:', err);
+      console.error("Error hydrating place:", err);
     }
   };
 
-  // Cached state can predate coordinate filtering, so re-check before rendering markers.
   const visiblePlaces = useMemo(
     () =>
       places.filter(
-        (p) => hasValidCoordinates(p) && placeMatchesFilter(p, activeFilter)
+        (p) =>
+          hasValidCoordinates(p) && placeMatchesFilters(p, amenityFilters)
       ),
-    [places, activeFilter]
+    [places, amenityFilters]
   );
+
+  const selectedMeta = selectedPlace ? cafeOpenStatus(selectedPlace) : null;
+
+  const selectedDistance =
+    selectedPlace && userCoords && hasValidCoordinates(selectedPlace)
+      ? formatDistance(
+          distanceMeters(userCoords, {
+            lat: selectedPlace.lat,
+            lng: selectedPlace.lng,
+          })
+        )
+      : "—";
 
   if (!MAPBOX_TOKEN) {
     return (
-      <div className="w-full h-full bg-brand-oat flex flex-col items-center justify-center p-6">
+      <div className="flex h-full w-full flex-col items-center justify-center bg-ds-bg p-6">
         <div className="text-center">
-          <MapPin size={48} className="text-brand-terracotta mb-4 mx-auto" />
-          <h2 className="text-2xl font-bold text-brand-espresso mb-4">Mapbox non configuré</h2>
-          <p className="text-brand-mocha mb-4">
-            Configurez NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN dans .env.local
-          </p>
-          <p className="text-sm text-brand-mocha/60">
-            Obtenez un token gratuit sur{' '}
-            <a
-              href="https://account.mapbox.com/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-brand-matcha underline"
-            >
-              Mapbox
-            </a>
+          <h2 className="mb-4 font-display text-2xl font-bold text-ds-text">
+            Mapbox non configuré
+          </h2>
+          <p className="mb-4 text-ds-text2">
+            Configure NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN dans .env.local
           </p>
         </div>
       </div>
@@ -218,19 +254,21 @@ export default function PremiumMap({
 
   if (error && places.length === 0) {
     return (
-      <div className="w-full h-full bg-brand-oat flex flex-col items-center justify-center p-6">
+      <div className="flex h-full w-full flex-col items-center justify-center bg-ds-bg p-6">
         <div className="text-center">
-          <MapPin size={48} className="text-brand-terracotta mb-4 mx-auto" />
-          <h2 className="text-2xl font-bold text-brand-espresso mb-4">Erreur de chargement</h2>
-          <p className="text-brand-mocha mb-4">{error}</p>
+          <h2 className="mb-4 font-display text-2xl font-bold text-ds-text">
+            Erreur de chargement
+          </h2>
+          <p className="text-ds-text2">{error}</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="w-full h-[100dvh] absolute inset-0">
+    <div className="absolute inset-0 h-[100dvh] w-full">
       <Map
+        key={mapStyle}
         ref={mapRef}
         mapboxAccessToken={MAPBOX_TOKEN}
         initialViewState={{
@@ -238,198 +276,116 @@ export default function PremiumMap({
           latitude: 43.7102,
           zoom: 13,
         }}
-        style={{ width: '100%', height: '100%' }}
-        mapStyle={MAP_STYLE}
+        style={{ width: "100%", height: "100%" }}
+        mapStyle={mapStyle}
         attributionControl={false}
         onError={handleMapError}
         onLoad={handleMapLoad}
+        onClick={() => setSelectedPlace(null)}
       >
-        {/* Bouton GPS natif Mapbox + pastille bleue de position utilisateur */}
         <GeolocateControl
           ref={geolocateControlRef}
-          position="bottom-right"
+          position="top-right"
           trackUserLocation
           showUserLocation
           showUserHeading
           positionOptions={{ enableHighAccuracy: true }}
-          style={{ marginBottom: '100px' }}
+          style={{ display: "none" }}
+          onGeolocate={(e) => {
+            setUserCoords({
+              lat: e.coords.latitude,
+              lng: e.coords.longitude,
+            });
+          }}
         />
 
-        {/* Marqueurs des spots — chargés une fois via getMapPlaces(), pas de bbox */}
-        {visiblePlaces.map((place) => (
-          <Marker
-            key={place.id}
-            longitude={place.lng}
-            latitude={place.lat}
-            anchor="bottom"
-            onClick={(e) => handleMarkerClick(e, place)}
-          >
-            <div className="bg-brand-ink text-white rounded-full p-2 shadow-lg flex items-center justify-center border-2 border-brand-surface transform transition-transform hover:scale-110 cursor-pointer">
-              <Coffee size={20} weight="fill" />
-            </div>
-          </Marker>
-        ))}
+        {visiblePlaces.map((place) => {
+          const selected = selectedPlace?.id === place.id;
+          return (
+            <Marker
+              key={place.id}
+              longitude={place.lng}
+              latitude={place.lat}
+              anchor="center"
+              onClick={(e) => handleMarkerClick(e, place)}
+            >
+              <MapPin
+                icon={pinIconFor(place)}
+                selected={selected}
+                label={selected ? place.name : undefined}
+                aria-label={place.name}
+                className={cn("shadow-ds", selected && "max-w-[220px]")}
+                onClick={(ev) => {
+                  ev.stopPropagation();
+                  void handleMarkerClick(
+                    { originalEvent: { stopPropagation: () => undefined } },
+                    place
+                  );
+                }}
+              />
+            </Marker>
+          );
+        })}
 
         {selectedPlace && hasValidCoordinates(selectedPlace) && (
           <FlyToPlace place={selectedPlace} />
         )}
       </Map>
 
-      {/* Barre de filtres — glassmorphism + scroll horizontal */}
-      <div className="absolute top-0 left-0 right-0 z-10 safe-pt bg-white/70 backdrop-blur-md border-b border-white/20 pb-3">
-        <div className="flex overflow-x-auto scrollbar-hide gap-2 px-4">
-          {filterPills.map((pill) => {
-            const isActive = activeFilter === pill.value;
+      <div className="pointer-events-none absolute inset-x-0 top-0 z-10 safe-pt">
+        <div className="pointer-events-auto flex gap-2 overflow-x-auto scrollbar-hide px-4 pb-2">
+          {FILTER_CHIPS.map(({ id, label, Icon }) => {
+            const active = filters.includes(id);
             return (
-              <button
-                key={pill.value}
-                type="button"
-                onClick={() =>
-                  setActiveFilter(isActive ? null : pill.value)
-                }
-                className={`shrink-0 rounded-full px-4 py-2 text-sm font-semibold whitespace-nowrap transition-all duration-200 active:scale-95 ${
-                  isActive
-                    ? 'bg-brand-dark text-white border border-brand-dark shadow-md'
-                    : 'bg-white/90 border border-gray-200 text-gray-700 shadow-sm'
-                }`}
+              <Chip
+                key={id}
+                active={active}
+                icon={<Icon size={16} weight="regular" aria-hidden />}
+                onClick={() => toggleFilter(id)}
+                className="shadow-ds"
               >
-                {pill.label}
-              </button>
+                {label}
+              </Chip>
             );
           })}
-          {/* Spacer pour que la dernière pilule ne soit pas coupée au bord droit */}
           <div className="w-2 shrink-0" aria-hidden />
         </div>
       </div>
 
-      <div
-        className={`absolute bottom-20 left-4 right-4 z-40 transition-transform duration-300 ${
-          selectedPlace ? 'translate-y-0' : 'translate-y-[150%]'
-        }`}
-      >
-        {selectedPlace && (
-          <div className="bg-brand-surface rounded-2xl shadow-xl overflow-hidden relative">
-            <div className="relative">
-              <div className="relative">
-                {selectedPlace.image_url ? (
-                  <img
-                    src={selectedPlace.image_url}
-                    alt={selectedPlace.name}
-                    className="w-full h-32 object-cover"
-                  />
-                ) : (
-                  <div className="w-full h-24 bg-gradient-to-br from-brand-muted to-brand-mocha/20 animate-pulse" />
-                )}
-                <div className="absolute top-3 right-3 z-10 flex items-center gap-2">
-                  <FavoriteButton
-                    placeId={selectedPlace.id}
-                    isSaved={savedIds.includes(selectedPlace.id)}
-                    onToggle={handleToggleSave}
-                    size={16}
-                    className="w-9 h-9 shadow-md"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setSelectedPlace(null)}
-                    aria-label="Fermer"
-                    className="w-9 h-9 flex items-center justify-center rounded-full bg-brand-surface/90 backdrop-blur-sm shadow-md hover:bg-brand-surface active:scale-95 transition-all"
-                  >
-                    <X size={18} weight="bold" className="text-brand-espresso" />
-                  </button>
-                </div>
-              </div>
-              <div className="p-4">
-                <h3 className="text-xl font-bold text-brand-espresso mb-2">
-                  {selectedPlace.name}
-                </h3>
-                <div className="mb-3">
-                  <TrophyBadge
-                    trophy={mockTrophyForPlace(selectedPlace.id)}
-                    size="sm"
-                  />
-                </div>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => openDirections(selectedPlace)}
-                    className="flex-1 flex items-center justify-center gap-2 bg-brand-ink text-white rounded-xl py-3 font-semibold shadow-sm hover:bg-brand-ink/90 active:scale-95 transition-all"
-                  >
-                    <MapPin size={20} weight="fill" />
-                    <span>S&apos;y rendre</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => router.push(`/place/${selectedPlace.id}`)}
-                    className="flex-1 flex items-center justify-center bg-brand-oat text-brand-espresso rounded-xl py-3 font-semibold shadow-sm hover:bg-brand-oat/80 active:scale-95 transition-all"
-                  >
-                    Voir la fiche
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            <div className="p-4 border-t border-brand-mocha/10 relative overflow-hidden">
-              <h4 className="text-sm font-semibold text-brand-mocha mb-3">Infos pratiques</h4>
-
-              <div
-                className={`space-y-2 transition-all duration-300 ${
-                  isAuthenticated ? '' : 'blur-sm opacity-40 select-none pointer-events-none'
-                }`}
-              >
-                {selectedPlace.wifi_speed && (
-                  <div className="flex items-center gap-3 p-2 bg-brand-oat rounded-lg">
-                    <WifiHigh size={20} weight="duotone" className="text-brand-mocha" />
-                    <div>
-                      <p className="text-xs text-brand-mocha">Wi-Fi</p>
-                      <p className="text-sm font-semibold text-brand-espresso">
-                        {wifiLabel(selectedPlace.wifi_speed)}
-                      </p>
-                    </div>
-                  </div>
-                )}
-                {selectedPlace.has_plugs !== undefined && (
-                  <div className="flex items-center gap-3 p-2 bg-brand-oat rounded-lg">
-                    <Plugs size={20} weight="duotone" className="text-brand-mocha" />
-                    <div>
-                      <p className="text-xs text-brand-mocha">Prises</p>
-                      <p className="text-sm font-semibold text-brand-espresso">
-                        {selectedPlace.has_plugs ? 'Disponibles' : 'Limitées'}
-                      </p>
-                    </div>
-                  </div>
-                )}
-                {selectedPlace.noise_level && (
-                  <div className="flex items-center gap-3 p-2 bg-brand-oat rounded-lg">
-                    <SpeakerHigh size={20} weight="duotone" className="text-brand-mocha" />
-                    <div>
-                      <p className="text-xs text-brand-mocha">Ambiance</p>
-                      <p className="text-sm font-semibold text-brand-espresso">
-                        {noiseLabel(selectedPlace.noise_level)}
-                      </p>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {!isAuthenticated && (
-                <div className="absolute inset-0 flex flex-col items-center justify-center p-4 bg-brand-oat/60 backdrop-blur-[2px]">
-                  <LockKey weight="duotone" size={28} className="text-brand-terracotta mb-2" />
-                  <p className="text-xs text-center font-medium text-brand-espresso mb-3">
-                    Connecte-toi pour voir les specs
-                  </p>
-                  <button
-                    onClick={() => setShowLogin(true)}
-                    className="bg-brand-matcha text-white text-xs px-4 py-2 rounded-lg font-semibold shadow-sm active:scale-95 transition-all"
-                  >
-                    Connexion
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
+      <button
+        type="button"
+        onClick={handleNearMe}
+        className={cn(
+          "absolute left-1/2 z-20 flex h-[52px] -translate-x-1/2 items-center justify-center gap-2 rounded-[26px] bg-ds-accent px-5 text-base font-bold text-ds-onaccent shadow-ds",
+          selectedPlace ? "bottom-[13.5rem]" : "bottom-28"
         )}
-      </div>
+      >
+        <Crosshair size={22} weight="regular" aria-hidden />
+        Près de moi
+      </button>
 
-      <LoginModal isOpen={showLogin} onClose={() => setShowLogin(false)} />
+      <div
+        className={cn(
+          "absolute inset-x-4 z-30 transition-transform duration-300",
+          selectedPlace
+            ? "bottom-24 translate-y-0"
+            : "bottom-24 translate-y-[140%]"
+        )}
+      >
+        {selectedPlace && selectedMeta ? (
+          <CafeRow
+            name={selectedPlace.name}
+            rating="—"
+            status={selectedMeta.status}
+            statusDetail={selectedMeta.statusDetail}
+            distance={selectedDistance}
+            features={cafeFeatures(selectedPlace)}
+            imageSrc={selectedPlace.image_url}
+            className="max-w-none rounded-[22px] border-0 shadow-ds"
+            onClick={() => router.push(`/place/${selectedPlace.id}`)}
+          />
+        ) : null}
+      </div>
     </div>
   );
 }

@@ -3,12 +3,13 @@ import { NextResponse, type NextRequest } from 'next/server';
 
 /**
  * Routes accessibles uniquement avec une session Supabase valide.
- * Les pages publiques (accueil `/`, `/map`, `/drops`, `/login`) restent ouvertes.
+ * Les pages publiques (`/map`, `/list`, `/drops`, `/login`) restent ouvertes.
  */
 const PROTECTED_PREFIXES = [
   '/check-in',
   '/gamification',
   '/saved',
+  '/profile',
   '/onboarding',
   '/dashboard-pro',
 ] as const;

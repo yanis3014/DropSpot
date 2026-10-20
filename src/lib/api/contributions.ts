@@ -3,7 +3,6 @@ import {
   endorsementCategories,
   type EndorsementCategory,
 } from '@/lib/api/endorsements';
-import { CHECKIN_GRAINS_REWARD } from '@/lib/grains';
 
 export type ContributionKind = 'check_in' | 'endorsement';
 
@@ -77,7 +76,8 @@ export async function getMyContributions(
         row.wifi_speed === 'good' ? 'Wi-Fi validé' : 'Ambiance partagée',
       placeName: placeName(row.places),
       createdAt: row.created_at,
-      gain: CHECKIN_GRAINS_REWARD,
+      // Grains are only awarded with proximity + cooldown — unknown from check_ins alone
+      gain: null,
     }));
 
     const endorsements: ContributionItem[] = (

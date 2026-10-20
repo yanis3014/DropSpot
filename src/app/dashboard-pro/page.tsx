@@ -48,7 +48,7 @@ export default function DashboardProPage() {
     <Suspense
       fallback={
         <div className="flex-1 flex items-center justify-center pb-24 min-h-[60vh]">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-green" />
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-ds-ok" />
         </div>
       }
     >
@@ -170,7 +170,7 @@ function DashboardProPageContent() {
   if (authLoading || profileLoading || redirectingOnboard) {
     return (
       <div className="flex-1 flex items-center justify-center pb-24 min-h-[60vh]">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-green" />
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-ds-ok" />
       </div>
     );
   }
@@ -182,7 +182,7 @@ function DashboardProPageContent() {
       <div className="flex-1 pb-24 px-5 pt-8">
         <Link
           href="/"
-          className="inline-flex items-center gap-2 text-sm font-semibold text-brand-mocha hover:text-brand-espresso mb-8"
+          className="inline-flex items-center gap-2 text-sm font-semibold text-ds-text2 hover:text-ds-text mb-8"
         >
           <ArrowLeft size={16} weight="bold" /> Retour
         </Link>
@@ -190,10 +190,10 @@ function DashboardProPageContent() {
           <div className="mx-auto w-14 h-14 rounded-full bg-white border border-gray-200 flex items-center justify-center text-gray-400 shadow-sm mb-4">
             <LockKey size={28} weight="duotone" />
           </div>
-          <h1 className="text-xl font-extrabold text-brand-espresso mb-2">
+          <h1 className="text-xl font-extrabold text-ds-text mb-2">
             Accès restaurateur requis
           </h1>
-          <p className="text-sm text-brand-mocha max-w-sm mx-auto leading-relaxed">
+          <p className="text-sm text-ds-text2 max-w-sm mx-auto leading-relaxed">
             Ton compte n&apos;a pas le rôle <strong>vendor</strong> ou{' '}
             <strong>owner</strong>.
           </p>
@@ -213,40 +213,40 @@ function DashboardProPageContent() {
         <button
           type="button"
           onClick={() => void signOut()}
-          className="text-xs font-semibold text-brand-mocha hover:text-brand-espresso shrink-0"
+          className="text-xs font-semibold text-ds-text2 hover:text-ds-text shrink-0"
         >
           Déconnexion
         </button>
       }
     >
       {welcomeToast && (
-        <p className="mb-4 flex items-center gap-2 text-sm font-medium text-brand-green bg-brand-green/10 rounded-xl px-3 py-2.5">
+        <p className="mb-4 flex items-center gap-2 text-sm font-medium text-ds-ok bg-ds-ok/10 rounded-xl px-3 py-2.5">
           <CheckCircle size={18} weight="fill" className="shrink-0" />
           Établissement configuré — bienvenue sur ton dashboard !
         </p>
       )}
 
       {dataError && (
-        <p className="mb-4 text-sm font-medium text-brand-terracotta bg-brand-terracotta/10 rounded-xl px-3 py-2">
+        <p className="mb-4 text-sm font-medium text-ds-accent bg-ds-accent/10 rounded-xl px-3 py-2">
           {dataError}
         </p>
       )}
 
       {/* Stats du jour (temps réel) */}
       <div className="grid grid-cols-2 gap-3 mb-3">
-        <div className="rounded-2xl bg-brand-surface border border-brand-mocha/10 p-4 shadow-soft">
-          <div className="flex items-center gap-2 text-brand-mocha mb-2">
+        <div className="rounded-2xl bg-ds-surface border border-ds-text2/10 p-4 shadow-soft">
+          <div className="flex items-center gap-2 text-ds-text2 mb-2">
             <QrCode size={18} weight="duotone" />
             <span className="text-[11px] font-bold uppercase tracking-wider">
               Validations aujourd&apos;hui
             </span>
           </div>
-          <p className="text-2xl font-extrabold text-brand-espresso tabular-nums">
+          <p className="text-2xl font-extrabold text-ds-text tabular-nums">
             {dataLoading ? '—' : today.validations_today}
           </p>
         </div>
-        <div className="rounded-2xl bg-brand-surface border border-brand-mocha/10 p-4 shadow-soft">
-          <div className="flex items-center gap-2 text-brand-mocha mb-2">
+        <div className="rounded-2xl bg-ds-surface border border-ds-text2/10 p-4 shadow-soft">
+          <div className="flex items-center gap-2 text-ds-text2 mb-2">
             <Grains size={18} weight="duotone" />
             <span className="text-[11px] font-bold uppercase tracking-wider">
               Grains distribués
@@ -259,25 +259,25 @@ function DashboardProPageContent() {
       </div>
 
       <div className="grid grid-cols-2 gap-3 mb-6">
-        <div className="rounded-2xl bg-brand-surface border border-brand-mocha/10 p-4 shadow-soft">
-          <div className="flex items-center gap-2 text-brand-mocha mb-2">
+        <div className="rounded-2xl bg-ds-surface border border-ds-text2/10 p-4 shadow-soft">
+          <div className="flex items-center gap-2 text-ds-text2 mb-2">
             <Storefront size={18} weight="duotone" />
             <span className="text-[11px] font-bold uppercase tracking-wider">
               Spots
             </span>
           </div>
-          <p className="text-2xl font-extrabold text-brand-espresso tabular-nums">
+          <p className="text-2xl font-extrabold text-ds-text tabular-nums">
             {dataLoading ? '—' : spotsCount}
           </p>
         </div>
-        <div className="rounded-2xl bg-brand-surface border border-brand-mocha/10 p-4 shadow-soft">
-          <div className="flex items-center gap-2 text-brand-mocha mb-2">
+        <div className="rounded-2xl bg-ds-surface border border-ds-text2/10 p-4 shadow-soft">
+          <div className="flex items-center gap-2 text-ds-text2 mb-2">
             <Lightning size={18} weight="duotone" />
             <span className="text-[11px] font-bold uppercase tracking-wider">
               Flash actifs
             </span>
           </div>
-          <p className="text-2xl font-extrabold text-brand-espresso tabular-nums">
+          <p className="text-2xl font-extrabold text-ds-text tabular-nums">
             {dataLoading ? '—' : activeDropsCount}
           </p>
         </div>
@@ -285,7 +285,7 @@ function DashboardProPageContent() {
 
       <Link
         href="/dashboard-pro/validate"
-        className="mb-6 flex items-center justify-center gap-2 w-full bg-brand-green text-white font-bold py-3.5 rounded-xl shadow-md active:scale-[0.98] transition-all"
+        className="mb-6 flex items-center justify-center gap-2 w-full bg-ds-ok text-white font-bold py-3.5 rounded-xl shadow-md active:scale-[0.98] transition-all"
       >
         <QrCode size={20} weight="bold" />
         Valider une offre en caisse
@@ -297,8 +297,8 @@ function DashboardProPageContent() {
       />
 
       <section className="mt-6">
-        <h2 className="text-base font-extrabold text-brand-espresso mb-3 flex items-center gap-2">
-          <Coffee size={18} weight="fill" className="text-brand-green" />
+        <h2 className="text-base font-extrabold text-ds-text mb-3 flex items-center gap-2">
+          <Coffee size={18} weight="fill" className="text-ds-ok" />
           Tes derniers drops
         </h2>
         {dataLoading ? (
@@ -308,7 +308,7 @@ function DashboardProPageContent() {
             ))}
           </div>
         ) : drops.length === 0 ? (
-          <p className="text-sm text-brand-mocha rounded-2xl border border-dashed border-gray-300 bg-white/50 p-6 text-center">
+          <p className="text-sm text-ds-text2 rounded-2xl border border-dashed border-gray-300 bg-white/50 p-6 text-center">
             Aucun flash drop — publie-en un ci-dessus.
           </p>
         ) : (
@@ -318,20 +318,20 @@ function DashboardProPageContent() {
               return (
                 <li
                   key={drop.id}
-                  className="rounded-2xl border border-brand-mocha/10 bg-brand-surface p-3.5 flex items-start justify-between gap-3"
+                  className="rounded-2xl border border-ds-text2/10 bg-ds-surface p-3.5 flex items-start justify-between gap-3"
                 >
                   <div className="min-w-0">
-                    <p className="font-bold text-sm text-brand-espresso truncate">
+                    <p className="font-bold text-sm text-ds-text truncate">
                       {drop.title}
                     </p>
-                    <p className="text-[11px] text-brand-mocha truncate mt-0.5">
+                    <p className="text-[11px] text-ds-text2 truncate mt-0.5">
                       {drop.places?.name ?? 'Spot'} · expire{' '}
                       {formatEndsAt(drop.ends_at)}
                       {typeof drop.current_uses === 'number' &&
                         ` · ${drop.current_uses} val.`}
                     </p>
                     {drop.pin_code && (
-                      <p className="mt-1 text-xs font-extrabold tracking-[0.2em] text-brand-green tabular-nums">
+                      <p className="mt-1 text-xs font-extrabold tracking-[0.2em] text-ds-ok tabular-nums">
                         PIN {drop.pin_code}
                       </p>
                     )}
@@ -339,7 +339,7 @@ function DashboardProPageContent() {
                   <span
                     className={`shrink-0 text-[10px] font-bold uppercase tracking-wide px-2 py-1 rounded-full ${
                       live
-                        ? 'bg-brand-green/15 text-brand-green'
+                        ? 'bg-ds-ok/15 text-ds-ok'
                         : 'bg-gray-100 text-gray-500'
                     }`}
                   >

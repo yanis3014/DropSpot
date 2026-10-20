@@ -72,24 +72,24 @@ export default function FlashDropForm({ places, onCreated }: FlashDropFormProps)
   return (
     <form
       onSubmit={handleSubmit}
-      className="rounded-2xl border border-brand-mocha/10 bg-brand-surface p-5 shadow-soft space-y-4"
+      className="rounded-2xl border border-ds-text2/10 bg-ds-surface p-5 shadow-soft space-y-4"
     >
       <div className="flex items-center gap-2 mb-1">
         <div className="w-9 h-9 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center">
           <Lightning size={18} weight="fill" />
         </div>
         <div>
-          <h2 className="text-base font-extrabold text-brand-espresso">
+          <h2 className="text-base font-extrabold text-ds-text">
             Créer un Flash Drop
           </h2>
-          <p className="text-xs text-brand-mocha">
+          <p className="text-xs text-ds-text2">
             Promo live visible immédiatement dans l&apos;app
           </p>
         </div>
       </div>
 
       <label className="block space-y-1.5">
-        <span className="text-xs font-bold uppercase tracking-wider text-brand-mocha">
+        <span className="text-xs font-bold uppercase tracking-wider text-ds-text2">
           Titre
         </span>
         <input
@@ -98,12 +98,12 @@ export default function FlashDropForm({ places, onCreated }: FlashDropFormProps)
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           placeholder="Ex: -20% sur les lattes"
-          className="w-full rounded-xl border border-brand-mocha/15 bg-brand-oat px-3.5 py-2.5 text-sm text-brand-espresso placeholder:text-brand-mocha/50 outline-none focus:border-brand-green/40 focus:ring-2 focus:ring-brand-green/15"
+          className="w-full rounded-xl border border-ds-text2/15 bg-ds-bg px-3.5 py-2.5 text-sm text-ds-text placeholder:text-ds-text2/50 outline-none focus:border-ds-ok/40 focus:ring-2 focus:ring-ds-ok/15"
         />
       </label>
 
       <label className="block space-y-1.5">
-        <span className="text-xs font-bold uppercase tracking-wider text-brand-mocha">
+        <span className="text-xs font-bold uppercase tracking-wider text-ds-text2">
           Description
         </span>
         <textarea
@@ -111,19 +111,19 @@ export default function FlashDropForm({ places, onCreated }: FlashDropFormProps)
           onChange={(e) => setDescription(e.target.value)}
           rows={2}
           placeholder="Détails de l'offre (optionnel)"
-          className="w-full rounded-xl border border-brand-mocha/15 bg-brand-oat px-3.5 py-2.5 text-sm text-brand-espresso placeholder:text-brand-mocha/50 outline-none focus:border-brand-green/40 focus:ring-2 focus:ring-brand-green/15 resize-none"
+          className="w-full rounded-xl border border-ds-text2/15 bg-ds-bg px-3.5 py-2.5 text-sm text-ds-text placeholder:text-ds-text2/50 outline-none focus:border-ds-ok/40 focus:ring-2 focus:ring-ds-ok/15 resize-none"
         />
       </label>
 
       <label className="block space-y-1.5">
-        <span className="text-xs font-bold uppercase tracking-wider text-brand-mocha">
+        <span className="text-xs font-bold uppercase tracking-wider text-ds-text2">
           Spot
         </span>
         <select
           required
           value={placeId}
           onChange={(e) => setPlaceId(e.target.value)}
-          className="w-full rounded-xl border border-brand-mocha/15 bg-brand-oat px-3.5 py-2.5 text-sm text-brand-espresso outline-none focus:border-brand-green/40 focus:ring-2 focus:ring-brand-green/15"
+          className="w-full rounded-xl border border-ds-text2/15 bg-ds-bg px-3.5 py-2.5 text-sm text-ds-text outline-none focus:border-ds-ok/40 focus:ring-2 focus:ring-ds-ok/15"
         >
           {places.length === 0 && (
             <option value="">
@@ -137,7 +137,7 @@ export default function FlashDropForm({ places, onCreated }: FlashDropFormProps)
           ))}
         </select>
         {places.length === 0 && (
-          <p className="text-[11px] text-brand-mocha">
+          <p className="text-[11px] text-ds-text2">
             Assigne ton café dans Supabase :{' '}
             <code className="text-[10px]">
               update places set vendor_id = &apos;TON_UID&apos; where id = …
@@ -147,7 +147,7 @@ export default function FlashDropForm({ places, onCreated }: FlashDropFormProps)
       </label>
 
       <fieldset className="space-y-1.5">
-        <legend className="text-xs font-bold uppercase tracking-wider text-brand-mocha">
+        <legend className="text-xs font-bold uppercase tracking-wider text-ds-text2">
           Durée
         </legend>
         <div className="grid grid-cols-4 gap-2">
@@ -160,8 +160,8 @@ export default function FlashDropForm({ places, onCreated }: FlashDropFormProps)
                 onClick={() => setDurationMinutes(d.minutes)}
                 className={`rounded-xl py-2 text-sm font-semibold border transition-all active:scale-95 ${
                   active
-                    ? 'bg-brand-dark text-white border-brand-dark'
-                    : 'bg-brand-oat text-brand-espresso border-brand-mocha/15'
+                    ? 'bg-ds-pin text-white border-ds-pin'
+                    : 'bg-ds-bg text-ds-text border-ds-text2/15'
                 }`}
               >
                 {d.label}
@@ -172,12 +172,12 @@ export default function FlashDropForm({ places, onCreated }: FlashDropFormProps)
       </fieldset>
 
       {error && (
-        <p className="text-sm font-medium text-brand-terracotta bg-brand-terracotta/10 rounded-xl px-3 py-2">
+        <p className="text-sm font-medium text-ds-accent bg-ds-accent/10 rounded-xl px-3 py-2">
           {error}
         </p>
       )}
       {success && (
-        <p className="text-sm font-medium text-brand-green bg-brand-green/10 rounded-xl px-3 py-2">
+        <p className="text-sm font-medium text-ds-ok bg-ds-ok/10 rounded-xl px-3 py-2">
           {success}
         </p>
       )}
@@ -185,7 +185,7 @@ export default function FlashDropForm({ places, onCreated }: FlashDropFormProps)
       <button
         type="submit"
         disabled={submitting || places.length === 0 || !title.trim()}
-        className="w-full flex items-center justify-center gap-2 bg-brand-green text-white font-bold text-sm py-3 rounded-xl shadow-md hover:bg-brand-green/90 active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+        className="w-full flex items-center justify-center gap-2 bg-ds-ok text-white font-bold text-sm py-3 rounded-xl shadow-md hover:bg-ds-ok/90 active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
       >
         {submitting ? (
           <>

@@ -50,8 +50,8 @@ export default function FavoriteButton({
         aria-label={isSaved ? 'Retirer des favoris' : 'Ajouter aux favoris'}
         aria-pressed={isSaved}
         className={[
-          'group inline-flex items-center justify-center rounded-full bg-brand-surface/90 backdrop-blur-sm shadow-sm',
-          'hover:bg-brand-surface active:scale-90 transition-all duration-200',
+          'group inline-flex items-center justify-center rounded-full bg-ds-surface/90 backdrop-blur-sm shadow-sm',
+          'hover:bg-ds-surface active:scale-90 transition-all duration-200',
           'disabled:opacity-60 disabled:cursor-not-allowed',
           className,
         ].join(' ')}
@@ -61,8 +61,8 @@ export default function FavoriteButton({
           weight={isSaved ? 'fill' : 'regular'}
           className={`transition-all duration-200 ${
             isSaved
-              ? 'text-brand-terracotta scale-110'
-              : 'text-brand-mocha group-hover:text-brand-terracotta'
+              ? 'text-ds-accent scale-110'
+              : 'text-ds-text2 group-hover:text-ds-accent'
           }`}
         />
       </button>

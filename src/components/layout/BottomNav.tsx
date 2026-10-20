@@ -1,63 +1,45 @@
-'use client';
+"use client";
 
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import {
-  Coffee,
-  Heart,
-  House,
-  MapPinPlus,
-  MapTrifold,
-} from '@phosphor-icons/react';
+import Link from "next/link";
+import { usePathname, useSearchParams } from "next/navigation";
+import { Suspense } from "react";
+import { Lightning, List, MapTrifold, User } from "@phosphor-icons/react";
+import { FILTERS_PARAM } from "@/lib/mapFilters";
+import { cn } from "@/lib/cn";
 
-const leftItems = [
-  { href: '/', label: 'Accueil', icon: House },
-  { href: '/map', label: 'Carte', icon: MapTrifold },
-];
+const items = [
+  { href: "/map", label: "Carte", icon: MapTrifold },
+  { href: "/list", label: "Liste", icon: List },
+  { href: "/drops", label: "Drops", icon: Lightning },
+  { href: "/profile", label: "Profil", icon: User },
+] as const;
 
-const rightItems = [
-  { href: '/gamification', label: 'Grains', icon: Coffee },
-  { href: '/saved', label: 'Favoris', icon: Heart },
-];
+/** Routes without the B2C tab bar (Espace Pro + auth / onboarding). */
+const HIDDEN_PREFIXES = ["/dashboard-pro", "/login", "/onboarding"] as const;
 
-function NavItem({
-  href,
-  label,
-  icon: Icon,
-  isActive,
-}: {
-  href: string;
-  label: string;
-  icon: typeof House;
-  isActive: boolean;
-}) {
-  return (
-    <Link
-      href={href}
-      className={`flex flex-col items-center gap-1 p-2 transition active:scale-95 ${
-        isActive ? 'text-brand-green' : 'text-gray-400 hover:text-gray-700'
-      }`}
-    >
-      <div className="relative">
-        <Icon size={24} weight={isActive ? 'fill' : 'regular'} />
-        {isActive && (
-          <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-1 h-1 bg-brand-green rounded-full" />
-        )}
-      </div>
-      <span
-        className={`text-[10px] ${isActive ? 'font-semibold' : 'font-medium'}`}
-      >
-        {label}
-      </span>
-    </Link>
-  );
+/** Keep shared `?filters=` when switching Carte ↔ Liste. */
+function hrefWithSharedFilters(
+  href: string,
+  pathname: string,
+  filters: string | null
+): string {
+  if (!filters) return href;
+  if (
+    (href === "/map" || href === "/list") &&
+    (pathname === "/map" ||
+      pathname === "/list" ||
+      pathname.startsWith("/map/") ||
+      pathname.startsWith("/list/"))
+  ) {
+    return `${href}?${FILTERS_PARAM}=${encodeURIComponent(filters)}`;
+  }
+  return href;
 }
 
-/** Routes sans barre B2C (Espace Pro + auth / onboarding). */
-const HIDDEN_PREFIXES = ['/dashboard-pro', '/login', '/onboarding'] as const;
-
-export default function BottomNav() {
+function BottomNavInner() {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const filters = searchParams.get(FILTERS_PARAM);
 
   if (
     !pathname ||
@@ -66,42 +48,40 @@ export default function BottomNav() {
     return null;
   }
 
-  const isCheckIn = pathname === '/check-in';
-
   return (
-    <nav className="fixed bottom-0 left-0 right-0 mx-auto w-full max-w-md bg-white dark:bg-brand-surface border-t border-gray-200 dark:border-brand-mocha/15 px-6 pt-3 safe-pb z-50 flex justify-between items-center shadow-[0_-10px_20px_rgba(0,0,0,0.03)] rounded-t-3xl">
-      {leftItems.map((item) => (
-        <NavItem
-          key={item.href}
-          {...item}
-          isActive={pathname === item.href}
-        />
-      ))}
+    <nav
+      aria-label="Navigation principale"
+      className="fixed bottom-0 left-0 right-0 z-50 mx-auto flex w-full max-w-md box-border border-t border-ds-line bg-ds-surface px-1.5 pt-1 safe-pb"
+    >
+      {items.map(({ href, label, icon: Icon }) => {
+        const isActive =
+          pathname === href || pathname.startsWith(`${href}/`);
+        const target = hrefWithSharedFilters(href, pathname, filters);
 
-      {/* FAB central → Check-in */}
-      <Link
-        href="/check-in"
-        aria-label="Check-in"
-        className="flex flex-col items-center justify-center -mt-6"
-      >
-        <div
-          className={`w-14 h-14 rounded-full flex items-center justify-center shadow-lg transform transition hover:scale-105 active:scale-95 border-4 border-brand-light ${
-            isCheckIn
-              ? 'bg-brand-green text-white shadow-brand-green/30'
-              : 'bg-brand-dark text-white shadow-brand-dark/20'
-          }`}
-        >
-          <MapPinPlus size={26} weight="bold" />
-        </div>
-      </Link>
-
-      {rightItems.map((item) => (
-        <NavItem
-          key={item.href}
-          {...item}
-          isActive={pathname === item.href}
-        />
-      ))}
+        return (
+          <Link
+            key={href}
+            href={target}
+            className={cn(
+              "flex flex-1 flex-col items-center justify-center gap-1 py-1 text-xs font-semibold no-underline transition-colors active:scale-95",
+              isActive ? "text-ds-accent" : "text-ds-text2"
+            )}
+          >
+            <span className="flex h-7 w-16 items-center justify-center rounded-2xl">
+              <Icon size={22} weight="regular" aria-hidden />
+            </span>
+            {label}
+          </Link>
+        );
+      })}
     </nav>
+  );
+}
+
+export default function BottomNav() {
+  return (
+    <Suspense fallback={null}>
+      <BottomNavInner />
+    </Suspense>
   );
 }

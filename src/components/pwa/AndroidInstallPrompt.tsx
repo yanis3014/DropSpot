@@ -102,13 +102,13 @@ export default function AndroidInstallPrompt() {
       role="dialog"
       aria-label="Installer DropSpot"
     >
-      <div className="pointer-events-auto w-full max-w-md rounded-2xl border border-brand-mocha/15 bg-brand-surface/95 backdrop-blur-xl shadow-[0_8px_32px_rgba(0,0,0,0.18)] p-4">
+      <div className="pointer-events-auto w-full max-w-md rounded-2xl border border-ds-text2/15 bg-ds-surface/95 backdrop-blur-xl shadow-[0_8px_32px_rgba(0,0,0,0.18)] p-4">
         <div className="flex items-start gap-3">
-          <div className="w-10 h-10 rounded-xl bg-brand-matcha/15 text-brand-matcha flex items-center justify-center flex-shrink-0">
+          <div className="w-10 h-10 rounded-xl bg-ds-ok/15 text-ds-ok flex items-center justify-center flex-shrink-0">
             <DownloadSimple size={22} weight="bold" />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-bold text-brand-espresso leading-snug">
+            <p className="text-sm font-bold text-ds-text leading-snug">
               Installe DropSpot sur ton écran d&apos;accueil pour un accès
               instantané.
             </p>
@@ -117,14 +117,14 @@ export default function AndroidInstallPrompt() {
                 type="button"
                 onClick={() => void install()}
                 disabled={installing}
-                className="flex-1 bg-brand-matcha text-white text-sm font-extrabold py-2.5 rounded-xl shadow-sm shadow-brand-matcha/25 active:scale-[0.98] transition-all disabled:opacity-60"
+                className="flex-1 bg-ds-ok text-white text-sm font-extrabold py-2.5 rounded-xl shadow-sm shadow-ds-ok/25 active:scale-[0.98] transition-all disabled:opacity-60"
               >
                 {installing ? 'Installation…' : "Installer l'app"}
               </button>
               <button
                 type="button"
                 onClick={dismiss}
-                className="flex-shrink-0 px-3 py-2.5 text-sm font-semibold text-brand-mocha hover:text-brand-espresso transition-colors"
+                className="flex-shrink-0 px-3 py-2.5 text-sm font-semibold text-ds-text2 hover:text-ds-text transition-colors"
               >
                 Plus tard
               </button>
@@ -134,7 +134,7 @@ export default function AndroidInstallPrompt() {
             type="button"
             onClick={dismiss}
             aria-label="Fermer"
-            className="flex-shrink-0 w-7 h-7 rounded-full bg-brand-mocha/10 text-brand-mocha flex items-center justify-center active:scale-90"
+            className="flex-shrink-0 w-7 h-7 rounded-full bg-ds-text2/10 text-ds-text2 flex items-center justify-center active:scale-90"
           >
             <X size={14} weight="bold" />
           </button>

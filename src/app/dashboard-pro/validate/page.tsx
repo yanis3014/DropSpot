@@ -145,7 +145,7 @@ export default function ValidatePage() {
   if (loading) {
     return (
       <div className="flex-1 flex items-center justify-center min-h-[50vh]">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-green" />
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-ds-ok" />
       </div>
     );
   }
@@ -153,10 +153,10 @@ export default function ValidatePage() {
   if (denied) {
     return (
       <div className="px-5 pt-8">
-        <Link href="/" className="text-sm font-semibold text-brand-mocha">
+        <Link href="/" className="text-sm font-semibold text-ds-text2">
           ← Retour
         </Link>
-        <p className="mt-6 text-brand-espresso font-bold">Accès restaurateur requis</p>
+        <p className="mt-6 text-ds-text font-bold">Accès restaurateur requis</p>
       </div>
     );
   }
@@ -171,7 +171,7 @@ export default function ValidatePage() {
         <button
           type="button"
           onClick={() => router.push('/dashboard-pro')}
-          className="text-xs font-semibold text-brand-mocha"
+          className="text-xs font-semibold text-ds-text2"
         >
           <ArrowLeft size={16} className="inline mr-1" />
           Accueil
@@ -180,16 +180,16 @@ export default function ValidatePage() {
     >
       {/* Succès */}
       {result?.ok && (
-        <div className="mb-6 rounded-2xl border border-brand-green/30 bg-brand-green/10 p-6 text-center animate-pop">
+        <div className="mb-6 rounded-2xl border border-ds-ok/30 bg-ds-ok/10 p-6 text-center animate-pop">
           <CheckCircle
             size={48}
             weight="fill"
-            className="text-brand-green mx-auto mb-3"
+            className="text-ds-ok mx-auto mb-3"
           />
-          <p className="text-lg font-extrabold text-brand-espresso">
+          <p className="text-lg font-extrabold text-ds-text">
             Réduction validée !
           </p>
-          <p className="text-sm text-brand-mocha mt-1">{result.title}</p>
+          <p className="text-sm text-ds-text2 mt-1">{result.title}</p>
           {typeof result.grains_awarded === 'number' && (
             <p className="text-sm font-bold text-amber-700 mt-2">
               +{result.grains_awarded} Grains
@@ -199,7 +199,7 @@ export default function ValidatePage() {
           <button
             type="button"
             onClick={() => setResult(null)}
-            className="mt-4 text-sm font-bold text-brand-green underline"
+            className="mt-4 text-sm font-bold text-ds-ok underline"
           >
             Valider un autre code
           </button>
@@ -208,8 +208,8 @@ export default function ValidatePage() {
 
       {!result?.ok && (
         <>
-          <div className="rounded-2xl bg-brand-surface border border-brand-mocha/10 p-5 shadow-soft mb-4">
-            <p className="text-xs font-bold uppercase tracking-wider text-brand-mocha mb-3 flex items-center gap-1.5">
+          <div className="rounded-2xl bg-ds-surface border border-ds-text2/10 p-5 shadow-soft mb-4">
+            <p className="text-xs font-bold uppercase tracking-wider text-ds-text2 mb-3 flex items-center gap-1.5">
               <Keyboard size={14} /> Code PIN à 4 chiffres
             </p>
             <div className="flex justify-center gap-3 mb-5">
@@ -218,8 +218,8 @@ export default function ValidatePage() {
                   key={i}
                   className={`w-12 h-14 rounded-xl border-2 flex items-center justify-center text-2xl font-extrabold tabular-nums ${
                     digits[i]
-                      ? 'border-brand-green bg-brand-green/10 text-brand-espresso'
-                      : 'border-brand-mocha/20 text-brand-mocha/30'
+                      ? 'border-ds-ok bg-ds-ok/10 text-ds-text'
+                      : 'border-ds-text2/20 text-ds-text2/30'
                   }`}
                 >
                   {digits[i] ?? '·'}
@@ -240,7 +240,7 @@ export default function ValidatePage() {
                       onClick={() =>
                         key === '⌫' ? backspace() : appendDigit(key)
                       }
-                      className="h-14 rounded-xl bg-brand-oat border border-brand-mocha/10 text-lg font-bold text-brand-espresso active:scale-95 transition-all disabled:opacity-50"
+                      className="h-14 rounded-xl bg-ds-bg border border-ds-text2/10 text-lg font-bold text-ds-text active:scale-95 transition-all disabled:opacity-50"
                     >
                       {key}
                     </button>
@@ -249,12 +249,12 @@ export default function ValidatePage() {
             </div>
 
             {submitting && (
-              <p className="mt-4 text-center text-sm text-brand-mocha flex items-center justify-center gap-2">
+              <p className="mt-4 text-center text-sm text-ds-text2 flex items-center justify-center gap-2">
                 <Spinner size={16} className="animate-spin" /> Validation…
               </p>
             )}
             {error && (
-              <p className="mt-4 text-center text-sm font-medium text-brand-terracotta bg-brand-terracotta/10 rounded-xl px-3 py-2">
+              <p className="mt-4 text-center text-sm font-medium text-ds-accent bg-ds-accent/10 rounded-xl px-3 py-2">
                 {error}
               </p>
             )}
@@ -263,7 +263,7 @@ export default function ValidatePage() {
           <button
             type="button"
             onClick={() => void startScan()}
-            className="w-full flex items-center justify-center gap-2 bg-brand-dark text-white font-bold py-3.5 rounded-xl shadow-md active:scale-[0.98] transition-all"
+            className="w-full flex items-center justify-center gap-2 bg-ds-pin text-white font-bold py-3.5 rounded-xl shadow-md active:scale-[0.98] transition-all"
           >
             <Camera size={20} weight="bold" />
             Scanner un QR Code

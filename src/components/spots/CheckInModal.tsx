@@ -148,43 +148,43 @@ export default function CheckInModal({
       />
 
       <div
-        className={`relative w-full max-w-md bg-brand-oat rounded-t-3xl overflow-hidden shadow-2xl transition-transform duration-300 ease-out max-h-[88dvh] flex flex-col ${
+        className={`relative w-full max-w-md bg-ds-bg rounded-t-3xl overflow-hidden shadow-2xl transition-transform duration-300 ease-out max-h-[88dvh] flex flex-col ${
           visible ? 'translate-y-0' : 'translate-y-full'
         }`}
       >
         <div className="flex justify-center pt-3 pb-1">
-          <div className="w-10 h-1 rounded-full bg-brand-mocha/25" />
+          <div className="w-10 h-1 rounded-full bg-ds-text2/25" />
         </div>
 
         <div className="px-5 pb-3 flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <p className="text-[11px] font-semibold uppercase tracking-wider text-brand-mocha mb-0.5">
+            <p className="text-[11px] font-semibold uppercase tracking-wider text-ds-text2 mb-0.5">
               {isActiveSession ? 'Mettre à jour' : 'Quick vibe'}
             </p>
-            <p className="flex items-center gap-1.5 text-brand-espresso font-bold text-lg leading-tight">
-              <MapPin size={18} weight="fill" className="text-brand-terracotta flex-shrink-0" />
+            <p className="flex items-center gap-1.5 text-ds-text font-bold text-lg leading-tight">
+              <MapPin size={18} weight="fill" className="text-ds-accent flex-shrink-0" />
               <span className="truncate">{place.name}</span>
             </p>
           </div>
           <button
             onClick={handleClose}
             aria-label="Fermer"
-            className="w-9 h-9 flex-shrink-0 flex items-center justify-center rounded-full bg-brand-surface shadow-sm border border-brand-mocha/10 hover:bg-brand-muted active:scale-95 transition-all"
+            className="w-9 h-9 flex-shrink-0 flex items-center justify-center rounded-full bg-ds-surface shadow-sm border border-ds-text2/10 hover:bg-ds-surface2 active:scale-95 transition-all"
           >
-            <X size={18} weight="bold" className="text-brand-espresso" />
+            <X size={18} weight="bold" className="text-ds-text" />
           </button>
         </div>
 
         {submitted ? (
           <div className="flex flex-col items-center justify-center gap-4 px-6 py-12 w-full text-center">
             <div className="relative shrink-0">
-              <span className="absolute inset-0 rounded-full bg-brand-matcha/25 animate-ping" />
-              <div className="relative w-16 h-16 rounded-full bg-brand-matcha/15 flex items-center justify-center">
-                <CheckCircle size={40} weight="fill" className="text-brand-matcha" />
+              <span className="absolute inset-0 rounded-full bg-ds-ok/25 animate-ping" />
+              <div className="relative w-16 h-16 rounded-full bg-ds-ok/15 flex items-center justify-center">
+                <CheckCircle size={40} weight="fill" className="text-ds-ok" />
               </div>
             </div>
 
-            <h2 className="text-xl font-extrabold text-brand-espresso shrink-0">
+            <h2 className="text-xl font-extrabold text-ds-text shrink-0">
               Check-in validé !
             </h2>
 
@@ -193,37 +193,37 @@ export default function CheckInModal({
               role="status"
               className={`pointer-events-none inline-flex max-w-full items-center justify-center rounded-full px-4 py-2 text-sm font-extrabold leading-snug animate-pop ${
                 earned > 0
-                  ? 'bg-brand-matcha/15 text-brand-matcha'
-                  : 'bg-brand-surface text-brand-espresso border border-brand-mocha/15'
+                  ? 'bg-ds-ok/15 text-ds-ok'
+                  : 'bg-ds-surface text-ds-text border border-ds-text2/15'
               }`}
             >
               {rewardCopy(reason, earned)}
             </span>
 
-            <p className="w-full text-sm leading-relaxed text-brand-mocha text-center px-1">
+            <p className="w-full text-sm leading-relaxed text-ds-text2 text-center px-1">
               Ta vibe est partagée avec la communauté.
             </p>
 
             <button
               type="button"
               onClick={handleSuccessFermer}
-              className="mt-1 w-full max-w-xs bg-brand-ink text-white font-bold py-3.5 rounded-2xl shadow-lg hover:bg-brand-ink/90 active:scale-[0.98] transition-all"
+              className="mt-1 w-full max-w-xs bg-ds-pin text-white font-bold py-3.5 rounded-2xl shadow-lg hover:bg-ds-pin/90 active:scale-[0.98] transition-all"
             >
               Fermer
             </button>
           </div>
         ) : !isAuthenticated ? (
           <div className="flex-1 flex flex-col items-center justify-center py-12 px-8 text-center">
-            <div className="w-14 h-14 rounded-2xl bg-brand-terracotta/10 flex items-center justify-center mb-4">
-              <LockKey size={28} weight="duotone" className="text-brand-terracotta" />
+            <div className="w-14 h-14 rounded-2xl bg-ds-accent/10 flex items-center justify-center mb-4">
+              <LockKey size={28} weight="duotone" className="text-ds-accent" />
             </div>
-            <p className="font-bold text-brand-espresso mb-1">Connecte-toi pour checker</p>
-            <p className="text-sm text-brand-mocha mb-6">
+            <p className="font-bold text-ds-text mb-1">Connecte-toi pour checker</p>
+            <p className="text-sm text-ds-text2 mb-6">
               Partage la vibe du spot et gagne des Grains.
             </p>
             <button
               onClick={() => setShowLogin(true)}
-              className="w-full bg-brand-ink text-white font-bold py-3.5 rounded-2xl shadow-lg hover:bg-brand-ink/90 active:scale-[0.98] transition-all"
+              className="w-full bg-ds-pin text-white font-bold py-3.5 rounded-2xl shadow-lg hover:bg-ds-pin/90 active:scale-[0.98] transition-all"
             >
               Se connecter
             </button>
@@ -232,19 +232,19 @@ export default function CheckInModal({
           <>
             <div className="flex-1 overflow-y-auto px-5 pb-4 space-y-6">
               {distanceM != null && distanceM > 100 && (
-                <p className="text-xs text-center text-brand-mocha bg-brand-muted rounded-xl px-3 py-2">
+                <p className="text-xs text-center text-ds-text2 bg-ds-surface2 rounded-xl px-3 py-2">
                   Tu es à {Math.round(distanceM)} m — la vibe sera partagée, mais
                   sans Grains (présence &lt; 100 m requise).
                 </p>
               )}
               {distanceM == null && (
-                <p className="text-xs text-center text-brand-mocha bg-brand-muted rounded-xl px-3 py-2">
+                <p className="text-xs text-center text-ds-text2 bg-ds-surface2 rounded-xl px-3 py-2">
                   GPS indisponible — vibe OK, Grains uniquement sur place.
                 </p>
               )}
 
               <div>
-                <p className="text-sm font-bold text-brand-espresso mb-3 text-center">
+                <p className="text-sm font-bold text-ds-text mb-3 text-center">
                   Comment est l&apos;affluence ?
                 </p>
                 <div className="grid grid-cols-3 gap-2.5">
@@ -255,12 +255,12 @@ export default function CheckInModal({
                       onClick={() => setCrowd(level)}
                       className={`flex flex-col items-center gap-1.5 py-4 rounded-3xl border-2 transition-all active:scale-95 ${
                         crowd === level
-                          ? 'border-brand-matcha bg-brand-matcha/10 shadow-md'
-                          : 'border-transparent bg-brand-surface hover:bg-brand-muted'
+                          ? 'border-ds-ok bg-ds-ok/10 shadow-md'
+                          : 'border-transparent bg-ds-surface hover:bg-ds-surface2'
                       }`}
                     >
                       <span className="text-4xl leading-none">{crowdConfig[level].emoji}</span>
-                      <span className="text-xs font-bold text-brand-espresso">
+                      <span className="text-xs font-bold text-ds-text">
                         {crowdConfig[level].label}
                       </span>
                     </button>
@@ -269,7 +269,7 @@ export default function CheckInModal({
               </div>
 
               <div>
-                <p className="text-sm font-bold text-brand-espresso mb-3 text-center">
+                <p className="text-sm font-bold text-ds-text mb-3 text-center">
                   Et le Wi-Fi ?
                 </p>
                 <div className="grid grid-cols-2 gap-2.5">
@@ -280,12 +280,12 @@ export default function CheckInModal({
                       onClick={() => setWifi(option.value)}
                       className={`flex flex-col items-center gap-1.5 py-4 rounded-3xl border-2 transition-all active:scale-95 ${
                         wifi === option.value
-                          ? 'border-brand-matcha bg-brand-matcha/10 shadow-md'
-                          : 'border-transparent bg-brand-surface hover:bg-brand-muted'
+                          ? 'border-ds-ok bg-ds-ok/10 shadow-md'
+                          : 'border-transparent bg-ds-surface hover:bg-ds-surface2'
                       }`}
                     >
                       <span className="text-4xl leading-none">{option.emoji}</span>
-                      <span className="text-xs font-bold text-brand-espresso">
+                      <span className="text-xs font-bold text-ds-text">
                         {option.label}
                       </span>
                     </button>
@@ -294,16 +294,16 @@ export default function CheckInModal({
               </div>
 
               {error && (
-                <p className="text-sm text-brand-terracotta font-medium text-center">{error}</p>
+                <p className="text-sm text-ds-accent font-medium text-center">{error}</p>
               )}
             </div>
 
-            <div className="p-5 pt-3 border-t border-brand-mocha/10 bg-brand-surface flex-shrink-0">
+            <div className="p-5 pt-3 border-t border-ds-text2/10 bg-ds-surface flex-shrink-0">
               <button
                 type="button"
                 onClick={handleSubmit}
                 disabled={!crowd || !wifi || submitting}
-                className="w-full bg-brand-matcha text-white font-extrabold py-4 rounded-2xl shadow-lg shadow-brand-matcha/25 hover:bg-brand-matcha/90 active:scale-[0.98] transition-all disabled:opacity-40 disabled:pointer-events-none"
+                className="w-full bg-ds-ok text-white font-extrabold py-4 rounded-2xl shadow-lg shadow-ds-ok/25 hover:bg-ds-ok/90 active:scale-[0.98] transition-all disabled:opacity-40 disabled:pointer-events-none"
               >
                 {submitting
                   ? 'Validation…'

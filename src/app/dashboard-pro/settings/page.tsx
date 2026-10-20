@@ -32,7 +32,7 @@ export default function DashboardSettingsPage() {
   if (loading) {
     return (
       <div className="flex-1 flex items-center justify-center min-h-[50vh]">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-green" />
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-ds-ok" />
       </div>
     );
   }
@@ -40,10 +40,10 @@ export default function DashboardSettingsPage() {
   if (denied) {
     return (
       <div className="px-5 pt-8">
-        <Link href="/" className="text-sm font-semibold text-brand-mocha">
+        <Link href="/" className="text-sm font-semibold text-ds-text2">
           ← Retour
         </Link>
-        <p className="mt-6 font-bold text-brand-espresso">
+        <p className="mt-6 font-bold text-ds-text">
           Accès restaurateur requis
         </p>
       </div>
@@ -60,16 +60,16 @@ export default function DashboardSettingsPage() {
       {dataLoading ? (
         <div className="h-64 rounded-2xl bg-gray-100 animate-pulse" />
       ) : places.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-brand-mocha/25 bg-brand-surface p-8 text-center">
-          <p className="font-bold text-brand-espresso mb-2">
+        <div className="rounded-2xl border border-dashed border-ds-text2/25 bg-ds-surface p-8 text-center">
+          <p className="font-bold text-ds-text mb-2">
             Aucun café associé
           </p>
-          <p className="text-sm text-brand-mocha mb-5">
+          <p className="text-sm text-ds-text2 mb-5">
             Configure ton établissement pour éditer la fiche.
           </p>
           <Link
             href="/dashboard-pro/onboarding"
-            className="inline-flex items-center justify-center rounded-xl bg-brand-green text-white font-bold text-sm px-5 py-3"
+            className="inline-flex items-center justify-center rounded-xl bg-ds-ok text-white font-bold text-sm px-5 py-3"
           >
             Lancer l&apos;onboarding
           </Link>

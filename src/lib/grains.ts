@@ -113,3 +113,30 @@ export function currentBadge(totalGrains: number): BadgeDef {
   }
   return unlocked;
 }
+
+/** Next badge to unlock, or null if already at the top. */
+export function nextBadge(totalGrains: number): BadgeDef | null {
+  return GRAIN_BADGES.find((b) => b.threshold > totalGrains) ?? null;
+}
+
+/** Progress toward the next level badge (0–100). */
+export function badgeProgress(totalGrains: number): {
+  current: BadgeDef;
+  next: BadgeDef | null;
+  remaining: number;
+  percent: number;
+} {
+  const current = currentBadge(totalGrains);
+  const next = nextBadge(totalGrains);
+  if (!next) {
+    return { current, next: null, remaining: 0, percent: 100 };
+  }
+  const span = Math.max(1, next.threshold - current.threshold);
+  const done = Math.max(0, totalGrains - current.threshold);
+  return {
+    current,
+    next,
+    remaining: Math.max(0, next.threshold - totalGrains),
+    percent: Math.min(100, Math.round((done / span) * 100)),
+  };
+}

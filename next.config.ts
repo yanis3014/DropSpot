@@ -3,6 +3,12 @@ import withPWA from "@ducanh2912/next-pwa";
 
 const nextConfig: NextConfig = {
   transpilePackages: ['react-map-gl', 'mapbox-gl'],
+  async redirects() {
+    return [
+      { source: '/gamification', destination: '/profile', permanent: true },
+      { source: '/saved', destination: '/list?filters=favorites', permanent: false },
+    ];
+  },
   images: {
     remotePatterns: [
       {

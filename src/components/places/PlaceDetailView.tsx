@@ -167,7 +167,7 @@ export default function PlaceDetailView({
   };
 
   return (
-    <div className="flex flex-col min-h-[100dvh] bg-brand-oat">
+    <div className="flex flex-col min-h-[100dvh] bg-ds-bg">
       {/* Galerie / carrousel */}
       <div className="relative flex-shrink-0 bg-gradient-to-br from-[#2C1E16] to-[#8B6B5D]">
         <div
@@ -198,16 +198,16 @@ export default function PlaceDetailView({
           )}
         </div>
 
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-brand-oat via-transparent to-black/30" />
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-ds-bg via-transparent to-black/30" />
 
         <div className="absolute top-3 left-3 right-3 z-10 flex items-center justify-between gap-2">
           <button
             type="button"
             onClick={handleBack}
             aria-label="Retour"
-            className="w-10 h-10 flex items-center justify-center bg-brand-surface/90 backdrop-blur-sm rounded-full shadow-md hover:bg-brand-surface active:scale-95 transition-all"
+            className="w-10 h-10 flex items-center justify-center bg-ds-surface/90 backdrop-blur-sm rounded-full shadow-md hover:bg-ds-surface active:scale-95 transition-all"
           >
-            <ArrowLeft size={20} weight="bold" className="text-brand-espresso" />
+            <ArrowLeft size={20} weight="bold" className="text-ds-text" />
           </button>
           <FavoriteButton
             placeId={place.id}
@@ -236,7 +236,7 @@ export default function PlaceDetailView({
 
       {/* Contenu */}
       <div className="flex-1 px-5 pt-1 pb-36 -mt-6 relative">
-        <h1 className="text-2xl font-extrabold text-brand-espresso tracking-tight mb-2">
+        <h1 className="text-2xl font-extrabold text-ds-text tracking-tight mb-2">
           {place.name}
         </h1>
 
@@ -248,11 +248,11 @@ export default function PlaceDetailView({
         </div>
 
         {address && (
-          <p className="flex items-start gap-1.5 text-sm text-brand-mocha mb-4">
+          <p className="flex items-start gap-1.5 text-sm text-ds-text2 mb-4">
             <MapPin
               size={16}
               weight="fill"
-              className="text-brand-terracotta flex-shrink-0 mt-0.5"
+              className="text-ds-accent flex-shrink-0 mt-0.5"
             />
             {address}
           </p>
@@ -278,14 +278,14 @@ export default function PlaceDetailView({
                     onClick={() => setActiveCategory(tab.category)}
                     className={`shrink-0 rounded-full px-3.5 py-2 text-xs font-bold border transition-all active:scale-95 ${
                       active
-                        ? 'bg-brand-dark text-white border-brand-dark'
-                        : 'bg-brand-surface text-brand-espresso border-brand-mocha/15'
+                        ? 'bg-ds-pin text-white border-ds-pin'
+                        : 'bg-ds-surface text-ds-text border-ds-text2/15'
                     }`}
                   >
                     {tab.label}
                     <span
                       className={`ml-1.5 tabular-nums ${
-                        active ? 'text-white/70' : 'text-brand-mocha'
+                        active ? 'text-white/70' : 'text-ds-text2'
                       }`}
                     >
                       {count}
@@ -305,7 +305,7 @@ export default function PlaceDetailView({
                     onClick={() => scrollToSlide(i)}
                     className={`relative shrink-0 w-16 h-16 rounded-xl overflow-hidden snap-start border-2 transition-all ${
                       i === slideIndex
-                        ? 'border-brand-green'
+                        ? 'border-ds-ok'
                         : 'border-transparent opacity-80'
                     }`}
                   >
@@ -347,34 +347,34 @@ export default function PlaceDetailView({
             {features.map(({ icon: Icon, label }) => (
               <span
                 key={label}
-                className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 bg-brand-surface text-brand-espresso rounded-full border border-brand-mocha/10 shadow-sm"
+                className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 bg-ds-surface text-ds-text rounded-full border border-ds-text2/10 shadow-sm"
               >
-                <Icon size={14} weight="duotone" className="text-brand-mocha" />
+                <Icon size={14} weight="duotone" className="text-ds-text2" />
                 {label}
               </span>
             ))}
           </div>
         )}
 
-        <h2 className="text-sm font-bold uppercase tracking-wider text-brand-mocha mb-2">
+        <h2 className="text-sm font-bold uppercase tracking-wider text-ds-text2 mb-2">
           L&apos;histoire du spot
         </h2>
         {place.description ? (
-          <p className="text-sm text-brand-espresso/90 leading-relaxed whitespace-pre-line">
+          <p className="text-sm text-ds-text/90 leading-relaxed whitespace-pre-line">
             {place.description}
           </p>
         ) : (
-          <p className="text-sm text-brand-mocha/70 italic">
+          <p className="text-sm text-ds-text2/70 italic">
             L&apos;équipe prépare la présentation de ce café. Reviens bientôt !
           </p>
         )}
 
         {place.opening_hours && (
           <div className="mt-6">
-            <h2 className="text-sm font-bold uppercase tracking-wider text-brand-mocha mb-2">
+            <h2 className="text-sm font-bold uppercase tracking-wider text-ds-text2 mb-2">
               Horaires
             </h2>
-            <p className="text-sm text-brand-espresso/90 leading-relaxed">
+            <p className="text-sm text-ds-text/90 leading-relaxed">
               {place.opening_hours}
             </p>
           </div>
@@ -383,11 +383,11 @@ export default function PlaceDetailView({
 
       {/* Actions sticky au-dessus de la BottomNav */}
       <div className="fixed bottom-[calc(4.75rem+env(safe-area-inset-bottom))] left-0 right-0 z-40 mx-auto w-full max-w-md px-4 pb-2">
-        <div className="flex gap-2 rounded-2xl bg-brand-surface/95 backdrop-blur-md border border-brand-mocha/10 p-3 shadow-xl">
+        <div className="flex gap-2 rounded-2xl bg-ds-surface/95 backdrop-blur-md border border-ds-text2/10 p-3 shadow-xl">
           <button
             type="button"
             onClick={() => openDirections(place)}
-            className="flex-1 flex items-center justify-center gap-2 bg-brand-ink text-white font-bold py-3.5 rounded-xl shadow-md hover:bg-brand-ink/90 active:scale-[0.98] transition-all"
+            className="flex-1 flex items-center justify-center gap-2 bg-ds-pin text-white font-bold py-3.5 rounded-xl shadow-md hover:bg-ds-pin/90 active:scale-[0.98] transition-all"
           >
             <NavigationArrow size={20} weight="fill" />
             S&apos;y rendre
@@ -395,7 +395,7 @@ export default function PlaceDetailView({
           <button
             type="button"
             onClick={() => setShowCheckIn(true)}
-            className="flex items-center justify-center gap-2 bg-brand-matcha/10 text-brand-matcha font-bold px-5 py-3.5 rounded-xl hover:bg-brand-matcha/20 active:scale-[0.98] transition-all"
+            className="flex items-center justify-center gap-2 bg-ds-ok/10 text-ds-ok font-bold px-5 py-3.5 rounded-xl hover:bg-ds-ok/20 active:scale-[0.98] transition-all"
           >
             <Lightning size={20} weight="fill" />
             Checker
@@ -431,7 +431,7 @@ export default function PlaceDetailView({
       )}
 
       {toast && (
-        <div className="fixed bottom-36 left-1/2 z-[80] -translate-x-1/2 rounded-2xl bg-brand-ink text-white px-4 py-3 text-sm font-bold shadow-xl">
+        <div className="fixed bottom-36 left-1/2 z-[80] -translate-x-1/2 rounded-2xl bg-ds-pin text-white px-4 py-3 text-sm font-bold shadow-xl">
           {toast}
         </div>
       )}

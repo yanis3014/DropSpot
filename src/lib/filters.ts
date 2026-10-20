@@ -10,7 +10,7 @@ export type PlaceCategoryId =
   | 'chill'
   | 'event';
 
-/** Canonical drop types used by DropCard / filters. */
+/** Canonical drop types used by drops filters. */
 export type DropTypeId = 'promo' | 'sport' | 'event';
 
 const placeCategoryAliases: Record<string, PlaceCategoryId> = {
@@ -193,7 +193,46 @@ const bakeryKeywords = [
   'pastry',
 ];
 
-/** Home feed / map filter for places (category pills). */
+/** True when free-text opening hours look open at `now` (optimistic if unknown). */
+export function isPlaceOpenNow(
+  place: Pick<Place, 'opening_hours'>,
+  now: Date = new Date()
+): boolean {
+  const raw = place.opening_hours?.trim();
+  if (!raw) return true;
+
+  const key = normalizeKey(raw);
+  if (
+    (key === 'ferme' || key.startsWith('ferme ')) &&
+    !/\d/.test(key)
+  ) {
+    return false;
+  }
+
+  const range = raw.match(
+    /(\d{1,2})\s*[h:]\s*(\d{0,2}).*?[-–—].*?(\d{1,2})\s*[h:]\s*(\d{0,2})/i
+  );
+  if (!range) return true;
+
+  const openMin =
+    Number(range[1]) * 60 + Number(range[2] === '' ? 0 : range[2]);
+  const closeMin =
+    Number(range[3]) * 60 + Number(range[4] === '' ? 0 : range[4]);
+  const nowMin = now.getHours() * 60 + now.getMinutes();
+
+  if (closeMin <= openMin) {
+    return nowMin >= openMin || nowMin < closeMin;
+  }
+  return nowMin >= openMin && nowMin < closeMin;
+}
+
+function placeHaystack(place: Place): string {
+  return normalizeKey(
+    `${place.name} ${place.description ?? ''} ${place.category ?? ''}`
+  );
+}
+
+/** Home feed / map filter for places (category pills + map chips). */
 export function placeMatchesFilter(
   place: Place,
   filter: string | null | undefined
@@ -202,12 +241,20 @@ export function placeMatchesFilter(
   const key = normalizeKey(filter);
   const categories = place.categories ?? [];
 
-  if (key === 'remote' || key === 'plugs') {
+  if (key === 'wifi' || key === 'wi-fi' || key === 'remote' || key === 'plugs') {
     return (
       !!place.has_plugs ||
       !!place.wifi_speed ||
       !!place.laptop_policy ||
       categories.includes('remote')
+    );
+  }
+  if (key === 'matcha') {
+    const haystack = placeHaystack(place);
+    return (
+      haystack.includes('matcha') ||
+      haystack.includes('chai') ||
+      !!place.is_vegan
     );
   }
   if (key === 'bakery' || key === 'brunch') {
@@ -217,6 +264,14 @@ export function placeMatchesFilter(
   }
   if (key === 'terrace') {
     return !!place.has_terrace || categories.includes('chill');
+  }
+  if (key === 'calme' || key === 'quiet') {
+    const noise = normalizeKey(place.noise_level);
+    return (
+      noise === 'quiet' ||
+      noise.includes('calme') ||
+      noise.includes('quiet')
+    );
   }
   if (key === 'chill' || key === 'ambiance') {
     const noise = normalizeKey(place.noise_level);
@@ -228,6 +283,9 @@ export function placeMatchesFilter(
       noise.includes('ambient') ||
       noise.includes('chill')
     );
+  }
+  if (key === 'open' || key === 'open_now' || key === 'ouvert') {
+    return isPlaceOpenNow(place);
   }
   if (key === 'coffee' || key === 'specialty') {
     if (categories.includes('specialty')) return true;
@@ -242,6 +300,15 @@ export function placeMatchesFilter(
   // Unknown filter: try as a place category id
   const asCategory = normalizePlaceCategory(filter);
   return asCategory ? categories.includes(asCategory) : true;
+}
+
+/** Place must match every active filter (AND). */
+export function placeMatchesFilters(
+  place: Place,
+  filters: readonly string[]
+): boolean {
+  if (filters.length === 0) return true;
+  return filters.every((f) => placeMatchesFilter(place, f));
 }
 
 /**

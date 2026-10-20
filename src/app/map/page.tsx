@@ -1,26 +1,19 @@
-'use client';
+"use client";
 
-import { Suspense } from 'react';
-import dynamic from 'next/dynamic';
-import { useSearchParams } from 'next/navigation';
-import MapSkeleton from '@/components/map/MapSkeleton';
+import { Suspense } from "react";
+import dynamic from "next/dynamic";
+import MapSkeleton from "@/components/map/MapSkeleton";
 
-const PremiumMap = dynamic(() => import('@/components/map/PremiumMap'), {
+const PremiumMap = dynamic(() => import("@/components/map/PremiumMap"), {
   ssr: false,
   loading: () => <MapSkeleton />,
 });
 
-function MapWithFilter() {
-  const searchParams = useSearchParams();
-  const filter = searchParams.get('filter');
-  return <PremiumMap initialFilter={filter} />;
-}
-
 export default function MapPage() {
   return (
-    <div className="flex-1 relative h-[100dvh]">
+    <div className="relative h-[100dvh] flex-1">
       <Suspense fallback={<MapSkeleton />}>
-        <MapWithFilter />
+        <PremiumMap />
       </Suspense>
     </div>
   );

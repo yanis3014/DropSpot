@@ -15,7 +15,18 @@ const items = [
 ] as const;
 
 /** Routes without the B2C tab bar (Espace Pro + auth / onboarding). */
-const HIDDEN_PREFIXES = ["/dashboard-pro", "/login", "/onboarding"] as const;
+const HIDDEN_PREFIXES = [
+  "/dashboard-pro",
+  "/etablissement",
+  "/specificites",
+  "/equipe",
+  "/abonnement",
+  "/reglages",
+  "/valider",
+  "/login",
+  "/onboarding",
+  "/admin",
+] as const;
 
 /** Keep shared `?filters=` when switching Carte ↔ Liste. */
 function hrefWithSharedFilters(

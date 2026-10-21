@@ -1,12 +1,12 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import FlashDropForm from '@/app/dashboard-pro/components/FlashDropForm';
+import FlashDropForm from '@/app/(pro)/dashboard-pro/components/FlashDropForm';
 import type { Place } from '@/lib/api/places';
 
 const mockCreateFlashDrop = vi.fn();
 
-vi.mock('@/app/dashboard-pro/lib/api/flashDrops', () => ({
+vi.mock('@/app/(pro)/dashboard-pro/lib/api/flashDrops', () => ({
   createFlashDrop: (...args: unknown[]) => mockCreateFlashDrop(...args),
 }));
 
@@ -38,7 +38,7 @@ vi.mock('@/lib/hooks/useAuth', () => ({
   }),
 }));
 
-vi.mock('@/app/dashboard-pro/hooks/useVendorProfile', () => ({
+vi.mock('@/app/(pro)/dashboard-pro/hooks/useVendorProfile', () => ({
   useVendorProfile: () => ({
     profile: {
       id: 'vendor-user-id',

@@ -227,7 +227,7 @@ body {
    Le repère tombe, rebondit, le grain apparaît, une onde part de la pointe,
    puis le mot-symbole se dévoile. Sortie en CSS : aucune attente du JS. */
 .ds-splash {
-  --splash-in: 0.95s; /* entrée finie vers 0,95 s, puis fondu : ~1,2 s au total */
+  --splash-in: 1.55s; /* entrée finie vers 0,95 s, logo et nom tenus ~0,6 s, puis fondu : ~1,8 s au total */
   --splash-out: 0.25s;
   position: fixed;
   inset: 0;

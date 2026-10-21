@@ -14,9 +14,9 @@ import {
 } from '@phosphor-icons/react';
 import { Place } from '@/lib/api/places';
 import {
-  claimVendorPlace,
   createVendorPlace,
   listUnclaimedPlaces,
+  requestPlaceClaim,
   updateVendorPlace,
 } from '@/app/(pro)/dashboard-pro/lib/api/vendor';
 import { uploadPlacePhoto } from '@/app/(pro)/dashboard-pro/lib/api/placePhotos';
@@ -77,6 +77,7 @@ export default function VendorOnboardingWizard() {
 
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [claimSent, setClaimSent] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -228,15 +229,14 @@ export default function VendorOnboardingWizard() {
         lng: selectedPlace?.lng,
       };
 
-      let place: Place;
       if (mode === 'claim') {
-        place = await claimVendorPlace({
-          ...base,
-          placeId: selectedPlaceId,
-        });
-      } else {
-        place = await createVendorPlace(base);
+        // The café is only handed over once the claim is verified.
+        await requestPlaceClaim(selectedPlaceId);
+        setClaimSent(true);
+        return;
       }
+
+      const place: Place = await createVendorPlace(base);
 
       if (coverFile) {
         const url = await uploadPlacePhoto(place.id, coverFile);
@@ -255,6 +255,20 @@ export default function VendorOnboardingWizard() {
       setSubmitting(false);
     }
   };
+
+  if (claimSent) {
+    return (
+      <div className="space-y-3 rounded-2xl bg-ds-surface p-5">
+        <h2 className="font-display text-xl font-bold text-ds-text">
+          Demande envoyée
+        </h2>
+        <p className="text-sm leading-relaxed text-ds-text2">
+          On vérifie que tu gères bien {name.trim() || 'ce café'} en appelant
+          l’établissement. Dès que c’est fait, ton espace pro s’ouvre ici.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-5">

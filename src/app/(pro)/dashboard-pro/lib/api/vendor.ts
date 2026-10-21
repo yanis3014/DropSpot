@@ -418,62 +418,37 @@ export async function createVendorPlace(
   return normalizePlace(data as Record<string, unknown>);
 }
 
-export interface ClaimVendorPlaceInput extends CreateVendorPlaceInput {
-  placeId: string;
-}
+const CLAIM_ERRORS: Record<string, string> = {
+  place_not_unclaimed: 'Ce café est déjà revendiqué ou en cours de vérification.',
+  claim_already_open: 'Une demande est déjà en cours pour ce café.',
+  place_not_found: 'Café introuvable.',
+  not_authenticated: 'Connecte-toi pour revendiquer ce café.',
+};
 
-/** Revendique un spot libre (vendor_id IS NULL) et met à jour la fiche. */
-export async function claimVendorPlace(
-  input: ClaimVendorPlaceInput
-): Promise<Place> {
+/**
+ * Demande à gérer un café existant (request_claim). Le café ne devient le tien
+ * qu'après vérification par l'équipe DropSpot (appel au café).
+ */
+export async function requestPlaceClaim(placeId: string): Promise<void> {
   if (!supabase) throw new Error('Supabase client not initialized');
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) throw new Error('Not authenticated');
 
-  const plugs = normalizePlugsLevel(input.plugs_level);
-  const payload: Record<string, unknown> = {
-    vendor_id: user.id,
-    name: input.name.trim() || undefined,
-    address: input.address?.trim() || null,
-    city: input.city?.trim() || null,
-    description: input.description?.trim() || null,
-    wifi_speed: normalizeWifiSpeed(input.wifi_speed),
-    noise_level: normalizeNoiseLevel(input.noise_level),
-    plugs_level: plugs,
-    has_plugs: plugs ? plugs !== 'limited' : false,
-    has_vegan: Boolean(input.has_vegan),
-    opening_hours: input.opening_hours || null,
-  };
-  if (input.image_url) payload.image_url = input.image_url;
-  if (Number.isFinite(input.lat)) payload.lat = input.lat;
-  if (Number.isFinite(input.lng)) payload.lng = input.lng;
-
-  Object.keys(payload).forEach((k) => {
-    if (payload[k] === undefined) delete payload[k];
+  const { data, error } = await supabase.rpc('request_claim', {
+    p_place_id: placeId,
+    p_declared_role: 'gérant',
+    p_proof_method: 'phone',
   });
 
-  const { data, error } = await supabase
-    .from('places')
-    .update(payload)
-    .eq('id', input.placeId)
-    .is('vendor_id', null)
-    .select(PLACE_SELECT)
-    .maybeSingle();
-
   if (error) {
-    console.error('Error claiming vendor place:', error);
+    console.error('Error requesting place claim:', error);
     throw error;
   }
-  if (!data) {
+
+  const row = data as { ok?: boolean; error?: string } | null;
+  if (!row?.ok) {
     throw new Error(
-      'Ce café n’est plus disponible (déjà revendiqué ou introuvable).'
+      CLAIM_ERRORS[row?.error ?? ''] ?? 'Impossible d’envoyer la demande.'
     );
   }
-
-  invalidatePlacesCache();
-  return normalizePlace(data as Record<string, unknown>);
 }
 
 // Ré-exports pour le dashboard (API flash drops)

@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Dropspot">
+  <!-- Full-bleed square for apple-touch-icon and maskable icons: the OS applies its own mask,
+       so the mark stays inside the central 80% safe zone. -->
+  <rect width="512" height="512" fill="#231915"/>
+  <g transform="translate(256 256) scale(5.4) translate(-32 -33)">
+    <path d="M32 61C26.5 52.5 11 40.5 11 26A21 21 0 0 1 53 26C53 40.5 37.5 52.5 32 61Z" fill="#E3905A"/>
+    <g transform="rotate(28 32 26)">
+      <ellipse cx="32" cy="26" rx="10.5" ry="14" fill="#FAF7F2"/>
+      <path d="M32 15C28.2 21 35.8 31 32 37" fill="none" stroke="#E3905A" stroke-width="3" stroke-linecap="round"/>
+    </g>
+  </g>
+</svg>

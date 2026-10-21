@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { GoogleLogo, AppleLogo, Envelope, X } from '@phosphor-icons/react';
 import { supabase } from '@/lib/supabase/client';
+import Logo from '@/components/brand/Logo';
 
 interface LoginModalProps {
   isOpen: boolean;
@@ -91,8 +92,8 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
         </button>
 
         <div className="text-center mb-6">
-          <h2 className="text-2xl font-extrabold text-ds-text tracking-tight">
-            DropSpot
+          <h2 className="text-2xl text-ds-text">
+            <Logo />
           </h2>
           <p className="text-sm text-ds-text2 mt-1">
             Connecte-toi pour enregistrer tes spots.

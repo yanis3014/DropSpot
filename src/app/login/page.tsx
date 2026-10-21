@@ -13,6 +13,7 @@ import { supabase } from '@/lib/supabase/client';
 import { useAuth } from '@/lib/hooks/useAuth';
 import ThemeSwitcher from '@/components/profile/ThemeSwitcher';
 import Button from '@/components/ui/Button';
+import Logo from '@/components/brand/Logo';
 import {
   resolvePostAuthDestination,
   safeRedirectPath,
@@ -245,8 +246,8 @@ function LoginPageContent() {
     <main className="flex min-h-screen flex-col items-center justify-center bg-ds-bg px-5 py-10">
       <div className="w-full max-w-sm">
         <div className="mb-8 text-center">
-          <h1 className="font-display text-[34px] font-extrabold leading-tight text-ds-text">
-            DropSpot
+          <h1 className="text-[34px] text-ds-text">
+            <Logo />
           </h1>
           <p className="mt-2 text-[15px] text-ds-text2">
             {mode === 'login'

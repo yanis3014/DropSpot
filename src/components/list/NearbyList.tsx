@@ -30,6 +30,7 @@ import {
 } from "@/lib/geo";
 import { useAuth } from "@/lib/hooks/useAuth";
 import { usePlaceFilters } from "@/lib/hooks/usePlaceFilters";
+import { usePlacesOpenStatus } from "@/hooks/usePlacesOpenStatus";
 import {
   AMENITY_FILTER_IDS,
   filtersQueryString,
@@ -175,6 +176,9 @@ export default function NearbyList() {
     userCoords,
   ]);
 
+  const rankedIds = useMemo(() => ranked.map((p) => p.id), [ranked]);
+  const openStatusByPlace = usePlacesOpenStatus(rankedIds);
+
   const within1km = useMemo(
     () =>
       ranked.filter(
@@ -258,7 +262,7 @@ export default function NearbyList() {
           </p>
         ) : (
           ranked.map((place) => {
-            const meta = cafeOpenStatus(place);
+            const meta = cafeOpenStatus(place, openStatusByPlace[place.id]);
             return (
               <CafeRow
                 key={place.id}

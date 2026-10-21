@@ -1,10 +1,7 @@
 import type { Metadata } from "next";
 import { Bricolage_Grotesque, Figtree } from "next/font/google";
 import "./globals.css";
-import BottomNav from "@/components/layout/BottomNav";
-import SplashScreen, { splashBootScript } from "@/components/SplashScreen";
-import IosInstallPrompt from "@/components/pwa/IosInstallPrompt";
-import AndroidInstallPrompt from "@/components/pwa/AndroidInstallPrompt";
+import { splashBootScript } from "@/components/SplashScreen";
 import { ThemeProvider, themeBootScript } from "@/lib/theme";
 
 const figtree = Figtree({
@@ -65,15 +62,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <script dangerouslySetInnerHTML={{ __html: splashBootScript }} />
       </head>
       <body className="min-h-full flex flex-col bg-ds-bg text-ds-text font-sans">
-        <ThemeProvider>
-          <div className="max-w-md mx-auto w-full min-h-full flex flex-col bg-ds-bg">
-            {children}
-            <BottomNav />
-          </div>
-          <IosInstallPrompt />
-          <AndroidInstallPrompt />
-          <SplashScreen />
-        </ThemeProvider>
+        <ThemeProvider>{children}</ThemeProvider>
       </body>
     </html>
   );

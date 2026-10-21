@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="fr"><head>
+<!-- Maquette Dropspot Pro (export Claude Design), décompressée pour lecture par Cursor. Les {{...}} sont remplis par le script text/x-dc en bas de fichier. -->
+<meta charset="utf-8">
+<title>Dropspot Pro — Abonnement</title>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+.board{font-family:'Figtree',system-ui,sans-serif;color:#231915}
+.th-light{--bg:#FAF7F2;--surface:#FFFFFF;--surface2:#F1ECE4;--line:#E3DACE;--text:#231915;--text2:#685A4E;--accent:#A34B1A;--onaccent:#FFFFFF;--accentsoft:#F6E5D7;--accenttext:#86390F;--ok:#2B6A47;--oksoft:#E2F0E7}
+.th-dark{--bg:#14100D;--surface:#211914;--surface2:#2C231D;--line:#3B3029;--text:#F4EDE6;--text2:#BBAD9F;--accent:#E3905A;--onaccent:#1B0F08;--accentsoft:#3D2719;--accenttext:#F3B086;--ok:#7CC79C;--oksoft:#1B3125}
+.desk{position:relative;width:1440px;height:900px;overflow:hidden;display:flex;background:var(--bg);color:var(--text);border-radius:16px;box-shadow:0 0 0 1px rgba(40,25,15,.10),0 24px 60px rgba(40,25,15,.14);font-family:'Figtree',system-ui,sans-serif;font-size:15px;flex:none}
+.disp{font-family:'Bricolage Grotesque','Figtree',sans-serif;letter-spacing:-.01em}
+.ic{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.ic-s{width:16px;height:16px}
+button{font:inherit;color:inherit;cursor:pointer}
+.side{width:264px;flex:none;display:flex;flex-direction:column;gap:18px;padding:20px 16px;box-sizing:border-box;background:var(--surface);border-right:1px solid var(--line)}
+.cafesel{display:flex;align-items:center;gap:10px;padding:10px 12px 10px 10px;border-radius:14px;border:1.5px solid var(--accent);background:var(--accentsoft);color:var(--text);text-decoration:none}
+.av{display:flex;align-items:center;justify-content:center;flex:none;width:40px;height:40px;border-radius:10px;font-family:'Bricolage Grotesque',sans-serif;font-weight:800;font-size:15px}
+.av1{background:var(--accent);color:var(--onaccent)}.av3{background:var(--surface2);color:var(--text2)}
+.navi{display:flex;align-items:center;gap:12px;height:42px;padding:0 12px;border-radius:12px;font-size:15px;font-weight:600;color:var(--text2);text-decoration:none}
+.navon{background:var(--surface2);color:var(--text)}
+.main{flex:1;min-width:0;display:flex;flex-direction:column}
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:16px;height:84px;padding:0 32px;border-bottom:1px solid var(--line);flex:none;box-sizing:border-box}
+.h1{margin:0;font-size:26px;font-weight:800}
+.sub{margin:2px 0 0;font-size:14px;color:var(--text2)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:18px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:44px;padding:0 18px;border:none;border-radius:12px;font-size:15px;font-weight:700;text-decoration:none;box-sizing:border-box;white-space:nowrap;flex:none}
+.btn-l{height:52px;font-size:16px;border-radius:14px}
+.btn-sm{height:36px;padding:0 12px;font-size:14px;border-radius:10px}
+.btn-main{background:var(--accent);color:var(--onaccent)}
+.btn-tonal{background:var(--accentsoft);color:var(--accenttext)}
+.btn-out{background:var(--surface);color:var(--text);border:1.5px solid var(--line)}
+.plan{display:inline-flex;align-items:center;gap:4px;height:24px;padding:0 9px;border-radius:12px;font-size:12px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;white-space:nowrap;box-sizing:border-box}
+.p-free{border:1.5px solid var(--line);color:var(--text2)}.p-pro{background:var(--text);color:var(--bg)}
+.hint{font-size:13px;color:var(--text2)}
+.crow{display:grid;grid-template-columns:minmax(0,1fr) 180px 180px;align-items:center;min-height:50px;padding:0 22px;font-size:15px}
+.crow + .crow{border-top:1px solid var(--line)}
+.cell{display:flex;justify-content:center;align-items:center;gap:6px;font-weight:600}
+.procol{background:var(--accentsoft)}
+.yes{color:var(--ok)}.no{color:var(--text2)}
+.vlabel{font-size:16px;font-weight:600;color:#5A4E45}
+</style>
+</helmet>
+<div class="board" style="width: 3064px; height: 1130px; box-sizing: border-box; padding: 56px 64px; background: #ECE8E2; display: flex; flex-direction: column; gap: 28px">
+<div style="display: flex; align-items: baseline; gap: 18px">
+<h1 class="disp" style="margin: 0; font-size: 44px; font-weight: 800; color: #231915">Pro 9 · Abonnement</h1>
+<p style="margin: 0; font-size: 18px; color: #5A4E45">Ce que tu as, ce que Pro ajoute, sans jargon. Les fonctions Pro sont toujours visibles, jamais cachées.</p>
+</div>
+<div style="display: flex; gap: 56px; align-items: flex-start">
+<sc-for list="{{desks}}" as="p" hint-placeholder-count="2">
+<div style="display: flex; flex-direction: column; gap: 14px">
+<div class="vlabel">{{p.label}}</div>
+<div class="{{p.cls}}">
+<aside class="side">
+<div style="display: flex; align-items: baseline; justify-content: space-between; padding: 2px 6px 0"><span class="disp" style="font-size: 23px; font-weight: 800">Dropspot</span><span class="hint" style="font-weight: 700">Espace gérant</span></div>
+<a href="ProSelecteur.dc.html" class="cafesel" aria-label="Établissement actif : Tech Café Sophia. Changer d'établissement">
+<span class="av av1">TC</span>
+<span style="display: flex; flex-direction: column; min-width: 0; flex: 1"><span style="font-size: 15px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">Tech Café Sophia</span><span class="hint">Biot · 1 café sur 2</span></span>
+<svg class="ic" sc-camel-view-box="0 0 24 24" aria-hidden="true"><path d="{{ic.chevUD}}"></path></svg>
+</a>
+<nav aria-label="Menu" style="display: flex; flex-direction: column; gap: 2px">
+<sc-for list="{{nav}}" as="n" hint-placeholder-count="7"><a class="{{n.cls}}" href="{{n.href}}"><svg class="ic" sc-camel-view-box="0 0 24 24" aria-hidden="true"><path d="{{n.d}}"></path></svg>{{n.label}}</a></sc-for>
+</nav>
+<div style="margin-top: auto; display: flex; align-items: center; gap: 10px; padding: 4px 6px"><span class="av av3" style="width: 34px; height: 34px; border-radius: 17px; font-size: 14px">N</span><span style="font-size: 14px; font-weight: 600">Niss Mrad</span></div>
+</aside>
+<div class="main">
+<header class="topbar">
+<div><h2 class="h1 disp">Abonnement</h2><p class="sub">Pour tous tes établissements</p></div>
+</header>
+<div style="flex: 1; min-height: 0; padding: 24px 32px; display: flex; gap: 20px; overflow: hidden">
+<div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 16px">
+<section class="card" style="padding: 20px 22px; display: flex; align-items: center; gap: 16px">
+<div style="display: flex; flex-direction: column; gap: 6px; flex: 1"><span class="hint" style="font-weight: 700">Ton offre actuelle</span><div style="display: flex; align-items: center; gap: 10px"><span class="disp" style="font-size: 28px; font-weight: 800">Gratuit</span><span class="plan p-free">Gratuit</span></div><span style="font-size: 15px; color: var(--text2)">Fiche, drops ponctuels, validation au comptoir et une équipe d'équipiers.</span></div>
+<a href="#paiement" class="btn btn-main btn-l">Passer au Pro</a>
+</section>
+<section class="card" style="overflow: hidden">
+<div class="crow" style="min-height: 64px"><span class="disp" style="font-size: 18px; font-weight: 700">Comparer</span><span class="cell" style="flex-direction: column; gap: 2px"><span class="plan p-free">Gratuit</span><span class="hint">ton offre</span></span><span class="cell procol" style="align-self: stretch; flex-direction: column; gap: 2px"><span class="plan p-pro">Pro</span></span></div>
+<sc-for list="{{rows}}" as="r" hint-placeholder-count="9">
+<div class="crow"><span>{{r.label}}</span><span class="cell {{r.fCls}}"><svg class="ic" sc-camel-view-box="0 0 24 24" role="img" aria-label="{{r.fTxt}}"><path d="{{r.fD}}"></path></svg></span><span class="cell procol yes" style="align-self: stretch"><svg class="ic" sc-camel-view-box="0 0 24 24" role="img" aria-label="Inclus"><path d="{{ic.check}}"></path></svg></span></div>
+</sc-for>
+</section>
+</div>
+<section style="width: 360px; flex: none; display: flex; flex-direction: column; gap: 12px">
+<h3 class="disp" style="margin: 0; font-size: 18px; font-weight: 700">Débloqué avec Pro</h3>
+<sc-for list="{{locked}}" as="l" hint-placeholder-count="4">
+<div class="card" style="padding: 16px; display: flex; flex-direction: column; gap: 10px">
+<div style="display: flex; align-items: center; gap: 10px"><span style="display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 10px; background: var(--surface2); color: var(--text2)"><svg class="ic ic-s" sc-camel-view-box="0 0 24 24" aria-hidden="true"><path d="{{ic.lock}}"></path></svg></span><span style="font-weight: 700; flex: 1">{{l.title}}</span><span class="plan p-pro">Pro</span></div>
+<span style="font-size: 14px; color: var(--text2); line-height: 1.4">{{l.text}}</span>
+</div>
+</sc-for>
+<a href="#paiement" class="btn btn-tonal">Voir les détails de Pro</a>
+</section>
+</div>
+</div>
+</div>
+</div>
+</sc-for>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script="" data-props="{&quot;$preview&quot;:{&quot;width&quot;:3064,&quot;height&quot;:1130}}">
+class Component extends DCLogic {
+  renderVals() {
+    const ic = {
+      home: 'M3 10.5L12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z',
+      zap: 'M13 2L4 14h7l-1 8 9-12h-7l1-8z',
+      store: 'M3 9l1.5-5h15L21 9M4 9v11h16V9M3 9h18M9 20v-6h6v6',
+      specs: 'M3 6l2 2 3-3M3 13l2 2 3-3M11 6h10M11 13h10M11 20h10M4 20h3',
+      users: 'M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M13 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0zM22 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8',
+      crown: 'M3 19h18M4 8l4 4 4-7 4 7 4-4-2 9H6z',
+      gear: 'M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z',
+      chevUD: 'M7 9l5-5 5 5M7 15l5 5 5-5',
+      check: 'M20 6L9 17l-5-5',
+      minus: 'M6 12h12',
+      lock: 'M5 11h14v10H5zM8 11V7a4 4 0 0 1 8 0v4'
+    };
+    const NAV = [['Accueil', 'ProAccueil.dc.html', 'home'], ['Drops', 'ProDrops.dc.html', 'zap'], ['Établissement', 'ProFiche.dc.html', 'store'], ['Spécificités', 'ProSpecificites.dc.html', 'specs'], ['Équipe', 'ProEquipe.dc.html', 'users'], ['Abonnement', 'ProAbonnement.dc.html', 'crown'], ['Réglages', 'ProReglages.dc.html', 'gear']];
+    const nav = NAV.map(([label, href, k]) => ({ label, href, d: ic[k], cls: label === 'Abonnement' ? 'navi navon' : 'navi' }));
+    const desks = [{ label: 'Ordinateur · Clair', cls: 'desk th-light' }, { label: 'Ordinateur · Sombre', cls: 'desk th-dark' }];
+    const R = (label, free) => ({ label, fCls: free ? 'yes' : 'no', fD: free ? ic.check : ic.minus, fTxt: free ? 'Inclus' : 'Non inclus' });
+    const rows = [
+      R('Fiche, horaires et horaires exceptionnels', true),
+      R('Proposer ou contester une info', true),
+      R('Drops flash ponctuels', true),
+      R('Validation au comptoir (QR ou code)', true),
+      R('Équipiers qui valident les drops', true),
+      R('Drops récurrents (chaque semaine)', false),
+      R('Rôle Responsable dans l’équipe', false),
+      R('Galerie complète et vidéo', false),
+      R('Connexion à ton ERP pour les statistiques', false)
+    ];
+    const locked = [
+      { title: 'Drops récurrents', text: 'Ton happy hour du jeudi se publie tout seul chaque semaine.' },
+      { title: 'Rôle Responsable', text: 'Un membre de l’équipe peut créer et arrêter des drops.' },
+      { title: 'Galerie complète', text: 'Plus de photos et une courte vidéo sur ta fiche.' },
+      { title: 'Connexion à l’ERP', text: 'Les chiffres détaillés arrivent dans ton outil de statistiques.' }
+    ];
+    return { ic, nav, desks, rows, locked };
+  }
+}
+</script>
+
+
+</body></html>

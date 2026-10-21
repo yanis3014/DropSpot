@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="fr"><head>
+<!-- Maquette Dropspot Pro (export Claude Design), décompressée pour lecture par Cursor. Les {{...}} sont remplis par le script text/x-dc en bas de fichier. -->
+<meta charset="utf-8">
+<title>Dropspot Pro — Créer un drop</title>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+.board{font-family:'Figtree',system-ui,sans-serif;color:#231915}
+.th-light{--bg:#FAF7F2;--surface:#FFFFFF;--surface2:#F1ECE4;--line:#E3DACE;--text:#231915;--text2:#685A4E;--accent:#A34B1A;--onaccent:#FFFFFF;--accentsoft:#F6E5D7;--accenttext:#86390F;--ok:#2B6A47;--oksoft:#E2F0E7;--warn:#8A4B00;--warnsoft:#FBEBD2;--shadow:0 10px 32px rgba(58,34,18,.18);--scrim:rgba(35,25,21,.45)}
+.th-dark{--bg:#14100D;--surface:#211914;--surface2:#2C231D;--line:#3B3029;--text:#F4EDE6;--text2:#BBAD9F;--accent:#E3905A;--onaccent:#1B0F08;--accentsoft:#3D2719;--accenttext:#F3B086;--ok:#7CC79C;--oksoft:#1B3125;--warn:#F0B467;--warnsoft:#3A2A12;--shadow:0 10px 32px rgba(0,0,0,.55);--scrim:rgba(0,0,0,.6)}
+.desk{position:relative;width:1440px;height:900px;overflow:hidden;display:flex;background:var(--bg);color:var(--text);border-radius:16px;box-shadow:0 0 0 1px rgba(40,25,15,.10),0 24px 60px rgba(40,25,15,.14);font-family:'Figtree',system-ui,sans-serif;font-size:15px;flex:none}
+.phone{position:relative;width:390px;height:844px;overflow:hidden;border-radius:46px;background:var(--bg);color:var(--text);box-shadow:0 0 0 1px rgba(40,25,15,.10),0 24px 60px rgba(40,25,15,.16);font-family:'Figtree',system-ui,sans-serif;flex:none}
+.disp{font-family:'Bricolage Grotesque','Figtree',sans-serif;letter-spacing:-.01em}
+.ic{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.ic-s{width:16px;height:16px}
+button{font:inherit;color:inherit;cursor:pointer}
+input,textarea{font:inherit;color:var(--text)}
+.side{width:264px;flex:none;display:flex;flex-direction:column;gap:18px;padding:20px 16px;box-sizing:border-box;background:var(--surface);border-right:1px solid var(--line)}
+.cafesel{display:flex;align-items:center;gap:10px;padding:10px 12px 10px 10px;border-radius:14px;border:1.5px solid var(--accent);background:var(--accentsoft);color:var(--text);text-decoration:none}
+.av{display:flex;align-items:center;justify-content:center;flex:none;width:40px;height:40px;border-radius:10px;font-family:'Bricolage Grotesque',sans-serif;font-weight:800;font-size:15px}
+.av1{background:var(--accent);color:var(--onaccent)}.av3{background:var(--surface2);color:var(--text2)}
+.navi{display:flex;align-items:center;gap:12px;height:42px;padding:0 12px;border-radius:12px;font-size:15px;font-weight:600;color:var(--text2);text-decoration:none}
+.navon{background:var(--surface2);color:var(--text)}
+.main{flex:1;min-width:0;display:flex;flex-direction:column}
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:16px;height:84px;padding:0 32px;border-bottom:1px solid var(--line);flex:none;box-sizing:border-box}
+.h1{margin:0;font-size:26px;font-weight:800}
+.sub{margin:2px 0 0;font-size:14px;color:var(--text2)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:18px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:44px;padding:0 18px;border:none;border-radius:12px;font-size:15px;font-weight:700;text-decoration:none;box-sizing:border-box;white-space:nowrap;flex:none}
+.btn-l{height:56px;font-size:17px;border-radius:16px}
+.btn-sm{height:36px;padding:0 12px;font-size:14px;border-radius:10px}
+.btn-main{background:var(--accent);color:var(--onaccent)}
+.btn-out{background:var(--surface);color:var(--text);border:1.5px solid var(--line)}
+.btn-ghost{background:transparent;color:var(--text)}
+.plan{display:inline-flex;align-items:center;gap:4px;height:22px;padding:0 8px;border-radius:11px;font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;white-space:nowrap;box-sizing:border-box}
+.p-free{border:1.5px solid var(--line);color:var(--text2)}.p-pro{background:var(--text);color:var(--bg)}
+.hint{font-size:13px;color:var(--text2);font-weight:500}
+.field{display:flex;flex-direction:column;gap:8px;font-size:14px;font-weight:700}
+.inp{display:flex;align-items:center;height:44px;padding:0 12px;border-radius:12px;border:1px solid var(--line);background:var(--bg);font-size:15px;font-weight:500;box-sizing:border-box;width:100%;outline:none;font-variant-numeric:tabular-nums}
+.chip{display:inline-flex;align-items:center;gap:6px;height:36px;padding:0 14px;border-radius:18px;border:1px solid var(--line);font-size:14px;font-weight:600;white-space:nowrap;box-sizing:border-box}
+.chip-on{background:var(--accentsoft);color:var(--accenttext);border-color:transparent}.chip-off{background:var(--surface);color:var(--text)}
+.seg{display:inline-flex;padding:3px;border-radius:12px;background:var(--surface2);gap:2px}
+.seg button{height:36px;min-width:44px;padding:0 12px;border:none;border-radius:9px;background:transparent;font-size:14px;font-weight:700;color:var(--text2)}
+.seg .on{background:var(--surface);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.radio{accent-color:var(--accent);width:18px;height:18px;margin:0}
+.sw{position:relative;width:44px;height:26px;padding:0;border:none;border-radius:13px;background:var(--line);flex:none}
+.sw::after{content:'';position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:10px;background:var(--surface)}
+.scrim{position:absolute;inset:0;background:var(--scrim);z-index:20}
+.drawer{position:absolute;z-index:21;top:0;right:0;bottom:0;width:600px;background:var(--surface);box-shadow:var(--shadow);display:flex;flex-direction:column}
+.tag{display:inline-flex;align-items:center;gap:5px;height:26px;padding:0 10px;border-radius:13px;font-size:13px;font-weight:700;white-space:nowrap}
+.t-live{background:var(--accent);color:var(--onaccent)}
+.step{display:flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:22px;border:1.5px solid var(--line);background:var(--surface);padding:0}
+.safe{height:54px;flex:none}
+.home{position:absolute;left:50%;bottom:8px;transform:translateX(-50%);width:134px;height:5px;border-radius:3px;background:var(--text);z-index:6}
+.vlabel{font-size:16px;font-weight:600;color:#5A4E45}
+</style>
+</helmet>
+<div class="board" style="width: 3956px; height: 1130px; box-sizing: border-box; padding: 56px 64px; background: #ECE8E2; display: flex; flex-direction: column; gap: 28px">
+<div style="display: flex; align-items: baseline; gap: 18px">
+<h1 class="disp" style="margin: 0; font-size: 44px; font-weight: 800; color: #231915">Pro 6b · Créer un drop</h1>
+<p style="margin: 0; font-size: 18px; color: #5A4E45">Au bureau, un formulaire complet (ici prérempli par « Dupliquer »). Au comptoir, un drop rapide en quatre touches.</p>
+</div>
+<div style="display: flex; gap: 56px; align-items: flex-start">
+<sc-for list="{{desks}}" as="p" hint-placeholder-count="2">
+<div style="display: flex; flex-direction: column; gap: 14px">
+<div class="vlabel">{{p.label}}</div>
+<div class="{{p.cls}}">
+<aside class="side">
+<div style="display: flex; align-items: baseline; justify-content: space-between; padding: 2px 6px 0"><span class="disp" style="font-size: 23px; font-weight: 800">Dropspot</span><span class="hint" style="font-weight: 700">Espace gérant</span></div>
+<a href="ProSelecteur.dc.html" class="cafesel" aria-label="Établissement actif : Tech Café Sophia. Changer d'établissement">
+<span class="av av1">TC</span>
+<span style="display: flex; flex-direction: column; min-width: 0; flex: 1"><span style="font-size: 15px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">Tech Café Sophia</span><span class="hint">Biot · 1 café sur 2</span></span>
+<svg class="ic" sc-camel-view-box="0 0 24 24" aria-hidden="true"><path d="{{ic.chevUD}}"></path></svg>
+</a>
+<nav aria-label="Menu" style="display: flex; flex-direction: column; gap: 2px">
+<sc-for list="{{nav}}" as="n" hint-placeholder-count="7"><a class="{{n.cls}}" href="{{n.href}}"><svg class="ic" sc-camel-view-box="0 0 24 24" aria-hidden="true"><path d="{{n.d}}"></path></svg>{{n.label}}</a></sc-for>
+</nav>
+<div style="margin-top: auto; display: flex; flex-direction: column; gap: 12px">
+<div style="padding: 14px; border-radius: 14px; background: var(--surface2); display: flex; flex-direction: column; gap: 8px">
+<div style="display: flex; align-items: center; gap: 8px"><span class="plan p-free">Gratuit</span><span class="hint">Ton offre</span></div>
+<a href="ProAbonnement.dc.html" style="font-size: 14px; font-weight: 700; color: var(--accent); text-decoration: none">Découvrir Pro →</a>
+</div>
+<div style="display: flex; align-items: center; gap: 10px; padding: 4px 6px"><span class="av av3" style="width: 34px; height: 34px; border-radius: 17px; font-size: 14px">N</span><span style="font-size: 14px; font-weight: 600">Niss Mrad</span></div>
+</div>
+</aside>
+<div class="main">
+<header class="topbar"><div><h2 class="h1 disp">Drops flash</h2><p class="sub">Tech Café Sophia · heures de Paris</p></div></header>
+<div aria-hidden="true" style="padding: 24px 32px; display: flex; flex-direction: column; gap: 14px">
+<div class="card" style="height: 150px"></div><div class="card" style="height: 80px"></div><div class="card" style="height: 220px"></div>
+</div>
+</div>
+<div class="scrim" style="opacity: .7"></div>
+<section class="drawer" role="dialog" aria-label="Nouveau drop">
+<div style="display: flex; align-items: center; justify-content: space-between; padding: 22px 28px; border-bottom: 1px solid var(--line)">
+<div><h3 class="disp" style="margin: 0; font-size: 24px; font-weight: 800">Nouveau drop</h3><span class="hint">pour Tech Café Sophia</span></div>
+<button class="btn btn-ghost" aria-label="Fermer" style="width: 44px; padding: 0"><svg class="ic" sc-camel-view-box="0 0 24 24" aria-hidden="true"><path d="{{ic.x}}"></path></svg></button>
+</div>
+<div style="flex: 1; min-height: 0; overflow: hidden; padding: 20px 28px; display: flex; flex-direction: column; gap: 18px">
+<div style="display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: 12px; background: var(--surface2); font-size: 14px"><svg class="ic ic-s" sc-camel-view-box="0 0 24 24" aria-hidden="true"><path d="{{ic.copy}}"></path></svg>Copié depuis « −20 % sur les boissons chaudes » du 16 oct.</div>
+<label class="field">Titre<input class="inp" value="−20 % sur les boissons chaudes"></label>
+<div class="field">Type<div style="display: flex; gap: 8px"><button class="chip chip-on" aria-pressed="true">Réduction</button><button class="chip chip-off">Offre</button><button class="chip chip-off">Prix spécial</button><button class="chip chip-off">Activité</button></div></div>
+<div class="field">Réduction<div style="display: flex; align-items: center; gap: 10px"><input class="inp" aria-label="Montant" value="20" style="width: 100px"><div class="seg"><button class="on">%</button><button>€</button></div></div></div>
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px">
+<div class="field">Début<div style="display: flex; gap: 8px"><input class="inp" aria-label="Date de début" value="Aujourd'hui"><input class="inp" aria-label="Heure de début" value="15:00" style="width: 90px"></div></div>
+<div class="field">Fin<div style="display: flex; gap: 8px"><input class="inp" aria-label="Date de fin" value="Aujourd'hui"><input class="inp" aria-label="Heure de fin" value="17:00" style="width: 90px"></div></div>
+</div>
+<span class="hint" style="margin-top: -10px">Dure 2 h · heure de Paris</span>
+<div class="field">Quantité
+<div style="display: flex; align-items: center; gap: 18px; font-weight: 600"><label style="display: flex; align-items: center; gap: 8px"><input class="radio" type="radio" name="q{{p.k}}" checked="">Limitée à</label><input class="inp" aria-label="Nombre de places" value="20" style="width: 80px"><label style="display: flex; align-items: center; gap: 8px"><input class="radio" type="radio" name="q{{p.k}}">Sans limite</label></div>
+</div>
+<label class="field">Conditions<textarea class="inp" style="height: 64px; padding: 10px 12px; resize: none">Sur place uniquement. 1 par personne.</textarea></label>
+<div style="display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 12px; border: 1px dashed var(--line)">
+<button class="sw" role="switch" aria-checked="false" aria-disabled="true" aria-label="Répéter chaque semaine, réservé à Pro"></button>
+<span style="flex: 1; font-size: 15px; font-weight: 600; color: var(--text2)">Répéter chaque semaine</span>
+<svg class="ic ic-s" sc-camel-view-box="0 0 24 24" aria-hidden="true" style="color: var(--text2)"><path d="{{ic.lock}}"></path></svg><span class="plan p-pro">Pro</span>
+</div>
+</div>
+<div style="display: flex; align-items: center; justify-content: space-between; padding: 16px 28px; border-top: 1px solid var(--line)">
+<button class="btn btn-ghost">Annuler</button>
+<div style="display: flex; gap: 10px"><button class="btn btn-out">Programmer</button><button class="btn btn-main">Publier à 15:00</button></div>
+</div>
+</section>
+</div>
+</div>
+</sc-for>
+<sc-for list="{{phones}}" as="p" hint-placeholder-count="2">
+<div style="display: flex; flex-direction: column; gap: 14px">
+<div class="vlabel">{{p.label}}</div>
+<div class="{{p.cls}}">
+<div style="display: flex; flex-direction: column; gap: 18px; padding: 0 16px">
+<div class="safe"></div>
+<div style="display: flex; align-items: center; justify-content: space-between">
+<a href="ProAccueil.dc.html" class="btn btn-ghost" style="padding: 0; width: 44px" aria-label="Fermer"><svg class="ic" sc-camel-view-box="0 0 24 24" aria-hidden="true" style="width: 24px; height: 24px"><path d="{{ic.x}}"></path></svg></a>
+<span style="font-size: 14px; font-weight: 700; color: var(--text2)">Tech Café Sophia</span>
+<span style="width: 44px"></span>
+</div>
+<h2 class="disp" style="margin: 0; font-size: 30px; font-weight: 800">Drop rapide</h2>
+<div class="field" style="font-size: 15px">Reprendre un drop
+<div style="display: flex; gap: 8px; overflow: hidden; margin-right: -16px"><button class="chip chip-on"><svg class="ic ic-s" sc-camel-view-box="0 0 24 24" aria-hidden="true"><path d="{{ic.copy}}"></path></svg>Matcha −30 %</button><button class="chip chip-off">Cookie offert</button><button class="chip chip-off">Chai à 3 €</button></div>
+</div>
+<div class="field" style="font-size: 15px">L'offre
+<div style="display: flex; gap: 8px; flex-wrap: wrap"><button class="chip chip-off">−10 %</button><button class="chip chip-off">−20 %</button><button class="chip chip-on" aria-pressed="true">−30 %</button><button class="chip chip-off">Offert</button></div>
+<input class="inp" aria-label="Sur quel produit ?" value="sur le matcha latte">
+</div>
+<div class="field" style="font-size: 15px">Pendant
+<div style="display: flex; gap: 8px; flex-wrap: wrap"><button class="chip chip-off">30 min</button><button class="chip chip-on" aria-pressed="true">1 h</button><button class="chip chip-off">2 h</button><button class="chip chip-off">Jusqu'à 19:00</button></div>
+</div>
+<div class="field" style="font-size: 15px">Combien ?
+<div style="display: flex; align-items: center; gap: 14px"><button class="step" aria-label="Moins"><svg class="ic" sc-camel-view-box="0 0 24 24" aria-hidden="true"><path d="{{ic.minus}}"></path></svg></button><span class="disp" style="font-size: 28px; font-weight: 800; min-width: 40px; text-align: center">20</span><button class="step" aria-label="Plus"><svg class="ic" sc-camel-view-box="0 0 24 24" aria-hidden="true"><path d="{{ic.plus}}"></path></svg></button><button class="chip chip-off" style="margin-left: auto">Sans limite</button></div>
+</div>
+</div>
+<div style="position: absolute; left: 0; right: 0; bottom: 0; padding: 14px 16px 40px; background: var(--surface); border-top: 1px solid var(--line); display: flex; flex-direction: column; gap: 10px">
+<span style="font-size: 14px; color: var(--text2); text-align: center">Visible de 15:00 à 16:00 · 20 places</span>
+<button class="btn btn-main btn-l"><svg class="ic" sc-camel-view-box="0 0 24 24" aria-hidden="true"><path d="{{ic.zap}}"></path></svg>Publier maintenant</button>
+</div>
+<div class="home" aria-hidden="true"></div>
+</div>
+</div>
+</sc-for>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script="" data-props="{&quot;$preview&quot;:{&quot;width&quot;:3956,&quot;height&quot;:1130}}">
+class Component extends DCLogic {
+  renderVals() {
+    const ic = {
+      home: 'M3 10.5L12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z',
+      zap: 'M13 2L4 14h7l-1 8 9-12h-7l1-8z',
+      store: 'M3 9l1.5-5h15L21 9M4 9v11h16V9M3 9h18M9 20v-6h6v6',
+      specs: 'M3 6l2 2 3-3M3 13l2 2 3-3M11 6h10M11 13h10M11 20h10M4 20h3',
+      users: 'M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M13 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0zM22 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8',
+      crown: 'M3 19h18M4 8l4 4 4-7 4 7 4-4-2 9H6z',
+      gear: 'M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z',
+      chevUD: 'M7 9l5-5 5 5M7 15l5 5 5-5',
+      plus: 'M12 5v14M5 12h14',
+      minus: 'M5 12h14',
+      x: 'M18 6L6 18M6 6l12 12',
+      lock: 'M5 11h14v10H5zM8 11V7a4 4 0 0 1 8 0v4',
+      copy: 'M9 9h11v11H9zM5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1'
+    };
+    const NAV = [['Accueil', 'ProAccueil.dc.html', 'home'], ['Drops', 'ProDrops.dc.html', 'zap'], ['Établissement', 'ProFiche.dc.html', 'store'], ['Spécificités', 'ProSpecificites.dc.html', 'specs'], ['Équipe', 'ProEquipe.dc.html', 'users'], ['Abonnement', 'ProAbonnement.dc.html', 'crown'], ['Réglages', 'ProReglages.dc.html', 'gear']];
+    const nav = NAV.map(([label, href, k]) => ({ label, href, d: ic[k], cls: label === 'Drops' ? 'navi navon' : 'navi' }));
+    const desks = [{ k: 'a', label: 'Ordinateur · Clair · drop dupliqué', cls: 'desk th-light' }, { k: 'b', label: 'Ordinateur · Sombre · drop dupliqué', cls: 'desk th-dark' }];
+    const phones = [{ label: 'iPhone · Clair · drop rapide', cls: 'phone th-light' }, { label: 'iPhone · Sombre · drop rapide', cls: 'phone th-dark' }];
+    return { ic, nav, desks, phones };
+  }
+}
+</script>
+
+
+</body></html>

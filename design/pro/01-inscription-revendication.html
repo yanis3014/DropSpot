@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="fr"><head>
+<!-- Maquette Dropspot Pro (export Claude Design), décompressée pour lecture par Cursor. Les {{...}} sont remplis par le script text/x-dc en bas de fichier. -->
+<meta charset="utf-8">
+<title>Dropspot Pro — Inscription</title>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+.board{font-family:'Figtree',system-ui,sans-serif;color:#231915}
+.th-light{--bg:#FAF7F2;--surface:#FFFFFF;--surface2:#F1ECE4;--line:#E3DACE;--text:#231915;--text2:#685A4E;--accent:#A34B1A;--onaccent:#FFFFFF;--accentsoft:#F6E5D7;--accenttext:#86390F;--ok:#2B6A47;--oksoft:#E2F0E7;--warn:#8A4B00;--warnsoft:#FBEBD2;--danger:#B3261E;--dangersoft:#FBE4E1;--map:#ECE5DA;--road:#FFFFFF;--park:#D9E3CB;--sea:#C9DCE4;--pin:#2A1D16;--onpin:#FFFFFF;--ph1:#DCC6AF;--ph2:#CBBBA2;--shadow:0 6px 24px rgba(58,34,18,.14);--scrim:rgba(35,25,21,.45)}
+.th-dark{--bg:#14100D;--surface:#211914;--surface2:#2C231D;--line:#3B3029;--text:#F4EDE6;--text2:#BBAD9F;--accent:#E3905A;--onaccent:#1B0F08;--accentsoft:#3D2719;--accenttext:#F3B086;--ok:#7CC79C;--oksoft:#1B3125;--warn:#F0B467;--warnsoft:#3A2A12;--danger:#F2A097;--dangersoft:#3D1D1A;--map:#1C1713;--road:#2E2620;--park:#1F281C;--sea:#13202A;--pin:#F4EDE6;--onpin:#1B120D;--ph1:#3A2C22;--ph2:#33291F;--shadow:0 6px 24px rgba(0,0,0,.45);--scrim:rgba(0,0,0,.6)}
+.desk{position:relative;width:1440px;height:900px;overflow:hidden;display:flex;flex-direction:column;background:var(--bg);color:var(--text);border-radius:16px;box-shadow:0 0 0 1px rgba(40,25,15,.10),0 24px 60px rgba(40,25,15,.14);font-family:'Figtree',system-ui,sans-serif;font-size:15px;flex:none}
+.disp{font-family:'Bricolage Grotesque','Figtree',sans-serif;letter-spacing:-.01em}
+.ic{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.ic-s{width:16px;height:16px}
+button{font:inherit;color:inherit;cursor:pointer}
+input{font:inherit;color:var(--text)}input::placeholder{color:var(--text2)}
+.obar{display:flex;align-items:center;justify-content:space-between;height:76px;padding:0 32px;border-bottom:1px solid var(--line);background:var(--surface);flex:none;box-sizing:border-box}
+.step{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600;color:var(--text2)}
+.num{display:flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:14px;border:1.5px solid var(--line);font-size:13px;font-weight:800;box-sizing:border-box}
+.s-on{color:var(--text)}.s-on .num{background:var(--accent);border-color:var(--accent);color:var(--onaccent)}
+.s-done .num{background:var(--accentsoft);border-color:transparent;color:var(--accenttext)}
+.sep{width:48px;height:2px;background:var(--line);border-radius:1px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:18px}
+.h1{margin:0;font-size:34px;font-weight:800;line-height:1.1}
+.lead{margin:0;font-size:16px;line-height:1.5;color:var(--text2)}
+.h2{margin:0;font-size:17px;font-weight:700}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:44px;padding:0 18px;border:none;border-radius:12px;font-size:15px;font-weight:700;text-decoration:none;box-sizing:border-box;white-space:nowrap;flex:none}
+.btn-l{height:52px;padding:0 24px;font-size:16px;border-radius:14px}
+.btn-main{background:var(--accent);color:var(--onaccent)}
+.btn-tonal{background:var(--accentsoft);color:var(--accenttext)}
+.btn-out{background:var(--surface);color:var(--text);border:1.5px solid var(--line)}
+.btn-ghost{background:transparent;color:var(--text)}
+.tag{display:inline-flex;align-items:center;gap:5px;height:26px;padding:0 10px;border-radius:13px;font-size:13px;font-weight:700;white-space:nowrap}
+.t-ok{background:var(--oksoft);color:var(--ok)}.t-warn{background:var(--warnsoft);color:var(--warn)}.t-done{background:var(--surface2);color:var(--text2)}
+.inp{display:flex;align-items:center;gap:10px;height:48px;padding:0 14px;border-radius:12px;border:1px solid var(--line);background:var(--surface);box-sizing:border-box;color:var(--text2)}
+.inp input{border:none;outline:none;background:transparent;flex:1;min-width:0;font-size:16px}
+.av{display:flex;align-items:center;justify-content:center;flex:none;width:44px;height:44px;border-radius:12px;font-family:'Bricolage Grotesque',sans-serif;font-weight:800;font-size:16px}
+.av1{background:var(--accent);color:var(--onaccent)}.av3{background:var(--surface2);color:var(--text2)}
+.chip{display:inline-flex;align-items:center;gap:6px;height:36px;padding:0 14px;border-radius:18px;border:1px solid var(--line);font-size:14px;font-weight:600;white-space:nowrap;box-sizing:border-box}
+.chip-on{background:var(--accentsoft);color:var(--accenttext);border-color:transparent}.chip-off{background:var(--surface);color:var(--text)}
+.opt{display:flex;flex-direction:column;gap:10px;padding:18px;border-radius:16px;border:1.5px solid var(--line);background:var(--surface);flex:1;min-width:0}
+.opt-on{border-color:var(--accent);box-shadow:0 0 0 3px var(--accentsoft)}
+.radio{accent-color:var(--accent);width:18px;height:18px;margin:0}
+.digit{display:flex;align-items:center;justify-content:center;width:44px;height:52px;border-radius:12px;border:1.5px solid var(--line);background:var(--bg);font-size:22px;font-weight:700;box-sizing:border-box}
+.hint{font-size:13px;color:var(--text2)}
+.dot{display:flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:16px;flex:none}
+.vlabel{font-size:16px;font-weight:600;color:#5A4E45}
+</style>
+</helmet>
+<div class="board" style="width: 4560px; height: 1130px; box-sizing: border-box; padding: 56px 64px; background: #ECE8E2; display: flex; flex-direction: column; gap: 28px">
+<div style="display: flex; align-items: baseline; gap: 18px">
+<h1 class="disp" style="margin: 0; font-size: 44px; font-weight: 800; color: #231915">Pro 1 · Inscription et revendication</h1>
+<p style="margin: 0; font-size: 18px; color: #5A4E45">Trois étapes courtes : trouver son café, prouver qu'on le gère, attendre la vérification sans rester bloqué.</p>
+</div>
+<div style="display: flex; gap: 56px; align-items: flex-start">
+
+<div style="display: flex; flex-direction: column; gap: 14px">
+<div class="vlabel">Étape 1 · Trouver son café · Clair</div>
+<div class="desk th-light">
+<header class="obar">
+<div style="display: flex; align-items: baseline; gap: 10px"><span class="disp" style="font-size: 24px; font-weight: 800">Dropspot</span><span class="hint" style="font-weight: 700">Espace gérant</span></div>
+<ol aria-label="Étapes" style="display: flex; align-items: center; gap: 14px; margin: 0; padding: 0; list-style: none">
+<li class="step s-on"><span class="num">1</span>Trouve ton café</li><li class="sep" aria-hidden="true"></li>
+<li class="step"><span class="num">2</span>Prouve que c'est toi</li><li class="sep" aria-hidden="true"></li>
+<li class="step"><span class="num">3</span>Vérification</li>
+</ol>
+<a href="#aide" style="font-size: 14px; font-weight: 700; color: var(--accent); text-decoration: none">Besoin d'aide ?</a>
+</header>
+<div style="flex: 1; min-height: 0; display: flex">
+<section style="width: 560px; flex: none; box-sizing: border-box; padding: 40px; display: flex; flex-direction: column; gap: 20px; background: var(--bg)">
+<div style="display: flex; flex-direction: column; gap: 8px">
+<h2 class="h1 disp">Trouve ton café</h2>
+<p class="lead">Cherche-le par son nom ou touche son pin sur la carte.</p>
+</div>
+<label class="inp"><svg class="ic" sc-camel-view-box="0 0 24 24" aria-hidden="true"><path d="{{ic.search}}"></path></svg><input type="search" aria-label="Nom du café ou adresse" value="Tech Café"></label>
+<div style="display: flex; flex-direction: column; gap: 10px">
+<div class="card" style="display: flex; align-items: center; gap: 14px; padding: 14px; border: 1.5px solid var(--accent); box-shadow: 0 0 0 3px var(--accentsoft)">
+<span class="av av1">TC</span>
+<div style="display: flex; flex-direction: column; gap: 3px; flex: 1; min-width: 0"><span style="font-size: 16px; font-weight: 700">Tech Café Sophia</span><span class="hint">Campus des Templiers, Biot</span></div>
+<span class="tag t-ok">Libre</span>
+<a href="#etape2" class="btn btn-main">C'est mon café</a>
+</div>
+<div class="card" style="display: flex; align-items: center; gap: 14px; padding: 14px">
+<span class="av av3">TN</span>
+<div style="display: flex; flex-direction: column; gap: 3px; flex: 1; min-width: 0"><span style="font-size: 16px; font-weight: 700">Tech Café Nice Port</span><span class="hint">Déjà géré par quelqu'un. C'est une erreur ? <a href="#aide" style="color: var(--accent); font-weight: 700">Écris-nous</a></span></div>
+<span class="tag t-done">Déjà géré</span>
+</div>
+<div class="card" style="display: flex; align-items: center; gap: 14px; padding: 14px">
+<span class="av av3">TT</span>
+<div style="display: flex; flex-direction: column; gap: 3px; flex: 1; min-width: 0"><span style="font-size: 16px; font-weight: 700">Tech &amp; Thé</span><span class="hint">Place Nationale, Antibes</span></div>
+<span class="tag t-ok">Libre</span>
+<button class="btn btn-out">C'est mon café</button>
+</div>
+</div>
+<div style="margin-top: auto; display: flex; align-items: center; gap: 12px; padding: 16px; border-radius: 14px; background: var(--surface2)">
+<svg class="ic" sc-camel-view-box="0 0 24 24" aria-hidden="true"><path d="{{ic.pin}}"></path></svg>
+<span style="flex: 1; font-size: 15px">Ton café n'est pas sur la carte ?</span>
+<a href="#ajouter" style="font-size: 15px; font-weight: 700; color: var(--accent); text-decoration: none">Ajoute-le</a>
+</div>
+</section>
+<div aria-hidden="true" style="position: relative; flex: 1; background: var(--map); overflow: hidden">
+<div style="position: absolute; left: -100px; top: 610px; width: 1200px; height: 300px; background: var(--sea); transform: rotate(-6deg)"></div>
+<div style="position: absolute; left: 120px; top: 140px; width: 220px; height: 150px; border-radius: 70px; background: var(--park)"></div>
+<div style="position: absolute; left: 560px; top: 330px; width: 240px; height: 170px; border-radius: 80px; background: var(--park)"></div>
+<div style="position: absolute; left: -60px; top: 420px; width: 1100px; height: 16px; background: var(--road); transform: rotate(-12deg)"></div>
+<div style="position: absolute; left: -60px; top: 250px; width: 1100px; height: 10px; background: var(--road); transform: rotate(8deg)"></div>
+<div style="position: absolute; left: 380px; top: -60px; width: 16px; height: 1000px; background: var(--road); transform: rotate(10deg)"></div>
+<div style="position: absolute; left: 650px; top: -60px; width: 10px; height: 1000px; background: var(--road); transform: rotate(-12deg)"></div>
+<div style="position: absolute; left: 160px; top: -60px; width: 10px; height: 1000px; background: var(--road); transform: rotate(-4deg)"></div>
+<div style="position: absolute; left: 640px; top: 230px; width: 44px; height: 44px; border-radius: 22px; border: 2px solid var(--surface); background: var(--pin); color: var(--onpin); display: flex; align-items: center; justify-content: center"><svg class="ic" sc-camel-view-box="0 0 24 24"><path d="{{ic.coffee}}"></path></svg></div>
+<div style="position: absolute; left: 220px; top: 470px; width: 44px; height: 44px; border-radius: 22px; border: 2px solid var(--surface); background: var(--pin); color: var(--onpin); display: flex; align-items: center; justify-content: center"><svg class="ic" sc-camel-view-box="0 0 24 24"><path d="{{ic.coffee}}"></path></svg></div>
+<div style="position: absolute; left: 360px; top: 320px; height: 48px; padding: 0 18px 0 12px; border-radius: 24px; border: 2px solid var(--surface); background: var(--accent); color: var(--onaccent); display: flex; align-items: center; gap: 8px; font-size: 15px; font-weight: 700; box-shadow: var(--shadow)"><svg class="ic" sc-camel-view-box="0 0 24 24"><path d="{{ic.coffee}}"></path></svg>Tech Café Sophia</div>
+</div>
+</div>
+</div>
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 14px">
+<div class="vlabel">Étape 2 · Prouver qu'on est le gérant · Sombre</div>
+<div class="desk th-dark">
+<header class="obar">
+<div style="display: flex; align-items: baseline; gap: 10px"><span class="disp" style="font-size: 24px; font-weight: 800">Dropspot</span><span class="hint" style="font-weight: 700">Espace gérant</span></div>
+<ol aria-label="Étapes" style="display: flex; align-items: center; gap: 14px; margin: 0; padding: 0; list-style: none">
+<li class="step s-done"><span class="num"><svg class="ic ic-s" sc-camel-view-box="0 0 24 24" aria-hidden="true"><path d="{{ic.check}}"></path></svg></span>Trouve ton café</li><li class="sep" aria-hidden="true"></li>
+<li class="step s-on"><span class="num">2</span>Prouve que c'est toi</li><li class="sep" aria-hidden="true"></li>
+<li class="step"><span class="num">3</span>Vérification</li>
+</ol>
+<a href="#aide" style="font-size: 14px; font-weight: 700; color: var(--accent); text-decoration: none">Besoin d'aide ?</a>
+</header>
+<div style="flex: 1; min-height: 0; overflow: hidden; display: flex; justify-content: center; padding: 32px 0 0">
+<div style="width: 820px; display: flex; flex-direction: column; gap: 20px">
+<div style="display: flex; flex-direction: column; gap: 8px">
+<h2 class="h1 disp">Prouve que tu gères ce café</h2>
+<p class="lead">On vérifie chaque demande pour que personne ne publie de drop à ta place.</p>
+</div>
+<div class="card" style="display: flex; align-items: center; gap: 14px; padding: 14px">
+<span class="av av1">TC</span>
+<div style="display: flex; flex-direction: column; gap: 3px; flex: 1"><span style="font-size: 16px; font-weight: 700">Tech Café Sophia</span><span class="hint">Campus des Templiers, Biot</span></div>
+<a href="#etape1" class="btn btn-ghost" style="color: var(--accent)">Changer</a>
+</div>
+<div style="display: flex; flex-direction: column; gap: 10px">
+<span class="h2">Ton rôle</span>
+<div style="display: flex; gap: 8px"><button class="chip chip-on" aria-pressed="true"><svg class="ic ic-s" sc-camel-view-box="0 0 24 24" aria-hidden="true"><path d="{{ic.check}}"></path></svg>Gérant·e</button><button class="chip chip-off" aria-pressed="false">Propriétaire</button><button class="chip chip-off" aria-pressed="false">Associé·e</button></div>
+</div>
+<div style="display: flex; flex-direction: column; gap: 10px">
+<span class="h2">Comment veux-tu le prouver ?</span>
+<div style="display: flex; gap: 14px">
+<label class="opt opt-on">
+<span style="display: flex; align-items: center; gap: 10px"><input class="radio" type="radio" name="preuve" checked=""><svg class="ic" sc-camel-view-box="0 0 24 24" aria-hidden="true"><path d="{{ic.phone}}"></path></svg><span style="font-size: 16px; font-weight: 700; flex: 1">Par téléphone</span><span class="tag t-ok">Le plus rapide</span></span>
+<span class="hint" style="font-size: 14px">On appelle le numéro public du café et on te dicte un code.</span>
+<span style="display: flex; align-items: center; justify-content: space-between; gap: 10px"><span style="font-size: 15px; font-weight: 600">04 93 •• •• 12</span><span class="btn btn-tonal" style="height: 40px">Appel en cours…</span></span>
+<span style="display: flex; flex-direction: column; gap: 6px"><span style="font-size: 14px; font-weight: 600">Code reçu</span><span style="display: flex; gap: 8px"><span class="digit">4</span><span class="digit">7</span><span class="digit">2</span><span class="digit" style="border-color: var(--accent)"></span><span class="digit"></span><span class="digit"></span></span></span>
+</label>
+<label class="opt">
+<span style="display: flex; align-items: center; gap: 10px"><input class="radio" type="radio" name="preuve"><svg class="ic" sc-camel-view-box="0 0 24 24" aria-hidden="true"><path d="{{ic.file}}"></path></svg><span style="font-size: 16px; font-weight: 700">Par justificatif</span></span>
+<span class="hint" style="font-size: 14px">Kbis, bail ou facture au nom du café. PDF ou photo.</span>
+<span style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; height: 132px; border-radius: 14px; border: 1.5px dashed var(--line); color: var(--text2); font-size: 14px"><svg class="ic" sc-camel-view-box="0 0 24 24" aria-hidden="true" style="width: 24px; height: 24px"><path d="{{ic.upload}}"></path></svg>Glisse ton fichier ici ou <span style="color: var(--accent); font-weight: 700">choisis-le</span></span>
+</label>
+</div>
+</div>
+<label style="display: flex; align-items: center; gap: 10px; font-size: 15px"><input class="radio" type="checkbox" checked="">Je certifie gérer cet établissement.</label>
+<div style="display: flex; justify-content: space-between; align-items: center; padding-top: 4px">
+<a href="#etape1" class="btn btn-ghost">Retour</a>
+<a href="#etape3" class="btn btn-main btn-l">Envoyer ma demande</a>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 14px">
+<div class="vlabel">Étape 3 · En cours de vérification · Clair</div>
+<div class="desk th-light">
+<header class="obar">
+<div style="display: flex; align-items: baseline; gap: 10px"><span class="disp" style="font-size: 24px; font-weight: 800">Dropspot</span><span class="hint" style="font-weight: 700">Espace gérant</span></div>
+<ol aria-label="Étapes" style="display: flex; align-items: center; gap: 14px; margin: 0; padding: 0; list-style: none">
+<li class="step s-done"><span class="num"><svg class="ic ic-s" sc-camel-view-box="0 0 24 24" aria-hidden="true"><path d="{{ic.check}}"></path></svg></span>Trouve ton café</li><li class="sep" aria-hidden="true"></li>
+<li class="step s-done"><span class="num"><svg class="ic ic-s" sc-camel-view-box="0 0 24 24" aria-hidden="true"><path d="{{ic.check}}"></path></svg></span>Prouve que c'est toi</li><li class="sep" aria-hidden="true"></li>
+<li class="step s-on"><span class="num">3</span>Vérification</li>
+</ol>
+<a href="#aide" style="font-size: 14px; font-weight: 700; color: var(--accent); text-decoration: none">Besoin d'aide ?</a>
+</header>
+<div style="flex: 1; display: flex; justify-content: center; align-items: center">
+<div class="card" style="width: 680px; padding: 40px; display: flex; flex-direction: column; gap: 22px; box-sizing: border-box">
+<div style="display: flex; align-items: center; gap: 14px">
+<span class="dot" style="width: 56px; height: 56px; border-radius: 28px; background: var(--warnsoft); color: var(--warn)"><svg class="ic" sc-camel-view-box="0 0 24 24" aria-hidden="true" style="width: 26px; height: 26px"><path d="{{ic.hourglass}}"></path></svg></span>
+<span class="tag t-warn">En cours de vérification</span>
+</div>
+<div style="display: flex; flex-direction: column; gap: 8px">
+<h2 class="h1 disp" style="font-size: 30px">On vérifie que Tech Café Sophia est bien à toi</h2>
+<p class="lead">On te prévient par e-mail et par notification dès que c'est validé.</p>
+</div>
+<ol style="margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 14px">
+<li style="display: flex; align-items: center; gap: 12px"><span class="dot" style="background: var(--oksoft); color: var(--ok)"><svg class="ic ic-s" sc-camel-view-box="0 0 24 24" aria-hidden="true"><path d="{{ic.check}}"></path></svg></span><span style="flex: 1; font-weight: 600">Demande envoyée</span><span class="hint">lun. 19 oct., 10:42</span></li>
+<li style="display: flex; align-items: center; gap: 12px"><span class="dot" style="background: var(--warnsoft); color: var(--warn)"><svg class="ic ic-s" sc-camel-view-box="0 0 24 24" aria-hidden="true"><path d="{{ic.clock}}"></path></svg></span><span style="flex: 1; font-weight: 600">Vérification par l'équipe Dropspot</span><span class="hint">en cours</span></li>
+<li style="display: flex; align-items: center; gap: 12px"><span class="dot" style="border: 1.5px solid var(--line); box-sizing: border-box"></span><span style="flex: 1; font-weight: 600; color: var(--text2)">Accès complet : drops, équipe, spécificités</span></li>
+</ol>
+<div style="display: flex; flex-direction: column; gap: 14px; padding: 18px; border-radius: 14px; background: var(--surface2)">
+<p style="margin: 0; font-size: 15px; line-height: 1.5">En attendant, prépare ta fiche : photos, horaires, description. Les drops s'activeront après la vérification.</p>
+<div style="display: flex; gap: 10px"><a href="ProFiche.dc.html" class="btn btn-main">Préparer ma fiche</a><button class="btn btn-ghost">Annuler la demande</button></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script="" data-props="{&quot;$preview&quot;:{&quot;width&quot;:4560,&quot;height&quot;:1130}}">
+class Component extends DCLogic {
+  renderVals() {
+    const ic = {
+      search: 'M21 21l-4.3-4.3M18 11a7 7 0 1 1-14 0 7 7 0 0 1 14 0z',
+      check: 'M20 6L9 17l-5-5',
+      clock: 'M12 7v5l3 2M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z',
+      pin: 'M12 21s-7-6.1-7-11.5a7 7 0 0 1 14 0C19 14.9 12 21 12 21zM14.5 9.5a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0z',
+      phone: 'M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z',
+      file: 'M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9zM14 3v6h6',
+      upload: 'M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12',
+      hourglass: 'M6 2h12M6 22h12M7 2v4l5 6-5 6v4M17 2v4l-5 6 5 6v4',
+      coffee: 'M17 8h1a4 4 0 0 1 0 8h-1M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V8zM7 2v3M11 2v3M15 2v3'
+    };
+    return { ic };
+  }
+}
+</script>
+
+
+</body></html>

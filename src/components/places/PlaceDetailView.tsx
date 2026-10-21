@@ -44,6 +44,11 @@ import {
   type PlaceMedia,
   type PlaceMediaCategory,
 } from '@/lib/api/placeMedia';
+import { getPlaceOpenStatus } from '@/lib/api/openingHours';
+import {
+  cafeOpenStatus,
+  type CafeOpenStatus,
+} from '@/lib/cafePresentation';
 
 export interface PlaceDetailViewProps {
   place: Place;
@@ -56,6 +61,18 @@ export interface PlaceDetailViewProps {
   /** Fallback si l’historique navigateur est vide (ex. lien direct). */
   backHref?: string;
 }
+
+const OPEN_STATUS_LABEL: Record<CafeOpenStatus, string> = {
+  open: 'Ouvert',
+  closing_soon: 'Ferme bientôt',
+  closed: 'Fermé',
+};
+
+const OPEN_STATUS_CLASS: Record<CafeOpenStatus, string> = {
+  open: 'text-ds-ok font-bold',
+  closing_soon: 'text-ds-accenttext font-bold',
+  closed: 'text-ds-text2 font-bold',
+};
 
 function timeAgo(iso: string): string {
   const minutes = Math.round((Date.now() - new Date(iso).getTime()) / 60000);
@@ -86,6 +103,10 @@ export default function PlaceDetailView({
     useState<PlaceMediaCategory>('venue');
   const [slideIndex, setSlideIndex] = useState(0);
   const galleryRef = useRef<HTMLDivElement>(null);
+  const [openMeta, setOpenMeta] = useState<{
+    status: CafeOpenStatus;
+    statusDetail?: string;
+  } | null>(null);
 
   const grouped = useMemo(() => groupPlaceMedia(media), [media]);
 
@@ -109,6 +130,17 @@ export default function PlaceDetailView({
   useEffect(() => {
     getPlaceTopTrophy(place.id).then(setTrophy);
   }, [place.id]);
+
+  useEffect(() => {
+    let cancelled = false;
+    void getPlaceOpenStatus(place.id).then((row) => {
+      if (cancelled) return;
+      setOpenMeta(cafeOpenStatus(place, row));
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [place]);
 
   // Onglet initial = première catégorie non vide
   useEffect(() => {
@@ -239,6 +271,20 @@ export default function PlaceDetailView({
         <h1 className="text-2xl font-extrabold text-ds-text tracking-tight mb-2">
           {place.name}
         </h1>
+
+        {openMeta ? (
+          <p className="text-sm text-ds-text2 mb-3">
+            <span className={OPEN_STATUS_CLASS[openMeta.status]}>
+              {OPEN_STATUS_LABEL[openMeta.status]}
+            </span>
+            {openMeta.statusDetail ? (
+              <>
+                {' '}
+                · {openMeta.statusDetail}
+              </>
+            ) : null}
+          </p>
+        ) : null}
 
         <div className="mb-3">
           <TrophyBadge

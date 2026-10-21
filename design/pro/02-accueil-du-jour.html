@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="fr"><head>
+<!-- Maquette Dropspot Pro (export Claude Design), décompressée pour lecture par Cursor. Les {{...}} sont remplis par le script text/x-dc en bas de fichier. -->
+<meta charset="utf-8">
+<title>Dropspot Pro — Accueil du jour</title>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+.board{font-family:'Figtree',system-ui,sans-serif;color:#231915}
+.th-light{--bg:#FAF7F2;--surface:#FFFFFF;--surface2:#F1ECE4;--line:#E3DACE;--text:#231915;--text2:#685A4E;--accent:#A34B1A;--onaccent:#FFFFFF;--accentsoft:#F6E5D7;--accenttext:#86390F;--ok:#2B6A47;--oksoft:#E2F0E7;--warn:#8A4B00;--warnsoft:#FBEBD2;--danger:#B3261E;--dangersoft:#FBE4E1;--ph1:#DCC6AF;--ph2:#CBBBA2;--shadow:0 6px 24px rgba(58,34,18,.14);--scrim:rgba(35,25,21,.45)}
+.th-dark{--bg:#14100D;--surface:#211914;--surface2:#2C231D;--line:#3B3029;--text:#F4EDE6;--text2:#BBAD9F;--accent:#E3905A;--onaccent:#1B0F08;--accentsoft:#3D2719;--accenttext:#F3B086;--ok:#7CC79C;--oksoft:#1B3125;--warn:#F0B467;--warnsoft:#3A2A12;--danger:#F2A097;--dangersoft:#3D1D1A;--ph1:#3A2C22;--ph2:#33291F;--shadow:0 6px 24px rgba(0,0,0,.45);--scrim:rgba(0,0,0,.6)}
+.desk{position:relative;width:1440px;height:900px;overflow:hidden;display:flex;background:var(--bg);color:var(--text);border-radius:16px;box-shadow:0 0 0 1px rgba(40,25,15,.10),0 24px 60px rgba(40,25,15,.14);font-family:'Figtree',system-ui,sans-serif;font-size:15px;flex:none}
+.phone{position:relative;width:390px;height:844px;overflow:hidden;border-radius:46px;background:var(--bg);color:var(--text);box-shadow:0 0 0 1px rgba(40,25,15,.10),0 24px 60px rgba(40,25,15,.16);font-family:'Figtree',system-ui,sans-serif;flex:none}
+.disp{font-family:'Bricolage Grotesque','Figtree',sans-serif;letter-spacing:-.01em}
+.ic{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.ic-s{width:16px;height:16px}
+button{font:inherit;color:inherit;cursor:pointer}
+.side{width:264px;flex:none;display:flex;flex-direction:column;gap:18px;padding:20px 16px;box-sizing:border-box;background:var(--surface);border-right:1px solid var(--line)}
+.cafesel{display:flex;align-items:center;gap:10px;padding:10px 12px 10px 10px;border-radius:14px;border:1.5px solid var(--accent);background:var(--accentsoft);color:var(--text);text-decoration:none}
+.av{display:flex;align-items:center;justify-content:center;flex:none;width:40px;height:40px;border-radius:10px;font-family:'Bricolage Grotesque',sans-serif;font-weight:800;font-size:15px}
+.av1{background:var(--accent);color:var(--onaccent)}.av2{background:var(--ok);color:var(--bg)}.av3{background:var(--surface2);color:var(--text2)}
+.navi{display:flex;align-items:center;gap:12px;height:42px;padding:0 12px;border-radius:12px;font-size:15px;font-weight:600;color:var(--text2);text-decoration:none}
+.navon{background:var(--surface2);color:var(--text)}
+.main{flex:1;min-width:0;display:flex;flex-direction:column}
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:16px;height:84px;padding:0 32px;border-bottom:1px solid var(--line);flex:none;box-sizing:border-box}
+.h1{margin:0;font-size:26px;font-weight:800}
+.sub{margin:2px 0 0;font-size:14px;color:var(--text2)}
+.content{flex:1;min-height:0;padding:24px 32px;display:flex;flex-direction:column;gap:20px;overflow:hidden}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:18px}
+.h2{margin:0;font-size:18px;font-weight:700}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:44px;padding:0 18px;border:none;border-radius:12px;font-size:15px;font-weight:700;text-decoration:none;box-sizing:border-box;white-space:nowrap;flex:none}
+.btn-sm{height:36px;padding:0 12px;font-size:14px;border-radius:10px}
+.btn-main{background:var(--accent);color:var(--onaccent)}
+.btn-tonal{background:var(--accentsoft);color:var(--accenttext)}
+.btn-out{background:var(--surface);color:var(--text);border:1.5px solid var(--line)}
+.btn-ghost{background:transparent;color:var(--text)}
+.ibtn{position:relative;display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;padding:0;border-radius:12px;border:1px solid var(--line);background:var(--surface);color:var(--text);flex:none}
+.badge-dot{position:absolute;top:9px;right:10px;width:9px;height:9px;border-radius:5px;background:var(--accent);border:2px solid var(--surface)}
+.tag{display:inline-flex;align-items:center;gap:5px;height:26px;padding:0 10px;border-radius:13px;font-size:13px;font-weight:700;white-space:nowrap}
+.t-live{background:var(--accent);color:var(--onaccent)}.t-sched{background:var(--surface2);color:var(--text)}.t-done{background:var(--surface2);color:var(--text2)}
+.t-ok{background:var(--oksoft);color:var(--ok)}.t-warn{background:var(--warnsoft);color:var(--warn)}.t-danger{background:var(--dangersoft);color:var(--danger)}
+.plan{display:inline-flex;align-items:center;gap:4px;height:24px;padding:0 9px;border-radius:12px;font-size:12px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;white-space:nowrap;box-sizing:border-box}
+.p-free{border:1.5px solid var(--line);color:var(--text2)}.p-pro{background:var(--text);color:var(--bg)}
+.hint{font-size:13px;color:var(--text2)}
+.timer{font-variant-numeric:tabular-nums}
+.track{height:8px;border-radius:4px;background:var(--surface2);overflow:hidden}
+.bar{height:100%;border-radius:4px;background:var(--accent)}
+.stat{display:flex;flex-direction:column;gap:4px;padding:18px 20px}
+.num{font-family:'Bricolage Grotesque',sans-serif;font-size:34px;font-weight:800;line-height:1}
+.lrow{display:flex;align-items:center;gap:14px;min-height:56px;padding:0 18px}
+.lrow + .lrow{border-top:1px solid var(--line)}
+.dot{display:flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:18px;flex:none}
+.safe{height:54px;flex:none}
+.mnav{position:absolute;left:0;right:0;bottom:0;height:88px;display:flex;align-items:flex-start;padding:6px 16px 0;box-sizing:border-box;background:var(--surface);border-top:1px solid var(--line);z-index:5}
+.mtab{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;flex:1;height:50px;text-decoration:none;font-size:12px;font-weight:600;color:var(--text2)}
+.mtab-on{color:var(--accent)}
+.mscan{display:flex;flex-direction:column;align-items:center;gap:4px;flex:1;margin-top:-30px;text-decoration:none;font-size:12px;font-weight:700;color:var(--text)}
+.mscan-c{display:flex;align-items:center;justify-content:center;width:64px;height:64px;border-radius:32px;background:var(--accent);color:var(--onaccent);box-shadow:var(--shadow);border:4px solid var(--bg)}
+.home{position:absolute;left:50%;bottom:8px;transform:translateX(-50%);width:134px;height:5px;border-radius:3px;background:var(--text);z-index:6}
+.mcafe{display:inline-flex;align-items:center;gap:8px;height:44px;padding:0 12px 0 6px;border-radius:22px;border:1.5px solid var(--accent);background:var(--accentsoft);color:var(--text);font-size:15px;font-weight:700;text-decoration:none}
+.vlabel{font-size:16px;font-weight:600;color:#5A4E45}
+</style>
+</helmet>
+<div class="board" style="width: 3956px; height: 1130px; box-sizing: border-box; padding: 56px 64px; background: #ECE8E2; display: flex; flex-direction: column; gap: 28px">
+<div style="display: flex; align-items: baseline; gap: 18px">
+<h1 class="disp" style="margin: 0; font-size: 44px; font-weight: 800; color: #231915">Pro 2 · Accueil du jour</h1>
+<p style="margin: 0; font-size: 18px; color: #5A4E45">Ce qui se passe aujourd'hui dans ton café, en un regard. Les vraies statistiques restent dans l'ERP.</p>
+</div>
+<div style="display: flex; gap: 56px; align-items: flex-start">
+<sc-for list="{{desks}}" as="p" hint-placeholder-count="2">
+<div style="display: flex; flex-direction: column; gap: 14px">
+<div class="vlabel">{{p.label}}</div>
+<div class="{{p.cls}}">
+<aside class="side">
+<div style="display: flex; align-items: baseline; justify-content: space-between; padding: 2px 6px 0"><span class="disp" style="font-size: 23px; font-weight: 800">Dropspot</span><span class="hint" style="font-weight: 700">Espace gérant</span></div>
+<a href="ProSelecteur.dc.html" class="cafesel" aria-label="Établissement actif : Tech Café Sophia. Changer d'établissement">
+<span class="av av1">TC</span>
+<span style="display: flex; flex-direction: column; min-width: 0; flex: 1"><span style="font-size: 15px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">Tech Café Sophia</span><span class="hint">Biot · 1 café sur 2</span></span>
+<svg class="ic" sc-camel-view-box="0 0 24 24" aria-hidden="true"><path d="{{ic.chevUD}}"></path></svg>
+</a>
+<nav aria-label="Menu" style="display: flex; flex-direction: column; gap: 2px">
+<sc-for list="{{nav}}" as="n" hint-placeholder-count="7"><a class="{{n.cls}}" href="{{n.href}}"><svg class="ic" sc-camel-view-box="0 0 24 24" aria-hidden="true"><path d="{{n.d}}"></path></svg>{{n.label}}</a></sc-for>
+</nav>
+<div style="margin-top: auto; display: flex; flex-direction: column; gap: 12px">
+<div style="padding: 14px; border-radius: 14px; background: var(--surface2); display: flex; flex-direction: column; gap: 8px">
+<div style="display: flex; align-items: center; gap: 8px"><span class="plan p-free">Gratuit</span><span class="hint">Ton offre</span></div>
+<a href="ProAbonnement.dc.html" style="font-size: 14px; font-weight: 700; color: var(--accent); text-decoration: none">Découvrir Pro →</a>
+</div>
+<div style="display: flex; align-items: center; gap: 10px; padding: 4px 6px"><span class="av av3" style="width: 34px; height: 34px; border-radius: 17px; font-size: 14px">N</span><span style="font-size: 14px; font-weight: 600">Niss Mrad</span></div>
+</div>
+</aside>
+<div class="main">
+<header class="topbar">
+<div><h2 class="h1 disp">Bonjour Niss</h2><p class="sub">Tech Café Sophia · lundi 19 octobre</p></div>
+<div style="display: flex; align-items: center; gap: 10px">
+<a href="#erp" class="btn btn-ghost" style="color: var(--accent)">Voir les statistiques<svg class="ic ic-s" sc-camel-view-box="0 0 24 24" aria-hidden="true"><path d="{{ic.ext}}"></path></svg></a>
+<button class="ibtn" aria-label="Notifications, 3 nouvelles"><svg class="ic" sc-camel-view-box="0 0 24 24" aria-hidden="true"><path d="{{ic.bell}}"></path></svg><span class="badge-dot"></span></button>
+<a href="ProDropCreer.dc.html" class="btn btn-main"><svg class="ic" sc-camel-view-box="0 0 24 24" aria-hidden="true"><path d="{{ic.plus}}"></path></svg>Créer un drop</a>
+</div>
+</header>
+<div class="content">
+<div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px">
+<div class="card stat"><span class="hint" style="font-size: 14px; font-weight: 600">Drops utilisés aujourd'hui</span><span class="num">14</span></div>
+<div class="card stat"><span class="hint" style="font-size: 14px; font-weight: 600">Drops en cours</span><span class="num">2</span></div>
+<div class="card stat"><span class="hint" style="font-size: 14px; font-weight: 600">Infos à regarder</span><span class="num">3</span></div>
+</div>
+<div style="display: flex; gap: 20px; flex: 1; min-height: 0">
+<div style="flex: 3; min-width: 0; display: flex; flex-direction: column; gap: 14px">
+<div style="display: flex; align-items: center; justify-content: space-between"><h3 class="h2 disp">En cours</h3><a href="ProDrops.dc.html" style="font-size: 14px; font-weight: 700; color: var(--accent); text-decoration: none">Tous les drops</a></div>
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px">
+<sc-for list="{{live}}" as="d" hint-placeholder-count="2">
+<article class="card" style="padding: 16px; display: flex; flex-direction: column; gap: 12px">
+<div style="display: flex; align-items: center; gap: 8px"><span class="tag t-live">En cours</span><span class="timer" style="font-size: 15px; font-weight: 700; display: inline-flex; align-items: center; gap: 5px"><svg class="ic ic-s" sc-camel-view-box="0 0 24 24" aria-hidden="true"><path d="{{ic.clock}}"></path></svg>{{d.left}}</span><span class="hint" style="margin-left: auto">fin à {{d.end}}</span></div>
+<span class="disp" style="font-size: 18px; font-weight: 700">{{d.title}}</span>
+<div style="display: flex; flex-direction: column; gap: 6px"><div class="track"><div class="bar" style="width: {{d.pct}}"></div></div><span class="hint">{{d.stock}}</span></div>
+<div style="display: flex; gap: 8px"><button class="btn btn-sm btn-out">Arrêter</button><button class="btn btn-sm btn-ghost">Dupliquer</button></div>
+</article>
+</sc-for>
+</div>
+<div style="display: flex; align-items: center; justify-content: space-between; margin-top: 4px"><h3 class="h2 disp">Utilisés aujourd'hui</h3><span class="hint">Heure de Paris</span></div>
+<div class="card" style="flex: 1; min-height: 0; overflow: hidden">
+<sc-for list="{{used}}" as="u" hint-placeholder-count="4">
+<div class="lrow"><span class="timer" style="width: 52px; font-weight: 700">{{u.time}}</span><span style="flex: 1; font-weight: 600">{{u.drop}}</span><span class="hint" style="width: 140px">Code {{u.code}}</span><span class="hint" style="width: 120px">par {{u.by}}</span><span class="tag t-ok"><svg class="ic ic-s" sc-camel-view-box="0 0 24 24" aria-hidden="true"><path d="{{ic.check}}"></path></svg>Validé</span></div>
+</sc-for>
+</div>
+</div>
+<div style="flex: 2; min-width: 0; display: flex; flex-direction: column; gap: 14px">
+<div style="display: flex; align-items: center; justify-content: space-between"><h3 class="h2 disp">Signalé par la communauté</h3><a href="ProSpecificites.dc.html" style="font-size: 14px; font-weight: 700; color: var(--accent); text-decoration: none">Tout voir</a></div>
+<div class="card">
+<sc-for list="{{reports}}" as="r" hint-placeholder-count="3">
+<div class="lrow" style="align-items: flex-start; padding-top: 14px; padding-bottom: 14px">
+<span class="dot {{r.dotCls}}"><svg class="ic ic-s" sc-camel-view-box="0 0 24 24" aria-hidden="true"><path d="{{r.d}}"></path></svg></span>
+<div style="display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 0"><span style="font-weight: 700">{{r.title}}</span><span style="font-size: 14px; color: var(--text2)">{{r.text}}</span><span class="hint">{{r.meta}}</span></div>
+<a href="ProSpecificites.dc.html" class="btn btn-sm btn-out">Voir</a>
+</div>
+</sc-for>
+</div>
+<div class="card" style="padding: 16px; display: flex; align-items: center; gap: 12px; background: var(--surface2); border: none">
+<svg class="ic" sc-camel-view-box="0 0 24 24" aria-hidden="true"><path d="{{ic.info}}"></path></svg>
+<span style="flex: 1; font-size: 14px; line-height: 1.4">Tu ne valides pas les infos toi-même : c'est la communauté qui confirme.</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</sc-for>
+<sc-for list="{{phones}}" as="p" hint-placeholder-count="2">
+<div style="display: flex; flex-direction: column; gap: 14px">
+<div class="vlabel">{{p.label}}</div>
+<div class="{{p.cls}}">
+<div style="display: flex; flex-direction: column; gap: 16px; padding: 0 16px">
+<div class="safe"></div>
+<div style="display: flex; align-items: center; justify-content: space-between">
+<a href="ProSelecteur.dc.html" class="mcafe" aria-label="Établissement actif : Tech Café Sophia. Changer"><span class="av av1" style="width: 32px; height: 32px; border-radius: 16px; font-size: 13px">TC</span>Tech Café Sophia<svg class="ic ic-s" sc-camel-view-box="0 0 24 24" aria-hidden="true"><path d="{{ic.chevUD}}"></path></svg></a>
+<button class="ibtn" aria-label="Notifications"><svg class="ic" sc-camel-view-box="0 0 24 24" aria-hidden="true"><path d="{{ic.bell}}"></path></svg><span class="badge-dot"></span></button>
+</div>
+<div style="display: flex; align-items: flex-end; justify-content: space-between">
+<div><h2 class="disp" style="margin: 0; font-size: 32px; font-weight: 800">Aujourd'hui</h2><span class="hint" style="font-size: 14px">lundi 19 octobre</span></div>
+<a href="ProDropCreer.dc.html" class="btn btn-sm btn-tonal"><svg class="ic ic-s" sc-camel-view-box="0 0 24 24" aria-hidden="true"><path d="{{ic.plus}}"></path></svg>Drop rapide</a>
+</div>
+<div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px">
+<div class="card" style="padding: 12px; display: flex; flex-direction: column; gap: 2px"><span class="num" style="font-size: 26px">14</span><span class="hint">utilisés</span></div>
+<div class="card" style="padding: 12px; display: flex; flex-direction: column; gap: 2px"><span class="num" style="font-size: 26px">2</span><span class="hint">en cours</span></div>
+<div class="card" style="padding: 12px; display: flex; flex-direction: column; gap: 2px"><span class="num" style="font-size: 26px">3</span><span class="hint">signalements</span></div>
+</div>
+<h3 class="h2 disp" style="font-size: 17px">En cours</h3>
+<sc-for list="{{live}}" as="d" hint-placeholder-count="2">
+<article class="card" style="padding: 14px; display: flex; flex-direction: column; gap: 10px">
+<div style="display: flex; align-items: center; gap: 8px"><span class="tag t-live">{{d.left}}</span><span class="hint" style="margin-left: auto">fin à {{d.end}}</span></div>
+<span style="font-size: 16px; font-weight: 700">{{d.title}}</span>
+<div style="display: flex; align-items: center; gap: 10px"><div class="track" style="flex: 1"><div class="bar" style="width: {{d.pct}}"></div></div><span class="hint">{{d.stockShort}}</span></div>
+</article>
+</sc-for>
+<a href="ProSpecificites.dc.html" class="card" style="display: flex; align-items: center; gap: 12px; padding: 12px 14px; color: var(--text); text-decoration: none"><span class="dot" style="background: var(--warnsoft); color: var(--warn)"><svg class="ic ic-s" sc-camel-view-box="0 0 24 24" aria-hidden="true"><path d="{{ic.wifi}}"></path></svg></span><span style="flex: 1; font-size: 15px; font-weight: 600">Wi-Fi signalé lent par 4 personnes</span><svg class="ic ic-s" sc-camel-view-box="0 0 24 24" aria-hidden="true"><path d="{{ic.chevR}}"></path></svg></a>
+</div>
+<nav class="mnav" aria-label="Navigation comptoir">
+<a href="ProAccueil.dc.html" class="mtab mtab-on"><svg class="ic" sc-camel-view-box="0 0 24 24" aria-hidden="true" style="width: 22px; height: 22px"><path d="{{ic.home}}"></path></svg>Aujourd'hui</a>
+<a href="ProValidation.dc.html" class="mscan"><span class="mscan-c"><svg class="ic" sc-camel-view-box="0 0 24 24" aria-hidden="true" style="width: 26px; height: 26px"><path d="{{ic.scan}}"></path></svg></span>Valider</a>
+<a href="ProDrops.dc.html" class="mtab"><svg class="ic" sc-camel-view-box="0 0 24 24" aria-hidden="true" style="width: 22px; height: 22px"><path d="{{ic.zap}}"></path></svg>Drops</a>
+</nav>
+<div class="home" aria-hidden="true"></div>
+</div>
+</div>
+</sc-for>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script="" data-props="{&quot;$preview&quot;:{&quot;width&quot;:3956,&quot;height&quot;:1130}}">
+class Component extends DCLogic {
+  renderVals() {
+    const ic = {
+      home: 'M3 10.5L12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z',
+      zap: 'M13 2L4 14h7l-1 8 9-12h-7l1-8z',
+      store: 'M3 9l1.5-5h15L21 9M4 9v11h16V9M3 9h18M9 20v-6h6v6',
+      specs: 'M3 6l2 2 3-3M3 13l2 2 3-3M11 6h10M11 13h10M11 20h10M4 20h3',
+      users: 'M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M13 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0zM22 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8',
+      crown: 'M3 19h18M4 8l4 4 4-7 4 7 4-4-2 9H6z',
+      gear: 'M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z',
+      chevUD: 'M7 9l5-5 5 5M7 15l5 5 5-5',
+      chevR: 'M9 18l6-6-6-6',
+      ext: 'M15 3h6v6M10 14L21 3M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6',
+      bell: 'M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.7 21a2 2 0 0 1-3.4 0',
+      plus: 'M12 5v14M5 12h14',
+      clock: 'M12 7v5l3 2M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z',
+      check: 'M20 6L9 17l-5-5',
+      info: 'M12 16v-4M12 8h.01M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z',
+      wifi: 'M2.5 8.8a14 14 0 0 1 19 0M5.5 12.2a9.5 9.5 0 0 1 13 0M8.6 15.5a5 5 0 0 1 6.8 0M12 19.2h.01',
+      plug: 'M9 2v6M15 2v6M6 8h12v4a6 6 0 0 1-12 0zM12 18v4',
+      cal: 'M8 3v3M16 3v3M4 9h16M6 5h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z',
+      scan: 'M3 7V4a1 1 0 0 1 1-1h3M17 3h3a1 1 0 0 1 1 1v3M21 17v3a1 1 0 0 1-1 1h-3M7 21H4a1 1 0 0 1-1-1v-3M7 12h10'
+    };
+    const NAV = [['Accueil', 'ProAccueil.dc.html', 'home'], ['Drops', 'ProDrops.dc.html', 'zap'], ['Établissement', 'ProFiche.dc.html', 'store'], ['Spécificités', 'ProSpecificites.dc.html', 'specs'], ['Équipe', 'ProEquipe.dc.html', 'users'], ['Abonnement', 'ProAbonnement.dc.html', 'crown'], ['Réglages', 'ProReglages.dc.html', 'gear']];
+    const nav = NAV.map(([label, href, k]) => ({ label, href, d: ic[k], cls: label === 'Accueil' ? 'navi navon' : 'navi' }));
+    const desks = [{ label: 'Ordinateur · Clair', cls: 'desk th-light' }, { label: 'Ordinateur · Sombre', cls: 'desk th-dark' }];
+    const phones = [{ label: 'iPhone · Clair', cls: 'phone th-light' }, { label: 'iPhone · Sombre', cls: 'phone th-dark' }];
+    const live = [
+      { title: '−30 % sur le matcha latte', left: 'Encore 42:15', end: '16:00', pct: '40%', stock: '8 utilisés sur 20', stockShort: '8/20' },
+      { title: 'Cookie offert avec un café', left: 'Encore 2 h 05', end: '18:00', pct: '20%', stock: '6 utilisés · sans limite', stockShort: '6' }
+    ];
+    const used = [
+      { time: '14:52', drop: '−30 % sur le matcha latte', code: 'MX-4821', by: 'Léa' },
+      { time: '14:31', drop: 'Cookie offert avec un café', code: 'CK-1190', by: 'toi' },
+      { time: '13:58', drop: '−30 % sur le matcha latte', code: 'MX-7702', by: 'Léa' },
+      { time: '12:14', drop: 'Cookie offert avec un café', code: 'CK-0457', by: 'Léa' }
+    ];
+    const reports = [
+      { d: ic.wifi, dotCls: 't-warn', title: 'Wi-Fi « lent depuis ce matin »', text: 'Signalé par 4 personnes. À vérifier de ton côté.', meta: 'il y a 1 h' },
+      { d: ic.plug, dotCls: 't-ok', title: 'Nouvelle info : prises à chaque table', text: 'Proposée par un client, 2 confirmations sur 3.', meta: 'il y a 3 h' },
+      { d: ic.cal, dotCls: 't-sched', title: 'Horaires : « fermé le dimanche ? »', text: 'Question d’un client sur tes horaires.', meta: 'hier' }
+    ];
+    return { ic, nav, desks, phones, live, used, reports };
+  }
+}
+</script>
+
+
+</body></html>

@@ -1,4 +1,6 @@
 import type { Place } from "@/lib/api/places";
+import type { PlaceOpenStatusRow } from "@/lib/api/openingHours";
+import { cafeStatusFromOpenRow } from "@/lib/api/openingHours";
 import {
   isPlaceOpenNow,
   normalizeKey,
@@ -39,10 +41,16 @@ export function cafeFeatureIds(place: Place): CafeFeatureId[] {
   return ids.slice(0, 3);
 }
 
-export function cafeOpenStatus(place: Place): {
+export function cafeOpenStatus(
+  place: Place,
+  openRow?: PlaceOpenStatusRow | null
+): {
   status: CafeOpenStatus;
   statusDetail?: string;
 } {
+  const fromRpc = cafeStatusFromOpenRow(openRow);
+  if (fromRpc) return fromRpc;
+
   const open = isPlaceOpenNow(place);
   return {
     status: open ? "open" : "closed",

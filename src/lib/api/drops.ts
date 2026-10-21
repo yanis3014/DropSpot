@@ -9,7 +9,7 @@ import {
   getActiveFlashDrops,
   normalizeFlashDrop,
   type FlashDrop,
-} from '@/app/dashboard-pro/lib/api/flashDrops';
+} from '@/app/(pro)/dashboard-pro/lib/api/flashDrops';
 export type { DropTypeId };
 
 export interface Drop {

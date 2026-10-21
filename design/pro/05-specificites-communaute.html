@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="fr"><head>
+<!-- Maquette Dropspot Pro (export Claude Design), décompressée pour lecture par Cursor. Les {{...}} sont remplis par le script text/x-dc en bas de fichier. -->
+<meta charset="utf-8">
+<title>Dropspot Pro — Spécificités et communauté</title>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+.board{font-family:'Figtree',system-ui,sans-serif;color:#231915}
+.th-light{--bg:#FAF7F2;--surface:#FFFFFF;--surface2:#F1ECE4;--line:#E3DACE;--text:#231915;--text2:#685A4E;--accent:#A34B1A;--onaccent:#FFFFFF;--accentsoft:#F6E5D7;--accenttext:#86390F;--ok:#2B6A47;--oksoft:#E2F0E7;--warn:#8A4B00;--warnsoft:#FBEBD2;--danger:#B3261E;--dangersoft:#FBE4E1;--shadow:0 10px 32px rgba(58,34,18,.18);--scrim:rgba(35,25,21,.45)}
+.th-dark{--bg:#14100D;--surface:#211914;--surface2:#2C231D;--line:#3B3029;--text:#F4EDE6;--text2:#BBAD9F;--accent:#E3905A;--onaccent:#1B0F08;--accentsoft:#3D2719;--accenttext:#F3B086;--ok:#7CC79C;--oksoft:#1B3125;--warn:#F0B467;--warnsoft:#3A2A12;--danger:#F2A097;--dangersoft:#3D1D1A;--shadow:0 10px 32px rgba(0,0,0,.55);--scrim:rgba(0,0,0,.6)}
+.desk{position:relative;width:1440px;height:900px;overflow:hidden;display:flex;background:var(--bg);color:var(--text);border-radius:16px;box-shadow:0 0 0 1px rgba(40,25,15,.10),0 24px 60px rgba(40,25,15,.14);font-family:'Figtree',system-ui,sans-serif;font-size:15px;flex:none}
+.disp{font-family:'Bricolage Grotesque','Figtree',sans-serif;letter-spacing:-.01em}
+.ic{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.ic-s{width:16px;height:16px}
+button{font:inherit;color:inherit;cursor:pointer}
+input{font:inherit;color:var(--text)}input::placeholder{color:var(--text2)}
+.side{width:264px;flex:none;display:flex;flex-direction:column;gap:18px;padding:20px 16px;box-sizing:border-box;background:var(--surface);border-right:1px solid var(--line)}
+.cafesel{display:flex;align-items:center;gap:10px;padding:10px 12px 10px 10px;border-radius:14px;border:1.5px solid var(--accent);background:var(--accentsoft);color:var(--text);text-decoration:none}
+.av{display:flex;align-items:center;justify-content:center;flex:none;width:40px;height:40px;border-radius:10px;font-family:'Bricolage Grotesque',sans-serif;font-weight:800;font-size:15px}
+.av1{background:var(--accent);color:var(--onaccent)}.av3{background:var(--surface2);color:var(--text2)}
+.navi{display:flex;align-items:center;gap:12px;height:42px;padding:0 12px;border-radius:12px;font-size:15px;font-weight:600;color:var(--text2);text-decoration:none}
+.navon{background:var(--surface2);color:var(--text)}
+.main{flex:1;min-width:0;display:flex;flex-direction:column}
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:16px;height:84px;padding:0 32px;border-bottom:1px solid var(--line);flex:none;box-sizing:border-box}
+.h1{margin:0;font-size:26px;font-weight:800}
+.sub{margin:2px 0 0;font-size:14px;color:var(--text2)}
+.content{flex:1;min-height:0;padding:24px 32px;display:flex;flex-direction:column;gap:16px;overflow:hidden}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:18px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:44px;padding:0 18px;border:none;border-radius:12px;font-size:15px;font-weight:700;text-decoration:none;box-sizing:border-box;white-space:nowrap;flex:none}
+.btn-sm{height:36px;padding:0 12px;font-size:14px;border-radius:10px}
+.btn-main{background:var(--accent);color:var(--onaccent)}
+.btn-out{background:var(--surface);color:var(--text);border:1.5px solid var(--line)}
+.btn-ghost{background:transparent;color:var(--text)}
+.tag{display:inline-flex;align-items:center;gap:5px;height:26px;padding:0 10px;border-radius:13px;font-size:13px;font-weight:700;white-space:nowrap}
+.t-ok{background:var(--oksoft);color:var(--ok)}.t-warn{background:var(--warnsoft);color:var(--warn)}.t-danger{background:var(--dangersoft);color:var(--danger)}
+.plan{display:inline-flex;align-items:center;gap:4px;height:24px;padding:0 9px;border-radius:12px;font-size:12px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;white-space:nowrap;box-sizing:border-box}
+.p-free{border:1.5px solid var(--line);color:var(--text2)}
+.hint{font-size:13px;color:var(--text2)}
+.chip{display:inline-flex;align-items:center;gap:6px;height:34px;padding:0 14px;border-radius:17px;border:1px solid var(--line);font-size:14px;font-weight:600;white-space:nowrap;box-sizing:border-box}
+.chip-on{background:var(--accentsoft);color:var(--accenttext);border-color:transparent}.chip-off{background:var(--surface);color:var(--text)}
+.srow{display:grid;grid-template-columns:44px minmax(0,1fr) 230px 190px 200px;align-items:center;gap:16px;padding:14px 20px;min-height:72px;box-sizing:border-box}
+.srow + .srow{border-top:1px solid var(--line)}
+.sico{display:flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:12px;background:var(--accentsoft);color:var(--accenttext)}
+.pips{display:flex;gap:4px}
+.pip{width:22px;height:6px;border-radius:3px;background:var(--surface2)}
+.pip-on{background:var(--ok)}
+.scrim{position:absolute;inset:0;background:var(--scrim);z-index:20}
+.modal{position:absolute;z-index:21;left:50%;top:50%;transform:translate(-50%,-50%);width:560px;background:var(--surface);border-radius:22px;box-shadow:var(--shadow);padding:28px;display:flex;flex-direction:column;gap:16px;box-sizing:border-box}
+.inp{height:44px;padding:0 14px;border-radius:12px;border:1px solid var(--line);background:var(--bg);font-size:15px;box-sizing:border-box;width:100%;outline:none}
+.vlabel{font-size:16px;font-weight:600;color:#5A4E45}
+</style>
+</helmet>
+<div class="board" style="width: 3064px; height: 1130px; box-sizing: border-box; padding: 56px 64px; background: #ECE8E2; display: flex; flex-direction: column; gap: 28px">
+<div style="display: flex; align-items: baseline; gap: 18px">
+<h1 class="disp" style="margin: 0; font-size: 44px; font-weight: 800; color: #231915">Pro 5 · Spécificités et communauté</h1>
+<p style="margin: 0; font-size: 18px; color: #5A4E45">Le gérant propose ou conteste ; seuls les clients confirment. Chaque ligne dit clairement où en est l'info.</p>
+</div>
+<div style="display: flex; gap: 56px; align-items: flex-start">
+<sc-for list="{{desks}}" as="p" hint-placeholder-count="2">
+<div style="display: flex; flex-direction: column; gap: 14px">
+<div class="vlabel">{{p.label}}</div>
+<div class="{{p.cls}}">
+<aside class="side">
+<div style="display: flex; align-items: baseline; justify-content: space-between; padding: 2px 6px 0"><span class="disp" style="font-size: 23px; font-weight: 800">Dropspot</span><span class="hint" style="font-weight: 700">Espace gérant</span></div>
+<a href="ProSelecteur.dc.html" class="cafesel" aria-label="Établissement actif : Tech Café Sophia. Changer d'établissement">
+<span class="av av1">TC</span>
+<span style="display: flex; flex-direction: column; min-width: 0; flex: 1"><span style="font-size: 15px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">Tech Café Sophia</span><span class="hint">Biot · 1 café sur 2</span></span>
+<svg class="ic" sc-camel-view-box="0 0 24 24" aria-hidden="true"><path d="{{ic.chevUD}}"></path></svg>
+</a>
+<nav aria-label="Menu" style="display: flex; flex-direction: column; gap: 2px">
+<sc-for list="{{nav}}" as="n" hint-placeholder-count="7"><a class="{{n.cls}}" href="{{n.href}}"><svg class="ic" sc-camel-view-box="0 0 24 24" aria-hidden="true"><path d="{{n.d}}"></path></svg>{{n.label}}</a></sc-for>
+</nav>
+<div style="margin-top: auto; display: flex; flex-direction: column; gap: 12px">
+<div style="padding: 14px; border-radius: 14px; background: var(--surface2); display: flex; flex-direction: column; gap: 8px">
+<div style="display: flex; align-items: center; gap: 8px"><span class="plan p-free">Gratuit</span><span class="hint">Ton offre</span></div>
+<a href="ProAbonnement.dc.html" style="font-size: 14px; font-weight: 700; color: var(--accent); text-decoration: none">Découvrir Pro →</a>
+</div>
+<div style="display: flex; align-items: center; gap: 10px; padding: 4px 6px"><span class="av av3" style="width: 34px; height: 34px; border-radius: 17px; font-size: 14px">N</span><span style="font-size: 14px; font-weight: 600">Niss Mrad</span></div>
+</div>
+</aside>
+<div class="main">
+<header class="topbar">
+<div><h2 class="h1 disp">Spécificités</h2><p class="sub">Tech Café Sophia · ce que la communauté a confirmé</p></div>
+<button class="btn btn-main"><svg class="ic" sc-camel-view-box="0 0 24 24" aria-hidden="true"><path d="{{ic.plus}}"></path></svg>Proposer une info</button>
+</header>
+<div class="content">
+<div style="display: flex; align-items: center; gap: 14px; padding: 14px 18px; border-radius: 16px; background: var(--surface2)">
+<svg class="ic" sc-camel-view-box="0 0 24 24" aria-hidden="true"><path d="{{ic.users}}"></path></svg>
+<p style="margin: 0; flex: 1; font-size: 15px; line-height: 1.45">C'est la communauté qui confirme. Tu peux proposer une info ou contester une info fausse, mais pas valider toi-même.</p>
+<span class="hint" style="font-weight: 600">Confirmée à partir de 3 clients</span>
+</div>
+<div style="display: flex; gap: 8px"><button class="chip chip-on" aria-pressed="true">Toutes · 6</button><button class="chip chip-off" aria-pressed="false">Confirmées · 3</button><button class="chip chip-off" aria-pressed="false">En attente · 2</button><button class="chip chip-off" aria-pressed="false">Contestées · 1</button></div>
+<div class="card" style="flex: 1; min-height: 0; overflow: hidden">
+<div class="srow" style="min-height: 44px; padding-top: 10px; padding-bottom: 10px; font-size: 13px; font-weight: 700; color: var(--text2)"><span></span><span>Info</span><span>Confirmations</span><span>Statut</span><span></span></div>
+<sc-for list="{{specs}}" as="s" hint-placeholder-count="6">
+<div class="srow">
+<span class="sico"><svg class="ic" sc-camel-view-box="0 0 24 24" aria-hidden="true"><path d="{{s.d}}"></path></svg></span>
+<div style="display: flex; flex-direction: column; gap: 3px; min-width: 0"><span style="font-size: 16px; font-weight: 700">{{s.name}} · {{s.value}}</span><span class="hint">{{s.note}}</span></div>
+<div style="display: flex; flex-direction: column; gap: 6px"><div class="pips"><span class="{{s.p1}}"></span><span class="{{s.p2}}"></span><span class="{{s.p3}}"></span></div><span style="font-size: 14px; font-weight: 600">{{s.conf}}</span></div>
+<span><span class="tag {{s.tCls}}"><svg class="ic ic-s" sc-camel-view-box="0 0 24 24" aria-hidden="true"><path d="{{s.tIcon}}"></path></svg>{{s.status}}</span></span>
+<span style="display: flex; justify-content: flex-end"><button class="btn btn-sm {{s.aCls}}">{{s.action}}</button></span>
+</div>
+</sc-for>
+</div>
+</div>
+</div>
+<sc-if value="{{p.modal}}" hint-placeholder-val="{{false}}">
+<div class="scrim"></div>
+<div class="modal" role="dialog" aria-label="Proposer une info">
+<div style="display: flex; align-items: center; justify-content: space-between"><h3 class="disp" style="margin: 0; font-size: 22px; font-weight: 800">Proposer une info</h3><button class="btn btn-sm btn-ghost" aria-label="Fermer"><svg class="ic" sc-camel-view-box="0 0 24 24" aria-hidden="true"><path d="{{ic.x}}"></path></svg></button></div>
+<div style="display: flex; flex-direction: column; gap: 8px"><span style="font-size: 14px; font-weight: 700">Catégorie</span><div style="display: flex; gap: 8px; flex-wrap: wrap"><button class="chip chip-off">Wi-Fi</button><button class="chip chip-off">Matcha</button><button class="chip chip-off">Ambiance</button><button class="chip chip-on" aria-pressed="true">Activités</button><button class="chip chip-off">Prises</button><button class="chip chip-off">Autre</button></div></div>
+<label style="display: flex; flex-direction: column; gap: 8px; font-size: 14px; font-weight: 700">Ce que les clients doivent savoir<input class="inp" value="Quiz musical le mardi à 19 h"></label>
+<div style="display: flex; gap: 10px; padding: 12px 14px; border-radius: 12px; background: var(--warnsoft); color: var(--warn); font-size: 14px; font-weight: 600; line-height: 1.4"><svg class="ic ic-s" sc-camel-view-box="0 0 24 24" aria-hidden="true" style="margin-top: 2px"><path d="{{ic.clock}}"></path></svg>Elle s'affichera « En attente » jusqu'à ce que 3 clients la confirment sur place.</div>
+<div style="display: flex; justify-content: flex-end; gap: 10px"><button class="btn btn-ghost">Annuler</button><button class="btn btn-main">Envoyer à la communauté</button></div>
+</div>
+</sc-if>
+</div>
+</div>
+</sc-for>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script="" data-props="{&quot;$preview&quot;:{&quot;width&quot;:3064,&quot;height&quot;:1130}}">
+class Component extends DCLogic {
+  renderVals() {
+    const ic = {
+      home: 'M3 10.5L12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z',
+      zap: 'M13 2L4 14h7l-1 8 9-12h-7l1-8z',
+      store: 'M3 9l1.5-5h15L21 9M4 9v11h16V9M3 9h18M9 20v-6h6v6',
+      specs: 'M3 6l2 2 3-3M3 13l2 2 3-3M11 6h10M11 13h10M11 20h10M4 20h3',
+      users: 'M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M13 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0zM22 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8',
+      crown: 'M3 19h18M4 8l4 4 4-7 4 7 4-4-2 9H6z',
+      gear: 'M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z',
+      chevUD: 'M7 9l5-5 5 5M7 15l5 5 5-5',
+      plus: 'M12 5v14M5 12h14',
+      x: 'M18 6L6 18M6 6l12 12',
+      check: 'M20 6L9 17l-5-5',
+      clock: 'M12 7v5l3 2M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z',
+      flag: 'M4 22V4M4 4h13l-2 4 2 4H4',
+      wifi: 'M2.5 8.8a14 14 0 0 1 19 0M5.5 12.2a9.5 9.5 0 0 1 13 0M8.6 15.5a5 5 0 0 1 6.8 0M12 19.2h.01',
+      leaf: 'M5 20c0-8.5 5.5-15 15-15 0 9.5-6.5 15-15 15zM5 20l8-8',
+      moon: 'M20 14.5A8 8 0 0 1 9.5 4 8 8 0 1 0 20 14.5z',
+      cal: 'M8 3v3M16 3v3M4 9h16M6 5h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z',
+      plug: 'M9 2v6M15 2v6M6 8h12v4a6 6 0 0 1-12 0zM12 18v4',
+      sun: 'M12 17a5 5 0 1 0 0-10 5 5 0 0 0 0 10zM12 1v2M12 21v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M1 12h2M21 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4'
+    };
+    const NAV = [['Accueil', 'ProAccueil.dc.html', 'home'], ['Drops', 'ProDrops.dc.html', 'zap'], ['Établissement', 'ProFiche.dc.html', 'store'], ['Spécificités', 'ProSpecificites.dc.html', 'specs'], ['Équipe', 'ProEquipe.dc.html', 'users'], ['Abonnement', 'ProAbonnement.dc.html', 'crown'], ['Réglages', 'ProReglages.dc.html', 'gear']];
+    const nav = NAV.map(([label, href, k]) => ({ label, href, d: ic[k], cls: label === 'Spécificités' ? 'navi navon' : 'navi' }));
+    const desks = [{ label: 'Ordinateur · Clair', cls: 'desk th-light', modal: false }, { label: 'Ordinateur · Sombre · proposer une info', cls: 'desk th-dark', modal: true }];
+    const pips = (n) => ({ p1: n >= 1 ? 'pip pip-on' : 'pip', p2: n >= 2 ? 'pip pip-on' : 'pip', p3: n >= 3 ? 'pip pip-on' : 'pip' });
+    const ok = { tCls: 't-ok', tIcon: ic.check, status: 'Confirmée' };
+    const wait = { tCls: 't-warn', tIcon: ic.clock, status: 'En attente' };
+    const contest = { tCls: 't-danger', tIcon: ic.flag, status: 'Contestée par toi' };
+    const specs = [
+      { d: ic.wifi, name: 'Wi-Fi', value: 'Fiable, 45 Mb/s', note: '4 clients le trouvent lent aujourd’hui', conf: '12 confirmations', action: 'Contester', aCls: 'btn-out', ...pips(3), ...ok },
+      { d: ic.leaf, name: 'Matcha', value: 'Latte et nature', note: 'Dernière confirmation il y a 2 h', conf: '8 confirmations', action: 'Contester', aCls: 'btn-out', ...pips(3), ...ok },
+      { d: ic.moon, name: 'Ambiance', value: 'Calme le matin', note: 'Dernière confirmation hier', conf: '5 confirmations', action: 'Contester', aCls: 'btn-out', ...pips(3), ...ok },
+      { d: ic.cal, name: 'Activités', value: 'Jeux le jeudi soir', note: 'Proposée par toi · tu ne peux pas la confirmer', conf: '1 sur 3', action: 'Retirer', aCls: 'btn-ghost', ...pips(1), ...wait },
+      { d: ic.plug, name: 'Prises', value: 'À chaque table', note: 'Proposée par un client', conf: '2 sur 3', action: 'Contester', aCls: 'btn-out', ...pips(2), ...wait },
+      { d: ic.sun, name: 'Terrasse', value: 'Oui', note: 'Les clients votent pour la retirer ou la garder', conf: '2 votes pour retirer', action: 'Annuler', aCls: 'btn-ghost', ...pips(2), ...contest }
+    ];
+    return { ic, nav, desks, specs };
+  }
+}
+</script>
+
+
+</body></html>

@@ -47,7 +47,6 @@ import {
   type LatLng,
 } from "@/lib/geo";
 import { useTheme } from "@/lib/theme";
-import MapSkeleton from "@/components/map/MapSkeleton";
 import MapPin from "@/components/ui/MapPin";
 import CafeRow, { type CafeRowFeature } from "@/components/ui/CafeRow";
 import Chip from "@/components/ui/Chip";
@@ -171,7 +170,6 @@ export default function PremiumMap() {
   const [places, setPlaces] = useState<Place[]>(
     () => peekCache<Place[]>("places:full") ?? []
   );
-  const [loading, setLoading] = useState(() => !peekCache("places:full"));
   const [error, setError] = useState<string | null>(null);
   const [userCoords, setUserCoords] = useState<LatLng | null>(null);
   const [geoDenied, setGeoDenied] = useState(false);
@@ -194,12 +192,13 @@ export default function PremiumMap() {
 
   const mapStyle = theme === "dark" ? MAP_STYLE_DARK : MAP_STYLE_LIGHT;
 
+  // The map starts right away; markers appear once places arrive, so Mapbox
+  // and the Supabase query load in parallel instead of one after the other.
   useEffect(() => {
     let cancelled = false;
 
     const fetchPlaces = async () => {
       try {
-        if (!peekCache("places:full")) setLoading(true);
         const data = await getPlaces({ withCoordinatesOnly: true });
         if (cancelled) return;
         setPlaces(data);
@@ -208,8 +207,6 @@ export default function PremiumMap() {
       } catch (err) {
         console.error("Error fetching places:", err);
         if (!cancelled) setError("Impossible de charger les cafés");
-      } finally {
-        if (!cancelled) setLoading(false);
       }
     };
 
@@ -380,10 +377,6 @@ export default function PremiumMap() {
     );
   }
 
-  if (loading && places.length === 0) {
-    return <MapSkeleton />;
-  }
-
   if (error && places.length === 0) {
     return (
       <div className="flex h-full w-full flex-col items-center justify-center bg-ds-bg p-6">
@@ -402,6 +395,9 @@ export default function PremiumMap() {
       <Map
         key={mapStyle}
         ref={mapRef}
+        // Keep the Mapbox instance (WebGL context, style, tiles) when leaving
+        // the Carte tab, so coming back does not rebuild the map from scratch.
+        reuseMaps
         mapboxAccessToken={MAPBOX_TOKEN}
         initialViewState={{
           longitude: 7.262,

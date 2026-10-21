@@ -167,10 +167,10 @@ begin
     v_out := '';
     for v_i in 1..2 loop
       v_out := v_out || substr(v_letters, 1 + floor(random() * length(v_letters))::integer, 1);
-    end for;
+    end loop;
     for v_i in 1..4 loop
       v_out := v_out || substr(v_digits, 1 + floor(random() * length(v_digits))::integer, 1);
-    end for;
+    end loop;
 
     exit when not exists (
       select 1 from public.drop_codes dc where dc.code = v_out::char(6)
@@ -527,8 +527,10 @@ begin
     return json_build_object('ok', false, 'error', 'forbidden');
   end if;
 
+  -- is_active = false too, so the client feed (is_active filter) and the
+  -- legacy PIN validation stop serving the drop as well.
   update public.flash_drops
-  set stopped_at = coalesce(stopped_at, now()), updated_at = now()
+  set stopped_at = coalesce(stopped_at, now()), is_active = false, updated_at = now()
   where id = p_drop;
 
   return json_build_object('ok', true, 'flash_drop_id', p_drop, 'stopped_at', now());
@@ -565,7 +567,12 @@ begin
     return json_build_object('ok', false, 'error', 'forbidden');
   end if;
 
-  v_new_max := coalesce(v_drop.max_uses, 0) + p_n;
+  -- A drop without max_uses is unlimited: adding places would cap it.
+  if v_drop.max_uses is null then
+    return json_build_object('ok', false, 'error', 'unlimited');
+  end if;
+
+  v_new_max := v_drop.max_uses + p_n;
 
   update public.flash_drops
   set max_uses = v_new_max, updated_at = now()
@@ -585,7 +592,8 @@ grant execute on function public.add_drop_places(uuid, integer) to authenticated
 -- ---------------------------------------------------------------------------
 -- 7) vendor_today_stats(p_place) — Europe/Paris + validation list
 -- ---------------------------------------------------------------------------
-drop function if exists public.vendor_today_stats();
+-- The no-argument vendor_today_stats() (legacy PIN validations, possibly read
+-- by the ERP) is kept as is; this overload serves the per-place pro home.
 
 create or replace function public.vendor_today_stats(p_place uuid)
 returns json

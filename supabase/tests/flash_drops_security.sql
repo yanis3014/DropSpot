@@ -68,11 +68,14 @@ begin
     onboarding_completed_at = excluded.onboarding_completed_at,
     welcome_grains_claimed_at = excluded.welcome_grains_claimed_at;
 
-  insert into public.places (id, name, vendor_id, lat, lng)
+  -- Drops are only allowed on verified places (20261021140000_place_claims.sql).
+  insert into public.places (id, name, vendor_id, lat, lng, verification_status)
   values
-    (place_a, 'Cafe A Flash', vendor_a, 43.7, 7.2),
-    (place_b, 'Cafe B Flash', vendor_b, 43.7, 7.3)
-  on conflict (id) do update set vendor_id = excluded.vendor_id;
+    (place_a, 'Cafe A Flash', vendor_a, 43.7, 7.2, 'verified'),
+    (place_b, 'Cafe B Flash', vendor_b, 43.7, 7.3, 'verified')
+  on conflict (id) do update set
+    vendor_id = excluded.vendor_id,
+    verification_status = excluded.verification_status;
 
   delete from public.flash_drop_redemptions
   where vendor_id in (vendor_a, vendor_b);

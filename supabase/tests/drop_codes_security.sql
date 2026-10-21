@@ -4,7 +4,7 @@
 --
 -- Covers: self-redeem forbidden, single-use codes, last-stock sold_out (serializes
 -- via FOR UPDATE on flash_drops — true dual-session race is same invariant),
--- cross-place staff blocked.
+-- cross-place staff blocked, stop_drop / add_drop_places on unlimited drops.
 -- Entire script runs in a transaction and rolls back.
 
 begin;
@@ -18,6 +18,7 @@ declare
   place_a uuid := 'eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee';
   place_b uuid := 'ffffffff-ffff-ffff-ffff-ffffffffffff';
   drop_a uuid := '11111111-1111-1111-1111-111111111111';
+  drop_unlimited uuid := '22222222-2222-2222-2222-222222222222';
   v_claim_a json;
   v_claim_b json;
   v_code_a char(6);
@@ -84,8 +85,8 @@ begin
     (place_a, staff_a, 'staff'),
     (place_b, staff_b, 'owner');
 
-  delete from public.drop_codes where flash_drop_id = drop_a;
-  delete from public.flash_drops where id = drop_a;
+  delete from public.drop_codes where flash_drop_id in (drop_a, drop_unlimited);
+  delete from public.flash_drops where id in (drop_a, drop_unlimited);
 
   insert into public.flash_drops (
     id, vendor_id, place_id, title, kind,
@@ -123,7 +124,19 @@ begin
   v_claim_b := public.claim_drop(drop_a);
   v_code_b := (v_claim_b ->> 'code')::char(6);
 
-  -- (1) Client cannot redeem own code
+  -- (0) A signed-in client who is not on the café team cannot redeem
+  v_redeem := public.redeem_drop_code(place_a, public.format_drop_code(v_code_a));
+  if coalesce(v_redeem ->> 'status', '') is distinct from 'not_found' then
+    raise exception 'FAIL: non-member redeemed a code: %', v_redeem;
+  end if;
+
+  -- (1) A team member cannot redeem their own code (client A owns cafe A)
+  perform set_config('request.jwt.claim.sub', client_a::text, true);
+  perform set_config(
+    'request.jwt.claims',
+    json_build_object('sub', client_a::text, 'role', 'authenticated')::text,
+    true
+  );
   v_redeem := public.redeem_drop_code(place_a, public.format_drop_code(v_code_a));
   if coalesce(v_redeem ->> 'status', '') is distinct from 'not_found' then
     raise exception 'FAIL: client redeemed own code: %', v_redeem;
@@ -173,6 +186,44 @@ begin
   select grains_balance into v_balance from public.profiles where id = client_a;
   if v_balance is distinct from 10 then
     raise exception 'FAIL: client A grains expected 10, got %', v_balance;
+  end if;
+
+  -- (5) add_drop_places never caps an unlimited drop; stop_drop ends it for clients too
+  insert into public.flash_drops (
+    id, vendor_id, place_id, title, kind,
+    starts_at, ends_at, is_active, max_uses, current_uses, grains_reward
+  )
+  values (
+    drop_unlimited, client_a, place_a, 'Unlimited drop', 'offer',
+    now() - interval '5 minutes', now() + interval '2 hours', true,
+    null, 0, 10
+  );
+
+  perform set_config('request.jwt.claim.sub', client_a::text, true);
+  perform set_config(
+    'request.jwt.claims',
+    json_build_object('sub', client_a::text, 'role', 'authenticated')::text,
+    true
+  );
+  execute 'set local role authenticated';
+
+  v_redeem := public.add_drop_places(drop_unlimited, 5);
+  if coalesce(v_redeem ->> 'error', '') is distinct from 'unlimited' then
+    raise exception 'FAIL: add_drop_places on unlimited drop: %', v_redeem;
+  end if;
+
+  v_redeem := public.stop_drop(drop_unlimited);
+  if coalesce((v_redeem ->> 'ok')::boolean, false) is not true then
+    raise exception 'FAIL: owner could not stop drop: %', v_redeem;
+  end if;
+
+  reset role;
+  if exists (
+    select 1 from public.flash_drops
+    where id = drop_unlimited
+      and (is_active or stopped_at is null or max_uses is not null)
+  ) then
+    raise exception 'FAIL: stopped drop still active, or unlimited drop got capped';
   end if;
 
   raise notice 'drop_codes_security: all assertions passed';

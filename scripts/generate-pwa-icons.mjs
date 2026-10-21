@@ -1,5 +1,8 @@
 /**
- * Generates PNG icons for the PWA manifest from public/icons/icon.svg.
+ * Generates PNG icons for the PWA manifest.
+ * - public/icons/icon.svg: rounded tile, used for "any" icons.
+ * - public/icons/icon-full.svg: full-bleed square, used where the OS applies its
+ *   own mask (apple-touch-icon, Android maskable icons).
  * Run: node scripts/generate-pwa-icons.mjs
  */
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
@@ -9,6 +12,7 @@ import { fileURLToPath } from 'node:url';
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const iconsDir = join(root, 'public', 'icons');
 const svgPath = join(iconsDir, 'icon.svg');
+const fullSvgPath = join(iconsDir, 'icon-full.svg');
 
 mkdirSync(iconsDir, { recursive: true });
 
@@ -24,20 +28,21 @@ try {
 }
 
 const svg = readFileSync(svgPath, 'utf8');
+const fullSvg = readFileSync(fullSvgPath, 'utf8');
 
-/** Full-bleed icons (rounded tile already in the SVG). */
-const fullBleed = [
+/** "any" icons: rounded tile with transparent corners. */
+const rounded = [
   { name: 'icon-192x192.png', size: 192 },
   { name: 'icon-512x512.png', size: 512 },
   { name: 'icon-192.png', size: 192 }, // alias for older refs
   { name: 'icon-512.png', size: 512 },
-  { name: 'apple-touch-icon.png', size: 180 },
 ];
 
-/** Maskable: solid safe-zone padding for Android adaptive icons. */
-const maskable = [
-  { name: 'icon-maskable-512.png', size: 512, pad: 0.14 },
-  { name: 'icon-maskable-192.png', size: 192, pad: 0.14 },
+/** Opaque squares: iOS rounds the corners itself, Android crops maskable icons. */
+const fullBleed = [
+  { name: 'apple-touch-icon.png', size: 180 },
+  { name: 'icon-maskable-192.png', size: 192 },
+  { name: 'icon-maskable-512.png', size: 512 },
 ];
 
 function renderPng(sourceSvg, size) {
@@ -47,20 +52,12 @@ function renderPng(sourceSvg, size) {
   return renderer.render().asPng();
 }
 
-for (const { name, size } of fullBleed) {
-  writeFileSync(join(iconsDir, name), renderPng(svg, size));
-  console.log(`Wrote public/icons/${name}`);
-}
-
-for (const { name, size, pad } of maskable) {
-  const inner = Math.round(size * (1 - pad * 2));
-  const offset = Math.round(size * pad);
-  const wrapped = `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
-  <rect width="${size}" height="${size}" fill="#2C1E16"/>
-  <g transform="translate(${offset} ${offset}) scale(${inner / 512})">
-    ${svg.replace(/<svg[^>]*>/, '').replace(/<\/svg>\s*$/, '')}
-  </g>
-</svg>`;
-  writeFileSync(join(iconsDir, name), renderPng(wrapped, size));
-  console.log(`Wrote public/icons/${name}`);
+for (const [source, list] of [
+  [svg, rounded],
+  [fullSvg, fullBleed],
+]) {
+  for (const { name, size } of list) {
+    writeFileSync(join(iconsDir, name), renderPng(source, size));
+    console.log(`Wrote public/icons/${name}`);
+  }
 }

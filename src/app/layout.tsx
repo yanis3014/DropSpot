@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Bricolage_Grotesque, Figtree } from "next/font/google";
 import "./globals.css";
 import BottomNav from "@/components/layout/BottomNav";
-import SplashScreen from "@/components/SplashScreen";
+import SplashScreen, { splashBootScript } from "@/components/SplashScreen";
 import IosInstallPrompt from "@/components/pwa/IosInstallPrompt";
 import AndroidInstallPrompt from "@/components/pwa/AndroidInstallPrompt";
 import { ThemeProvider, themeBootScript } from "@/lib/theme";
@@ -35,11 +35,11 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: [
+      { url: "/icons/icon.svg", type: "image/svg+xml" },
       { url: "/icons/icon-192x192.png", sizes: "192x192", type: "image/png" },
       { url: "/icons/icon-512x512.png", sizes: "512x512", type: "image/png" },
     ],
     apple: [
-      { url: "/icons/icon-192x192.png", sizes: "192x192", type: "image/png" },
       { url: "/icons/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
     ],
   },
@@ -62,8 +62,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     >
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeBootScript }} />
-        <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
-        <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon.png" />
+        <script dangerouslySetInnerHTML={{ __html: splashBootScript }} />
       </head>
       <body className="min-h-full flex flex-col bg-ds-bg text-ds-text font-sans">
         <ThemeProvider>

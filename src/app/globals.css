@@ -222,3 +222,190 @@ body {
     inset 0 4px 15px rgba(255, 255, 255, 0.6),
     inset 0 -10px 20px rgba(0, 0, 0, 0.1);
 }
+
+/* ---------- Écran de lancement (SplashScreen) ----------
+   Le repère tombe, rebondit, le grain apparaît, une onde part de la pointe,
+   puis le mot-symbole se dévoile. Sortie en CSS : aucune attente du JS. */
+.ds-splash {
+  --splash-in: 1.8s; /* entrée finie vers 1,4 s, puis logo et nom tenus ~0,4 s avant le fondu */
+  --splash-out: 0.35s;
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  background: radial-gradient(120% 70% at 50% 42%, #3d2719 0%, #14100d 62%);
+  color: #f4ede6;
+  pointer-events: none;
+  animation: ds-splash-out var(--splash-out) ease-in var(--splash-in) forwards;
+}
+
+html[data-splash='seen'] .ds-splash {
+  display: none;
+}
+
+.ds-splash-mark {
+  width: 88px;
+  height: 88px;
+  overflow: visible;
+}
+
+.ds-splash-pin path:first-child {
+  fill: #e3905a;
+}
+.ds-splash-bean ellipse {
+  fill: #faf7f2;
+}
+.ds-splash-bean path {
+  fill: none;
+  stroke: #e3905a;
+  stroke-width: 3;
+  stroke-linecap: round;
+}
+.ds-splash-shadow {
+  fill: #000;
+  opacity: 0.45;
+}
+.ds-splash-ring {
+  fill: none;
+  stroke: #e3905a;
+  stroke-width: 1.4;
+  opacity: 0;
+}
+
+.ds-splash-pin,
+.ds-splash-bean,
+.ds-splash-shadow,
+.ds-splash-ring {
+  transform-box: fill-box;
+  transform-origin: 50% 50%;
+}
+
+.ds-splash-pin {
+  transform-origin: 50% 100%;
+  animation: ds-pin-drop 0.8s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+.ds-splash-shadow {
+  animation: ds-shadow-in 0.8s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+.ds-splash-ring {
+  animation: ds-ring 1s ease-out 0.42s both;
+}
+.ds-splash-bean {
+  animation: ds-bean-pop 0.5s cubic-bezier(0.3, 1.5, 0.5, 1) 0.5s both;
+}
+
+.ds-splash-word {
+  font-family: var(--font-display), var(--font-sans), sans-serif;
+  font-size: 36px;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.04em;
+  animation: ds-word-in 0.55s cubic-bezier(0.2, 0.7, 0.2, 1) 0.7s both;
+}
+
+.ds-splash-tagline {
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  color: #bbad9f;
+  animation: ds-fade-up 0.45s ease-out 0.95s both;
+}
+
+@keyframes ds-pin-drop {
+  0% {
+    transform: translateY(-150px);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  45% {
+    transform: translateY(0) scale(1, 1);
+    animation-timing-function: ease-out;
+  }
+  56% {
+    transform: translateY(0) scale(1.12, 0.84);
+  }
+  70% {
+    transform: translateY(-5px) scale(0.96, 1.05);
+  }
+  100% {
+    transform: none;
+  }
+}
+
+@keyframes ds-shadow-in {
+  0%,
+  10% {
+    transform: scale(0.2);
+    opacity: 0;
+  }
+  45%,
+  100% {
+    transform: scale(1);
+    opacity: 0.45;
+  }
+}
+
+@keyframes ds-ring {
+  from {
+    transform: scale(0.3);
+    opacity: 0.9;
+  }
+  to {
+    transform: scale(2.8);
+    opacity: 0;
+  }
+}
+
+@keyframes ds-bean-pop {
+  from {
+    transform: scale(0) rotate(-120deg);
+  }
+  to {
+    transform: none;
+  }
+}
+
+@keyframes ds-word-in {
+  from {
+    clip-path: inset(0 100% 0 0);
+    transform: translateY(6px);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+    transform: none;
+  }
+}
+
+@keyframes ds-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes ds-splash-out {
+  to {
+    opacity: 0;
+    visibility: hidden;
+  }
+}
+
+/* Réduire les animations : logo fixe, simple fondu plus tôt. */
+@media (prefers-reduced-motion: reduce) {
+  .ds-splash {
+    --splash-in: 0.6s;
+  }
+  .ds-splash * {
+    animation: none !important;
+  }
+}

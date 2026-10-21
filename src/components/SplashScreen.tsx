@@ -1,75 +1,33 @@
-'use client';
+const SESSION_KEY = 'dropspot_splash_seen';
 
-import { useEffect, useState } from 'react';
-import { Coffee } from '@phosphor-icons/react';
+/**
+ * Runs in <head> before first paint: the splash is shown once per browser
+ * session, then hidden via html[data-splash="seen"].
+ */
+export const splashBootScript = `(function(){try{var s=sessionStorage;if(s.getItem('${SESSION_KEY}')){document.documentElement.dataset.splash='seen';}else{s.setItem('${SESSION_KEY}','1');}}catch(e){}})();`;
 
-const SPLASH_DURATION_MS = 1800;
-const FADE_OUT_MS = 500;
-
+/**
+ * Launch screen. Server component: the entrance and the exit are pure CSS
+ * (see .ds-splash in globals.css), so it never waits for hydration to leave.
+ */
 export default function SplashScreen() {
-  const [entered, setEntered] = useState(false);
-  const [exiting, setExiting] = useState(false);
-  const [done, setDone] = useState(false);
-
-  useEffect(() => {
-    const enter = requestAnimationFrame(() => setEntered(true));
-    const exit = setTimeout(() => setExiting(true), SPLASH_DURATION_MS);
-    const remove = setTimeout(
-      () => setDone(true),
-      SPLASH_DURATION_MS + FADE_OUT_MS
-    );
-    return () => {
-      cancelAnimationFrame(enter);
-      clearTimeout(exit);
-      clearTimeout(remove);
-    };
-  }, []);
-
-  if (done) return null;
-
   return (
-    <div
-      aria-hidden={exiting}
-      className={`fixed inset-0 z-[100] flex flex-col items-center justify-center bg-gradient-to-b from-[#2C1E16] via-[#241610] to-[#1A1410] transition-opacity duration-500 ${
-        exiting ? 'opacity-0 pointer-events-none' : 'opacity-100'
-      }`}
-    >
-      {/* Ambient glow */}
-      <div className="absolute w-64 h-64 rounded-full bg-ds-accent/15 blur-3xl" />
-      <div className="absolute bottom-24 w-48 h-48 rounded-full bg-ds-ok/10 blur-3xl" />
-
-      {/* Logo block */}
-      <div
-        className={`relative flex flex-col items-center transition-all duration-700 ease-out ${
-          entered ? 'opacity-100 scale-100 translate-y-0' : 'opacity-0 scale-90 translate-y-3'
-        }`}
-      >
-        {/* Icon tile with pulse ring */}
-        <div className="relative mb-5">
-          <span className="absolute inset-0 rounded-3xl bg-ds-ok/40 animate-ping [animation-duration:2s]" />
-          <div className="relative w-20 h-20 rounded-3xl bg-gradient-to-br from-ds-ok to-ds-ok/80 flex items-center justify-center shadow-2xl shadow-ds-ok/30">
-            <Coffee size={40} weight="duotone" className="text-white" />
-          </div>
-        </div>
-
-        {/* Wordmark */}
-        <h1 className="text-4xl font-extrabold tracking-tight text-white">
-          Drop<span className="text-ds-accent">Spot</span>
-        </h1>
-        <p className="mt-2 text-sm text-white/50 font-medium tracking-wide">
-          Ton spot. Ta vibe.
-        </p>
-      </div>
-
-      {/* Progress bar */}
-      <div className="absolute bottom-20 w-28 h-1 rounded-full bg-white/10 overflow-hidden">
-        <div
-          className={`h-full rounded-full bg-gradient-to-r from-ds-ok to-ds-accent transition-all ease-linear ${
-            entered ? 'w-full' : 'w-0'
-          }`}
-          style={{ transitionDuration: `${SPLASH_DURATION_MS}ms` }}
-        />
-      </div>
+    <div className="ds-splash" aria-hidden="true">
+      <svg viewBox="0 0 64 64" className="ds-splash-mark">
+        <ellipse className="ds-splash-shadow" cx="32" cy="62" rx="9" ry="2.2" />
+        <ellipse className="ds-splash-ring" cx="32" cy="61" rx="8" ry="2.4" />
+        <g className="ds-splash-pin">
+          <path d="M32 61C26.5 52.5 11 40.5 11 26A21 21 0 0 1 53 26C53 40.5 37.5 52.5 32 61Z" />
+          <g transform="rotate(28 32 26)">
+            <g className="ds-splash-bean">
+              <ellipse cx="32" cy="26" rx="10.5" ry="14" />
+              <path d="M32 15C28.2 21 35.8 31 32 37" />
+            </g>
+          </g>
+        </g>
+      </svg>
+      <span className="ds-splash-word">dropspot</span>
+      <span className="ds-splash-tagline">Ton spot. Ta vibe.</span>
     </div>
   );
 }

@@ -19,7 +19,7 @@ function isProtectedPath(pathname: string): boolean {
 }
 
 /**
- * Refreshes the Supabase auth session on every request and keeps the
+ * On private routes, refreshes the Supabase auth session and keeps the
  * auth cookies in sync between the browser, Server Components and
  * Route Handlers. This is the Supabase SSR pattern for Next.js 16 `proxy`.
  *
@@ -27,6 +27,13 @@ function isProtectedPath(pathname: string): boolean {
  */
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
+
+  // Public pages read the session in the browser only (the browser client
+  // refreshes its own token), so skip the Supabase Auth round trip there:
+  // it ran on every navigation and every <Link> prefetch.
+  if (!isProtectedPath(request.nextUrl.pathname)) {
+    return supabaseResponse;
+  }
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;

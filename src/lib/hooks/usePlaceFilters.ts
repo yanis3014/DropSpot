@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useMemo } from "react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import {
   applyFiltersToSearchParams,
   parseFiltersParam,
@@ -10,7 +10,6 @@ import {
 
 /** Shared map/list filter state backed by `?filters=` in the URL. */
 export function usePlaceFilters() {
-  const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
@@ -28,9 +27,12 @@ export function usePlaceFilters() {
       const resolved = typeof next === "function" ? next(filters) : next;
       const params = applyFiltersToSearchParams(searchParams, resolved);
       const qs = params.toString();
-      router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+      // Native history update: Next syncs useSearchParams without a server
+      // round trip, so a chip tap applies instantly (router.replace refetched
+      // the page through the proxy on every tap).
+      window.history.replaceState(null, "", qs ? `${pathname}?${qs}` : pathname);
     },
-    [filters, pathname, router, searchParams]
+    [filters, pathname, searchParams]
   );
 
   const toggleFilter = useCallback(

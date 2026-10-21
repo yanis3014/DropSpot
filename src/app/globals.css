@@ -227,8 +227,8 @@ body {
    Le repère tombe, rebondit, le grain apparaît, une onde part de la pointe,
    puis le mot-symbole se dévoile. Sortie en CSS : aucune attente du JS. */
 .ds-splash {
-  --splash-in: 1.8s; /* entrée finie vers 1,4 s, puis logo et nom tenus ~0,4 s avant le fondu */
-  --splash-out: 0.35s;
+  --splash-in: 1.55s; /* entrée finie vers 0,95 s, logo et nom tenus ~0,6 s, puis fondu : ~1,8 s au total */
+  --splash-out: 0.25s;
   position: fixed;
   inset: 0;
   z-index: 100;
@@ -286,16 +286,16 @@ html[data-splash='seen'] .ds-splash {
 
 .ds-splash-pin {
   transform-origin: 50% 100%;
-  animation: ds-pin-drop 0.8s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  animation: ds-pin-drop 0.6s cubic-bezier(0.2, 0.7, 0.2, 1) both;
 }
 .ds-splash-shadow {
-  animation: ds-shadow-in 0.8s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  animation: ds-shadow-in 0.6s cubic-bezier(0.2, 0.7, 0.2, 1) both;
 }
 .ds-splash-ring {
-  animation: ds-ring 1s ease-out 0.42s both;
+  animation: ds-ring 0.65s ease-out 0.3s both;
 }
 .ds-splash-bean {
-  animation: ds-bean-pop 0.5s cubic-bezier(0.3, 1.5, 0.5, 1) 0.5s both;
+  animation: ds-bean-pop 0.4s cubic-bezier(0.3, 1.5, 0.5, 1) 0.35s both;
 }
 
 .ds-splash-word {
@@ -304,7 +304,7 @@ html[data-splash='seen'] .ds-splash {
   font-weight: 800;
   line-height: 1;
   letter-spacing: -0.04em;
-  animation: ds-word-in 0.55s cubic-bezier(0.2, 0.7, 0.2, 1) 0.7s both;
+  animation: ds-word-in 0.45s cubic-bezier(0.2, 0.7, 0.2, 1) 0.45s both;
 }
 
 .ds-splash-tagline {
@@ -312,7 +312,7 @@ html[data-splash='seen'] .ds-splash {
   font-weight: 500;
   letter-spacing: 0.04em;
   color: #bbad9f;
-  animation: ds-fade-up 0.45s ease-out 0.95s both;
+  animation: ds-fade-up 0.35s ease-out 0.6s both;
 }
 
 @keyframes ds-pin-drop {
@@ -403,7 +403,7 @@ html[data-splash='seen'] .ds-splash {
 /* Réduire les animations : logo fixe, simple fondu plus tôt. */
 @media (prefers-reduced-motion: reduce) {
   .ds-splash {
-    --splash-in: 0.6s;
+    --splash-in: 0.4s;
   }
   .ds-splash * {
     animation: none !important;

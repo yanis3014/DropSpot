@@ -10,6 +10,26 @@ import { supabase } from '@/lib/supabase/client';
  * `getUser()` validates the cookie on mount; `onAuthStateChange` keeps the
  * state fresh afterwards (SIGNED_IN, SIGNED_OUT, TOKEN_REFRESHED...).
  */
+/**
+ * One `getUser()` request shared by every component mounted at the same time
+ * (a list renders one FavoriteButton per café, each calling useAuth).
+ */
+let pendingUser: Promise<User | null> | null = null;
+
+function fetchUserOnce(): Promise<User | null> {
+  if (!supabase) return Promise.resolve(null);
+  if (!pendingUser) {
+    pendingUser = supabase.auth
+      .getUser()
+      .then(({ data }) => data.user ?? null)
+      .catch(() => null)
+      .finally(() => {
+        pendingUser = null;
+      });
+  }
+  return pendingUser;
+}
+
 export function useAuth() {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
@@ -21,11 +41,10 @@ export function useAuth() {
       return;
     }
 
-    supabase.auth
-      .getUser()
-      .then(({ data }) => setUser(data.user ?? null))
-      .catch(() => setUser(null))
-      .finally(() => setLoading(false));
+    void fetchUserOnce().then((u) => {
+      setUser(u);
+      setLoading(false);
+    });
 
     const {
       data: { subscription },

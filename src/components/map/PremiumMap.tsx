@@ -39,6 +39,7 @@ import {
 } from "@/lib/cafePresentation";
 import { AMENITY_FILTER_IDS, type AmenityFilterId } from "@/lib/mapFilters";
 import { usePlaceFilters } from "@/lib/hooks/usePlaceFilters";
+import { usePlacesOpenStatus } from "@/hooks/usePlacesOpenStatus";
 import {
   distanceMeters,
   formatDistance,
@@ -279,7 +280,15 @@ export default function PremiumMap() {
     [places, amenityFilters]
   );
 
-  const selectedMeta = selectedPlace ? cafeOpenStatus(selectedPlace) : null;
+  const visiblePlaceIds = useMemo(
+    () => visiblePlaces.map((p) => p.id),
+    [visiblePlaces]
+  );
+  const openStatusByPlace = usePlacesOpenStatus(visiblePlaceIds);
+
+  const selectedMeta = selectedPlace
+    ? cafeOpenStatus(selectedPlace, openStatusByPlace[selectedPlace.id])
+    : null;
 
   const selectedDistance =
     selectedPlace && userCoords && hasValidCoordinates(selectedPlace)

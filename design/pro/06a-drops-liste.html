@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="fr"><head>
+<!-- Maquette Dropspot Pro (export Claude Design), décompressée pour lecture par Cursor. Les {{...}} sont remplis par le script text/x-dc en bas de fichier. -->
+<meta charset="utf-8">
+<title>Dropspot Pro — Drops flash</title>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+.board{font-family:'Figtree',system-ui,sans-serif;color:#231915}
+.th-light{--bg:#FAF7F2;--surface:#FFFFFF;--surface2:#F1ECE4;--line:#E3DACE;--text:#231915;--text2:#685A4E;--accent:#A34B1A;--onaccent:#FFFFFF;--accentsoft:#F6E5D7;--accenttext:#86390F;--ok:#2B6A47;--oksoft:#E2F0E7;--warn:#8A4B00;--warnsoft:#FBEBD2;--danger:#B3261E;--dangersoft:#FBE4E1;--shadow:0 10px 32px rgba(58,34,18,.18);--scrim:rgba(35,25,21,.45)}
+.th-dark{--bg:#14100D;--surface:#211914;--surface2:#2C231D;--line:#3B3029;--text:#F4EDE6;--text2:#BBAD9F;--accent:#E3905A;--onaccent:#1B0F08;--accentsoft:#3D2719;--accenttext:#F3B086;--ok:#7CC79C;--oksoft:#1B3125;--warn:#F0B467;--warnsoft:#3A2A12;--danger:#F2A097;--dangersoft:#3D1D1A;--shadow:0 10px 32px rgba(0,0,0,.55);--scrim:rgba(0,0,0,.6)}
+.desk{position:relative;width:1440px;height:900px;overflow:hidden;display:flex;background:var(--bg);color:var(--text);border-radius:16px;box-shadow:0 0 0 1px rgba(40,25,15,.10),0 24px 60px rgba(40,25,15,.14);font-family:'Figtree',system-ui,sans-serif;font-size:15px;flex:none}
+.disp{font-family:'Bricolage Grotesque','Figtree',sans-serif;letter-spacing:-.01em}
+.ic{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.ic-s{width:16px;height:16px}
+button{font:inherit;color:inherit;cursor:pointer}
+.side{width:264px;flex:none;display:flex;flex-direction:column;gap:18px;padding:20px 16px;box-sizing:border-box;background:var(--surface);border-right:1px solid var(--line)}
+.cafesel{display:flex;align-items:center;gap:10px;padding:10px 12px 10px 10px;border-radius:14px;border:1.5px solid var(--accent);background:var(--accentsoft);color:var(--text);text-decoration:none}
+.av{display:flex;align-items:center;justify-content:center;flex:none;width:40px;height:40px;border-radius:10px;font-family:'Bricolage Grotesque',sans-serif;font-weight:800;font-size:15px}
+.av1{background:var(--accent);color:var(--onaccent)}.av3{background:var(--surface2);color:var(--text2)}
+.navi{display:flex;align-items:center;gap:12px;height:42px;padding:0 12px;border-radius:12px;font-size:15px;font-weight:600;color:var(--text2);text-decoration:none}
+.navon{background:var(--surface2);color:var(--text)}
+.main{flex:1;min-width:0;display:flex;flex-direction:column}
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:16px;height:84px;padding:0 32px;border-bottom:1px solid var(--line);flex:none;box-sizing:border-box}
+.h1{margin:0;font-size:26px;font-weight:800}
+.sub{margin:2px 0 0;font-size:14px;color:var(--text2)}
+.content{flex:1;min-height:0;padding:20px 32px;display:flex;flex-direction:column;gap:14px;overflow:hidden}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:18px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:44px;padding:0 18px;border:none;border-radius:12px;font-size:15px;font-weight:700;text-decoration:none;box-sizing:border-box;white-space:nowrap;flex:none}
+.btn-sm{height:36px;padding:0 12px;font-size:14px;border-radius:10px}
+.btn-main{background:var(--accent);color:var(--onaccent)}
+.btn-out{background:var(--surface);color:var(--text);border:1.5px solid var(--line)}
+.btn-ghost{background:transparent;color:var(--text)}
+.btn-danger{background:var(--dangersoft);color:var(--danger)}
+.btn-dangerf{background:var(--danger);color:var(--bg)}
+.tag{display:inline-flex;align-items:center;gap:5px;height:26px;padding:0 10px;border-radius:13px;font-size:13px;font-weight:700;white-space:nowrap}
+.t-live{background:var(--accent);color:var(--onaccent)}.t-sched{background:var(--accentsoft);color:var(--accenttext)}.t-done{background:var(--surface2);color:var(--text2)}
+.plan{display:inline-flex;align-items:center;gap:4px;height:22px;padding:0 8px;border-radius:11px;font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;white-space:nowrap;box-sizing:border-box}
+.p-free{border:1.5px solid var(--line);color:var(--text2)}.p-pro{background:var(--text);color:var(--bg)}
+.hint{font-size:13px;color:var(--text2)}
+.seg{display:inline-flex;padding:4px;border-radius:14px;background:var(--surface2);gap:2px}
+.seg button{height:36px;padding:0 14px;border:none;border-radius:10px;background:transparent;font-size:14px;font-weight:700;color:var(--text2)}
+.seg .on{background:var(--surface);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.drow{display:grid;grid-template-columns:120px minmax(0,1fr) 210px 170px 230px;align-items:center;gap:16px;padding:12px 20px;min-height:68px;box-sizing:border-box}
+.drow + .drow{border-top:1px solid var(--line)}
+.sect{font-size:13px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--text2);padding:0 4px}
+.track{height:6px;border-radius:3px;background:var(--surface2);overflow:hidden}
+.bar{height:100%;border-radius:3px;background:var(--accent)}
+.timer{font-variant-numeric:tabular-nums}
+.scrim{position:absolute;inset:0;background:var(--scrim);z-index:20}
+.modal{position:absolute;z-index:21;left:50%;top:50%;transform:translate(-50%,-50%);width:520px;background:var(--surface);border-radius:22px;box-shadow:var(--shadow);padding:28px;display:flex;flex-direction:column;gap:14px;box-sizing:border-box}
+.vlabel{font-size:16px;font-weight:600;color:#5A4E45}
+</style>
+</helmet>
+<div class="board" style="width: 3064px; height: 1130px; box-sizing: border-box; padding: 56px 64px; background: #ECE8E2; display: flex; flex-direction: column; gap: 28px">
+<div style="display: flex; align-items: baseline; gap: 18px">
+<h1 class="disp" style="margin: 0; font-size: 44px; font-weight: 800; color: #231915">Pro 6a · Drops flash : liste</h1>
+<p style="margin: 0; font-size: 18px; color: #5A4E45">En cours d'abord, avec compte à rebours. Dupliquer un ancien drop en un clic, arrêter un drop en cours avec confirmation.</p>
+</div>
+<div style="display: flex; gap: 56px; align-items: flex-start">
+<sc-for list="{{desks}}" as="p" hint-placeholder-count="2">
+<div style="display: flex; flex-direction: column; gap: 14px">
+<div class="vlabel">{{p.label}}</div>
+<div class="{{p.cls}}">
+<aside class="side">
+<div style="display: flex; align-items: baseline; justify-content: space-between; padding: 2px 6px 0"><span class="disp" style="font-size: 23px; font-weight: 800">Dropspot</span><span class="hint" style="font-weight: 700">Espace gérant</span></div>
+<a href="ProSelecteur.dc.html" class="cafesel" aria-label="Établissement actif : Tech Café Sophia. Changer d'établissement">
+<span class="av av1">TC</span>
+<span style="display: flex; flex-direction: column; min-width: 0; flex: 1"><span style="font-size: 15px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">Tech Café Sophia</span><span class="hint">Biot · 1 café sur 2</span></span>
+<svg class="ic" sc-camel-view-box="0 0 24 24" aria-hidden="true"><path d="{{ic.chevUD}}"></path></svg>
+</a>
+<nav aria-label="Menu" style="display: flex; flex-direction: column; gap: 2px">
+<sc-for list="{{nav}}" as="n" hint-placeholder-count="7"><a class="{{n.cls}}" href="{{n.href}}"><svg class="ic" sc-camel-view-box="0 0 24 24" aria-hidden="true"><path d="{{n.d}}"></path></svg>{{n.label}}</a></sc-for>
+</nav>
+<div style="margin-top: auto; display: flex; flex-direction: column; gap: 12px">
+<div style="padding: 14px; border-radius: 14px; background: var(--surface2); display: flex; flex-direction: column; gap: 8px">
+<div style="display: flex; align-items: center; gap: 8px"><span class="plan p-free">Gratuit</span><span class="hint">Ton offre</span></div>
+<a href="ProAbonnement.dc.html" style="font-size: 14px; font-weight: 700; color: var(--accent); text-decoration: none">Découvrir Pro →</a>
+</div>
+<div style="display: flex; align-items: center; gap: 10px; padding: 4px 6px"><span class="av av3" style="width: 34px; height: 34px; border-radius: 17px; font-size: 14px">N</span><span style="font-size: 14px; font-weight: 600">Niss Mrad</span></div>
+</div>
+</aside>
+<div class="main">
+<header class="topbar">
+<div><h2 class="h1 disp">Drops flash</h2><p class="sub">Tech Café Sophia · heures de Paris</p></div>
+<div style="display: flex; gap: 10px">
+<a href="ProAbonnement.dc.html" class="btn btn-out" aria-label="Drop récurrent, réservé à l'offre Pro"><svg class="ic ic-s" sc-camel-view-box="0 0 24 24" aria-hidden="true"><path d="{{ic.lock}}"></path></svg>Drop récurrent<span class="plan p-pro">Pro</span></a>
+<a href="ProDropCreer.dc.html" class="btn btn-main"><svg class="ic" sc-camel-view-box="0 0 24 24" aria-hidden="true"><path d="{{ic.plus}}"></path></svg>Créer un drop</a>
+</div>
+</header>
+<div class="content">
+<div class="seg" role="tablist" aria-label="Filtrer les drops"><button class="on" role="tab" aria-selected="true">Tous</button><button role="tab" aria-selected="false">En cours · 2</button><button role="tab" aria-selected="false">Programmés · 1</button><button role="tab" aria-selected="false">Terminés · 12</button></div>
+<span class="sect">En cours</span>
+<div class="card">
+<sc-for list="{{live}}" as="d" hint-placeholder-count="2">
+<div class="drow">
+<span><span class="tag t-live">En cours</span></span>
+<div style="display: flex; flex-direction: column; gap: 3px; min-width: 0"><span style="font-size: 16px; font-weight: 700">{{d.title}}</span><span class="hint">{{d.type}}</span></div>
+<div style="display: flex; flex-direction: column; gap: 2px"><span class="timer" style="font-size: 16px; font-weight: 800; color: var(--accent); display: inline-flex; align-items: center; gap: 6px"><svg class="ic ic-s" sc-camel-view-box="0 0 24 24" aria-hidden="true"><path d="{{ic.clock}}"></path></svg>{{d.left}}</span><span class="hint">{{d.when}}</span></div>
+<div style="display: flex; flex-direction: column; gap: 6px"><div class="track"><div class="bar" style="width: {{d.pct}}"></div></div><span class="hint">{{d.stock}}</span></div>
+<div style="display: flex; justify-content: flex-end; gap: 6px"><button class="btn btn-sm btn-danger"><svg class="ic ic-s" sc-camel-view-box="0 0 24 24" aria-hidden="true"><path d="{{ic.stop}}"></path></svg>Arrêter</button><button class="btn btn-sm btn-ghost"><svg class="ic ic-s" sc-camel-view-box="0 0 24 24" aria-hidden="true"><path d="{{ic.copy}}"></path></svg>Dupliquer</button></div>
+</div>
+</sc-for>
+</div>
+<span class="sect">Programmés</span>
+<div class="card">
+<div class="drow">
+<span><span class="tag t-sched">Programmé</span></span>
+<div style="display: flex; flex-direction: column; gap: 3px; min-width: 0"><span style="font-size: 16px; font-weight: 700">Atelier latte art</span><span class="hint">Activité · 6 places</span></div>
+<div style="display: flex; flex-direction: column; gap: 2px"><span style="font-size: 15px; font-weight: 700">Jeudi 22 oct.</span><span class="hint">18:00 → 19:30</span></div>
+<span class="hint">Commence dans 3 jours</span>
+<div style="display: flex; justify-content: flex-end; gap: 6px"><button class="btn btn-sm btn-out">Modifier</button><button class="btn btn-sm btn-ghost"><svg class="ic ic-s" sc-camel-view-box="0 0 24 24" aria-hidden="true"><path d="{{ic.copy}}"></path></svg>Dupliquer</button></div>
+</div>
+</div>
+<span class="sect">Terminés</span>
+<div class="card" style="flex: 1; min-height: 0; overflow: hidden">
+<sc-for list="{{done}}" as="d" hint-placeholder-count="3">
+<div class="drow">
+<span><span class="tag t-done">{{d.status}}</span></span>
+<div style="display: flex; flex-direction: column; gap: 3px; min-width: 0"><span style="font-size: 16px; font-weight: 700">{{d.title}}</span><span class="hint">{{d.type}}</span></div>
+<span class="hint" style="font-size: 14px">{{d.when}}</span>
+<span class="hint" style="font-size: 14px">{{d.stock}}</span>
+<div style="display: flex; justify-content: flex-end"><a href="ProDropCreer.dc.html" class="btn btn-sm btn-out"><svg class="ic ic-s" sc-camel-view-box="0 0 24 24" aria-hidden="true"><path d="{{ic.copy}}"></path></svg>Dupliquer</a></div>
+</div>
+</sc-for>
+</div>
+</div>
+</div>
+<sc-if value="{{p.modal}}" hint-placeholder-val="{{false}}">
+<div class="scrim"></div>
+<div class="modal" role="alertdialog" aria-label="Arrêter ce drop maintenant ?">
+<span style="display: flex; align-items: center; justify-content: center; width: 48px; height: 48px; border-radius: 24px; background: var(--dangersoft); color: var(--danger)"><svg class="ic" sc-camel-view-box="0 0 24 24" aria-hidden="true"><path d="{{ic.stop}}"></path></svg></span>
+<h3 class="disp" style="margin: 0; font-size: 22px; font-weight: 800">Arrêter « −30 % sur le matcha latte » ?</h3>
+<p style="margin: 0; font-size: 15px; line-height: 1.5; color: var(--text2)">Il disparaît de l'app tout de suite. Les 8 codes déjà validés restent acquis ; les clients en route verront « Drop terminé ».</p>
+<div style="display: flex; justify-content: flex-end; gap: 10px; padding-top: 6px"><button class="btn btn-ghost">Le garder</button><button class="btn btn-dangerf">Arrêter maintenant</button></div>
+</div>
+</sc-if>
+</div>
+</div>
+</sc-for>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script="" data-props="{&quot;$preview&quot;:{&quot;width&quot;:3064,&quot;height&quot;:1130}}">
+class Component extends DCLogic {
+  renderVals() {
+    const ic = {
+      home: 'M3 10.5L12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z',
+      zap: 'M13 2L4 14h7l-1 8 9-12h-7l1-8z',
+      store: 'M3 9l1.5-5h15L21 9M4 9v11h16V9M3 9h18M9 20v-6h6v6',
+      specs: 'M3 6l2 2 3-3M3 13l2 2 3-3M11 6h10M11 13h10M11 20h10M4 20h3',
+      users: 'M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M13 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0zM22 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8',
+      crown: 'M3 19h18M4 8l4 4 4-7 4 7 4-4-2 9H6z',
+      gear: 'M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z',
+      chevUD: 'M7 9l5-5 5 5M7 15l5 5 5-5',
+      plus: 'M12 5v14M5 12h14',
+      lock: 'M5 11h14v10H5zM8 11V7a4 4 0 0 1 8 0v4',
+      clock: 'M12 7v5l3 2M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z',
+      stop: 'M7 7h10v10H7z',
+      copy: 'M9 9h11v11H9zM5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1'
+    };
+    const NAV = [['Accueil', 'ProAccueil.dc.html', 'home'], ['Drops', 'ProDrops.dc.html', 'zap'], ['Établissement', 'ProFiche.dc.html', 'store'], ['Spécificités', 'ProSpecificites.dc.html', 'specs'], ['Équipe', 'ProEquipe.dc.html', 'users'], ['Abonnement', 'ProAbonnement.dc.html', 'crown'], ['Réglages', 'ProReglages.dc.html', 'gear']];
+    const nav = NAV.map(([label, href, k]) => ({ label, href, d: ic[k], cls: label === 'Drops' ? 'navi navon' : 'navi' }));
+    const desks = [{ label: 'Ordinateur · Clair', cls: 'desk th-light', modal: false }, { label: 'Ordinateur · Sombre · arrêt anticipé', cls: 'desk th-dark', modal: true }];
+    const live = [
+      { title: '−30 % sur le matcha latte', type: 'Réduction · sur place uniquement', left: 'Encore 42:15', when: 'fin à 16:00', pct: '40%', stock: '8 utilisés sur 20' },
+      { title: 'Cookie offert avec un café', type: 'Offre · 1 par personne', left: 'Encore 2 h 05', when: 'fin à 18:00', pct: '100%', stock: '6 utilisés · sans limite' }
+    ];
+    const done = [
+      { status: 'Terminé', title: '−20 % sur les boissons chaudes', type: 'Réduction', when: 'Ven. 16 oct. · 08:00 → 10:00', stock: '20 sur 20 · épuisé' },
+      { status: 'Arrêté', title: 'Chai latte à 3 €', type: 'Prix spécial', when: 'Mer. 14 oct. · 15:00 → 17:00', stock: '5 sur 15' },
+      { status: 'Terminé', title: 'Cookie offert avec un café', type: 'Offre', when: 'Lun. 12 oct. · 14:00 → 18:00', stock: '11 · sans limite' }
+    ];
+    return { ic, nav, desks, live, done };
+  }
+}
+</script>
+
+
+</body></html>

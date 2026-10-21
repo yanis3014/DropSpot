@@ -1,10 +1,6 @@
 import type { Metadata } from "next";
 import { Bricolage_Grotesque, Figtree } from "next/font/google";
 import "./globals.css";
-import BottomNav from "@/components/layout/BottomNav";
-import SplashScreen from "@/components/SplashScreen";
-import IosInstallPrompt from "@/components/pwa/IosInstallPrompt";
-import AndroidInstallPrompt from "@/components/pwa/AndroidInstallPrompt";
 import { ThemeProvider, themeBootScript } from "@/lib/theme";
 
 const figtree = Figtree({
@@ -63,18 +59,14 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeBootScript }} />
         <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
-        <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon.png" />
+        <link
+          rel="apple-touch-icon"
+          sizes="180x180"
+          href="/icons/apple-touch-icon.png"
+        />
       </head>
       <body className="min-h-full flex flex-col bg-ds-bg text-ds-text font-sans">
-        <ThemeProvider>
-          <div className="max-w-md mx-auto w-full min-h-full flex flex-col bg-ds-bg">
-            {children}
-            <BottomNav />
-          </div>
-          <IosInstallPrompt />
-          <AndroidInstallPrompt />
-          <SplashScreen />
-        </ThemeProvider>
+        <ThemeProvider>{children}</ThemeProvider>
       </body>
     </html>
   );

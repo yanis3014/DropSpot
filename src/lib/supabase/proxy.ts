@@ -10,6 +10,13 @@ const PROTECTED_PREFIXES = [
   '/profile',
   '/onboarding',
   '/dashboard-pro',
+  '/etablissement',
+  '/specificites',
+  '/equipe',
+  '/abonnement',
+  '/reglages',
+  '/valider',
+  '/admin',
 ] as const;
 
 function isProtectedPath(pathname: string): boolean {

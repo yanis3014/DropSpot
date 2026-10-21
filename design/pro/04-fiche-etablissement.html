@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="fr"><head>
+<!-- Maquette Dropspot Pro (export Claude Design), décompressée pour lecture par Cursor. Les {{...}} sont remplis par le script text/x-dc en bas de fichier. -->
+<meta charset="utf-8">
+<title>Dropspot Pro — Fiche de l'établissement</title>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+.board{font-family:'Figtree',system-ui,sans-serif;color:#231915}
+.th-light{--bg:#FAF7F2;--surface:#FFFFFF;--surface2:#F1ECE4;--line:#E3DACE;--text:#231915;--text2:#685A4E;--accent:#A34B1A;--onaccent:#FFFFFF;--accentsoft:#F6E5D7;--accenttext:#86390F;--ok:#2B6A47;--oksoft:#E2F0E7;--warn:#8A4B00;--warnsoft:#FBEBD2;--ph1:#DCC6AF;--ph2:#CBBBA2;--ph3:#E3D2BE;--shadow:0 6px 24px rgba(58,34,18,.14)}
+.th-dark{--bg:#14100D;--surface:#211914;--surface2:#2C231D;--line:#3B3029;--text:#F4EDE6;--text2:#BBAD9F;--accent:#E3905A;--onaccent:#1B0F08;--accentsoft:#3D2719;--accenttext:#F3B086;--ok:#7CC79C;--oksoft:#1B3125;--warn:#F0B467;--warnsoft:#3A2A12;--ph1:#3A2C22;--ph2:#33291F;--ph3:#42332A;--shadow:0 6px 24px rgba(0,0,0,.45)}
+.desk{position:relative;width:1440px;height:900px;overflow:hidden;display:flex;background:var(--bg);color:var(--text);border-radius:16px;box-shadow:0 0 0 1px rgba(40,25,15,.10),0 24px 60px rgba(40,25,15,.14);font-family:'Figtree',system-ui,sans-serif;font-size:15px;flex:none}
+.disp{font-family:'Bricolage Grotesque','Figtree',sans-serif;letter-spacing:-.01em}
+.ic{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.ic-s{width:16px;height:16px}.fill{fill:currentColor}
+button{font:inherit;color:inherit;cursor:pointer}
+input,textarea{font:inherit;color:var(--text)}
+.side{width:264px;flex:none;display:flex;flex-direction:column;gap:18px;padding:20px 16px;box-sizing:border-box;background:var(--surface);border-right:1px solid var(--line)}
+.cafesel{display:flex;align-items:center;gap:10px;padding:10px 12px 10px 10px;border-radius:14px;border:1.5px solid var(--accent);background:var(--accentsoft);color:var(--text);text-decoration:none}
+.av{display:flex;align-items:center;justify-content:center;flex:none;width:40px;height:40px;border-radius:10px;font-family:'Bricolage Grotesque',sans-serif;font-weight:800;font-size:15px}
+.av1{background:var(--accent);color:var(--onaccent)}.av3{background:var(--surface2);color:var(--text2)}
+.navi{display:flex;align-items:center;gap:12px;height:42px;padding:0 12px;border-radius:12px;font-size:15px;font-weight:600;color:var(--text2);text-decoration:none}
+.navon{background:var(--surface2);color:var(--text)}
+.main{flex:1;min-width:0;display:flex;flex-direction:column}
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:16px;height:84px;padding:0 32px;border-bottom:1px solid var(--line);flex:none;box-sizing:border-box}
+.h1{margin:0;font-size:26px;font-weight:800}
+.sub{margin:2px 0 0;font-size:14px;color:var(--text2)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:18px}
+.sec{padding:18px;display:flex;flex-direction:column;gap:12px}
+.h2{margin:0;font-size:17px;font-weight:700}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:44px;padding:0 18px;border:none;border-radius:12px;font-size:15px;font-weight:700;text-decoration:none;box-sizing:border-box;white-space:nowrap;flex:none}
+.btn-sm{height:34px;padding:0 12px;font-size:14px;border-radius:10px}
+.btn-main{background:var(--accent);color:var(--onaccent)}
+.btn-out{background:var(--surface);color:var(--text);border:1.5px solid var(--line)}
+.btn-ghost{background:transparent;color:var(--accent)}
+.plan{display:inline-flex;align-items:center;gap:4px;height:22px;padding:0 8px;border-radius:11px;font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;white-space:nowrap;box-sizing:border-box}
+.p-free{border:1.5px solid var(--line);color:var(--text2)}.p-pro{background:var(--text);color:var(--bg)}
+.hint{font-size:13px;color:var(--text2)}
+.field{display:flex;flex-direction:column;gap:6px;font-size:14px;font-weight:600}
+.inp{height:40px;padding:0 12px;border-radius:10px;border:1px solid var(--line);background:var(--bg);font-size:15px;font-weight:500;box-sizing:border-box;width:100%;outline:none}
+.hrow{display:flex;align-items:center;gap:8px;font-size:14px;min-height:30px}
+.hrow b{width:42px;font-weight:700}
+.time{display:inline-flex;align-items:center;height:30px;padding:0 8px;border-radius:8px;background:var(--surface2);font-variant-numeric:tabular-nums;font-weight:600}
+.tag{display:inline-flex;align-items:center;gap:5px;height:24px;padding:0 9px;border-radius:12px;font-size:12px;font-weight:700;white-space:nowrap}
+.t-ok{background:var(--oksoft);color:var(--ok)}.t-warn{background:var(--warnsoft);color:var(--warn)}
+.feat{display:inline-flex;align-items:center;gap:4px;height:24px;padding:0 7px;border-radius:7px;background:var(--surface2);font-size:12px;font-weight:600;white-space:nowrap}
+.ph1{background:var(--ph1)}.ph2{background:var(--ph2)}.ph3{background:var(--ph3)}
+.vlabel{font-size:16px;font-weight:600;color:#5A4E45}
+</style>
+</helmet>
+<div class="board" style="width: 3064px; height: 1130px; box-sizing: border-box; padding: 56px 64px; background: #ECE8E2; display: flex; flex-direction: column; gap: 28px">
+<div style="display: flex; align-items: baseline; gap: 18px">
+<h1 class="disp" style="margin: 0; font-size: 44px; font-weight: 800; color: #231915">Pro 4 · Fiche de l'établissement</h1>
+<p style="margin: 0; font-size: 18px; color: #5A4E45">Modifier sa fiche à gauche, voir tout de suite ce que verront les clients à droite.</p>
+</div>
+<div style="display: flex; gap: 56px; align-items: flex-start">
+<sc-for list="{{desks}}" as="p" hint-placeholder-count="2">
+<div style="display: flex; flex-direction: column; gap: 14px">
+<div class="vlabel">{{p.label}}</div>
+<div class="{{p.cls}}">
+<aside class="side">
+<div style="display: flex; align-items: baseline; justify-content: space-between; padding: 2px 6px 0"><span class="disp" style="font-size: 23px; font-weight: 800">Dropspot</span><span class="hint" style="font-weight: 700">Espace gérant</span></div>
+<a href="ProSelecteur.dc.html" class="cafesel" aria-label="Établissement actif : Tech Café Sophia. Changer d'établissement">
+<span class="av av1">TC</span>
+<span style="display: flex; flex-direction: column; min-width: 0; flex: 1"><span style="font-size: 15px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">Tech Café Sophia</span><span class="hint">Biot · 1 café sur 2</span></span>
+<svg class="ic" sc-camel-view-box="0 0 24 24" aria-hidden="true"><path d="{{ic.chevUD}}"></path></svg>
+</a>
+<nav aria-label="Menu" style="display: flex; flex-direction: column; gap: 2px">
+<sc-for list="{{nav}}" as="n" hint-placeholder-count="7"><a class="{{n.cls}}" href="{{n.href}}"><svg class="ic" sc-camel-view-box="0 0 24 24" aria-hidden="true"><path d="{{n.d}}"></path></svg>{{n.label}}</a></sc-for>
+</nav>
+<div style="margin-top: auto; display: flex; flex-direction: column; gap: 12px">
+<div style="padding: 14px; border-radius: 14px; background: var(--surface2); display: flex; flex-direction: column; gap: 8px">
+<div style="display: flex; align-items: center; gap: 8px"><span class="plan p-free">Gratuit</span><span class="hint">Ton offre</span></div>
+<a href="ProAbonnement.dc.html" style="font-size: 14px; font-weight: 700; color: var(--accent); text-decoration: none">Découvrir Pro →</a>
+</div>
+<div style="display: flex; align-items: center; gap: 10px; padding: 4px 6px"><span class="av av3" style="width: 34px; height: 34px; border-radius: 17px; font-size: 14px">N</span><span style="font-size: 14px; font-weight: 600">Niss Mrad</span></div>
+</div>
+</aside>
+<div class="main">
+<header class="topbar">
+<div><h2 class="h1 disp">Établissement</h2><p class="sub">Tech Café Sophia · 2 modifications non publiées</p></div>
+<div style="display: flex; gap: 10px"><button class="btn btn-out">Annuler</button><button class="btn btn-main">Publier les modifications</button></div>
+</header>
+<div style="flex: 1; min-height: 0; display: flex; gap: 24px; padding: 24px 32px; overflow: hidden">
+<div style="flex: 1; min-width: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; align-content: start">
+<div style="display: flex; flex-direction: column; gap: 16px">
+<section class="card sec">
+<h3 class="h2 disp">Infos générales</h3>
+<label class="field">Nom<input class="inp" value="Tech Café Sophia"></label>
+<label class="field">Adresse<input class="inp" value="Campus des Templiers, 06410 Biot"></label>
+<label class="field">Téléphone<input class="inp" value="04 93 00 00 12"></label>
+<label class="field">Description<textarea class="inp" style="height: 104px; padding: 10px 12px; resize: none; line-height: 1.45">Café de campus avec grandes tables, prises partout et matcha latte maison. Calme le matin, plus animé après 16 h.</textarea><span class="hint" style="font-weight: 500">112 / 300 caractères</span></label>
+</section>
+<section class="card sec">
+<h3 class="h2 disp">Liens</h3>
+<div style="display: flex; align-items: center; gap: 10px"><svg class="ic" sc-camel-view-box="0 0 24 24" aria-hidden="true"><path d="{{ic.link}}"></path></svg><input class="inp" aria-label="Site web" value="techcafe-sophia.fr"></div>
+<div style="display: flex; align-items: center; gap: 10px"><svg class="ic" sc-camel-view-box="0 0 24 24" aria-hidden="true"><path d="{{ic.insta}}"></path></svg><input class="inp" aria-label="Instagram" value="@techcafesophia"></div>
+</section>
+</div>
+<div style="display: flex; flex-direction: column; gap: 16px">
+<section class="card sec">
+<div style="display: flex; align-items: center; justify-content: space-between"><h3 class="h2 disp">Horaires</h3><span class="hint">Heure de Paris</span></div>
+<div style="display: flex; flex-direction: column; gap: 4px">
+<sc-for list="{{hours}}" as="h" hint-placeholder-count="7">
+<div class="hrow"><b>{{h.day}}</b><sc-if value="{{h.open}}" hint-placeholder-val="{{true}}"><span class="time">{{h.from}}</span>–<span class="time">{{h.to}}</span></sc-if><sc-if value="{{h.closed}}" hint-placeholder-val="{{false}}"><span style="color: var(--text2); font-weight: 600">Fermé</span></sc-if></div>
+</sc-for>
+</div>
+<div style="border-top: 1px solid var(--line); padding-top: 12px; display: flex; flex-direction: column; gap: 8px">
+<div style="display: flex; align-items: center; justify-content: space-between"><span style="font-size: 15px; font-weight: 700">Horaires exceptionnels</span><button class="btn btn-sm btn-ghost"><svg class="ic ic-s" sc-camel-view-box="0 0 24 24" aria-hidden="true"><path d="{{ic.plus}}"></path></svg>Ajouter</button></div>
+<div class="hrow"><span class="tag t-warn">sam. 31 oct.</span><span style="flex: 1">Halloween</span><span class="time">09:00</span>–<span class="time">14:00</span></div>
+<div class="hrow"><span class="tag t-warn">mer. 11 nov.</span><span style="flex: 1">Férié</span><span style="color: var(--text2); font-weight: 600">Fermé</span></div>
+</div>
+</section>
+<section class="card sec">
+<div style="display: flex; align-items: center; justify-content: space-between"><h3 class="h2 disp">Photos</h3><span class="hint">Glisse pour changer l'ordre</span></div>
+<div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px">
+<div class="ph1" style="height: 78px; border-radius: 12px; position: relative"><span class="tag" style="position: absolute; left: 6px; bottom: 6px; background: var(--surface); color: var(--text)">Principale</span></div>
+<div class="ph2" style="height: 78px; border-radius: 12px"></div>
+<button aria-label="Ajouter une photo" style="height: 78px; border-radius: 12px; border: 1.5px dashed var(--line); background: transparent; color: var(--text2); display: flex; align-items: center; justify-content: center"><svg class="ic" sc-camel-view-box="0 0 24 24" aria-hidden="true"><path d="{{ic.plus}}"></path></svg></button>
+</div>
+<div style="display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--text2)"><svg class="ic ic-s" sc-camel-view-box="0 0 24 24" aria-hidden="true"><path d="{{ic.lock}}"></path></svg>Galerie complète et vidéo<span class="plan p-pro">Pro</span></div>
+</section>
+</div>
+</div>
+<aside aria-label="Aperçu client" style="width: 330px; flex: none; display: flex; flex-direction: column; gap: 10px">
+<div style="display: flex; align-items: center; justify-content: space-between"><span style="font-size: 15px; font-weight: 700; display: inline-flex; align-items: center; gap: 6px"><svg class="ic ic-s" sc-camel-view-box="0 0 24 24" aria-hidden="true"><path d="{{ic.eye}}"></path></svg>Comme le voient les clients</span></div>
+<div style="width: 330px; height: 690px; border-radius: 40px; overflow: hidden; background: var(--bg); box-shadow: 0 0 0 8px var(--surface2), var(--shadow); position: relative">
+<div class="ph1" style="height: 180px"></div>
+<div style="position: relative; margin-top: -22px; border-radius: 22px 22px 0 0; background: var(--bg); padding: 18px 14px; display: flex; flex-direction: column; gap: 12px">
+<span class="disp" style="font-size: 23px; font-weight: 800">Tech Café Sophia</span>
+<span style="font-size: 13px; color: var(--text2)"><span style="color: var(--ok); font-weight: 700">Ouvert</span> · ferme à 19 h</span>
+<div style="display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 14px; background: var(--surface); border: 1px solid var(--line)"><span class="disp" style="font-size: 26px; font-weight: 800">4,6</span><span style="font-size: 12px; color: var(--text2)">38 avis de la communauté</span></div>
+<p style="margin: 0; font-size: 13px; line-height: 1.45; color: var(--text2)">Café de campus avec grandes tables, prises partout et matcha latte maison.</p>
+<div style="display: flex; gap: 6px; flex-wrap: wrap"><span class="feat"><svg class="ic" sc-camel-view-box="0 0 24 24" aria-hidden="true" style="width: 14px; height: 14px"><path d="{{ic.wifi}}"></path></svg>Wi-Fi</span><span class="feat"><svg class="ic" sc-camel-view-box="0 0 24 24" aria-hidden="true" style="width: 14px; height: 14px"><path d="{{ic.leaf}}"></path></svg>Matcha</span><span class="feat"><svg class="ic" sc-camel-view-box="0 0 24 24" aria-hidden="true" style="width: 14px; height: 14px"><path d="{{ic.moon}}"></path></svg>Calme</span></div>
+<div style="padding: 10px 12px; border-radius: 12px; background: var(--warnsoft); color: var(--warn); font-size: 13px; font-weight: 700">Sam. 31 oct. : ouvert 09:00 – 14:00</div>
+</div>
+</div>
+</aside>
+</div>
+</div>
+</div>
+</div>
+</sc-for>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script="" data-props="{&quot;$preview&quot;:{&quot;width&quot;:3064,&quot;height&quot;:1130}}">
+class Component extends DCLogic {
+  renderVals() {
+    const ic = {
+      home: 'M3 10.5L12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z',
+      zap: 'M13 2L4 14h7l-1 8 9-12h-7l1-8z',
+      store: 'M3 9l1.5-5h15L21 9M4 9v11h16V9M3 9h18M9 20v-6h6v6',
+      specs: 'M3 6l2 2 3-3M3 13l2 2 3-3M11 6h10M11 13h10M11 20h10M4 20h3',
+      users: 'M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M13 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0zM22 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8',
+      crown: 'M3 19h18M4 8l4 4 4-7 4 7 4-4-2 9H6z',
+      gear: 'M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z',
+      chevUD: 'M7 9l5-5 5 5M7 15l5 5 5-5',
+      plus: 'M12 5v14M5 12h14',
+      lock: 'M5 11h14v10H5zM8 11V7a4 4 0 0 1 8 0v4',
+      eye: 'M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12zM15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0z',
+      link: 'M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7',
+      insta: 'M7 3h10a4 4 0 0 1 4 4v10a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V7a4 4 0 0 1 4-4zM16 12a4 4 0 1 1-8 0 4 4 0 0 1 8 0zM17.5 6.5h.01',
+      wifi: 'M2.5 8.8a14 14 0 0 1 19 0M5.5 12.2a9.5 9.5 0 0 1 13 0M8.6 15.5a5 5 0 0 1 6.8 0M12 19.2h.01',
+      leaf: 'M5 20c0-8.5 5.5-15 15-15 0 9.5-6.5 15-15 15zM5 20l8-8',
+      moon: 'M20 14.5A8 8 0 0 1 9.5 4 8 8 0 1 0 20 14.5z'
+    };
+    const NAV = [['Accueil', 'ProAccueil.dc.html', 'home'], ['Drops', 'ProDrops.dc.html', 'zap'], ['Établissement', 'ProFiche.dc.html', 'store'], ['Spécificités', 'ProSpecificites.dc.html', 'specs'], ['Équipe', 'ProEquipe.dc.html', 'users'], ['Abonnement', 'ProAbonnement.dc.html', 'crown'], ['Réglages', 'ProReglages.dc.html', 'gear']];
+    const nav = NAV.map(([label, href, k]) => ({ label, href, d: ic[k], cls: label === 'Établissement' ? 'navi navon' : 'navi' }));
+    const desks = [{ label: 'Ordinateur · Clair', cls: 'desk th-light' }, { label: 'Ordinateur · Sombre', cls: 'desk th-dark' }];
+    const H = (day, from, to) => ({ day, from, to, open: !!from, closed: !from });
+    const hours = [H('Lun.', '08:00', '19:00'), H('Mar.', '08:00', '19:00'), H('Mer.', '08:00', '19:00'), H('Jeu.', '08:00', '22:00'), H('Ven.', '08:00', '19:00'), H('Sam.', '09:00', '17:00'), H('Dim.', null, null)];
+    return { ic, nav, desks, hours };
+  }
+}
+</script>
+
+
+</body></html>

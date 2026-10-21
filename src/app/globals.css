@@ -16,6 +16,11 @@
   --accentsoft: #f6e5d7;
   --accenttext: #86390f;
   --ok: #2b6a47;
+  --oksoft: #e2f0e7;
+  --warn: #8a4b00;
+  --warnsoft: #fbebd2;
+  --danger: #b3261e;
+  --dangersoft: #fbe4e1;
   --pin: #2a1d16;
   --onpin: #ffffff;
   --map: #ece5da;
@@ -36,6 +41,11 @@
   --accentsoft: #3d2719;
   --accenttext: #f3b086;
   --ok: #7cc79c;
+  --oksoft: #1b3125;
+  --warn: #f0b467;
+  --warnsoft: #3a2a12;
+  --danger: #f2a097;
+  --dangersoft: #3d1d1a;
   --pin: #f4ede6;
   --onpin: #1b120d;
   --map: #1c1713;
@@ -57,6 +67,11 @@
   --color-ds-accentsoft: var(--accentsoft);
   --color-ds-accenttext: var(--accenttext);
   --color-ds-ok: var(--ok);
+  --color-ds-oksoft: var(--oksoft);
+  --color-ds-warn: var(--warn);
+  --color-ds-warnsoft: var(--warnsoft);
+  --color-ds-danger: var(--danger);
+  --color-ds-dangersoft: var(--dangersoft);
   --color-ds-pin: var(--pin);
   --color-ds-onpin: var(--onpin);
   --color-ds-map: var(--map);

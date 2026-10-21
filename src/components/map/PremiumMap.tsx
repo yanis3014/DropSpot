@@ -20,6 +20,7 @@ import type { GeolocateControl as MapboxGeolocateControl } from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import {
   CalendarBlank,
+  CircleNotch,
   Clock,
   Coffee,
   Crosshair,
@@ -56,6 +57,18 @@ import { cn } from "@/lib/cn";
 const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN;
 const MAP_STYLE_LIGHT = "mapbox://styles/yanis3014/cmuldtuxb002h01s51acaf25v";
 const MAP_STYLE_DARK = "mapbox://styles/mapbox/dark-v11";
+
+/**
+ * Distance (m) between the map center and the user's position beyond which
+ * the "Près de moi" button comes back, like Google Maps' recenter button.
+ */
+const RECENTER_BUTTON_DISTANCE_M = 300;
+/** Max wait for a position after a tap on "Près de moi" before giving up. */
+const GEOLOCATE_TIMEOUT_MS = 10_000;
+/** How long the "position not found" hint stays on screen. */
+const GEOLOCATE_ERROR_HINT_MS = 4_000;
+/** GeolocationPositionError.PERMISSION_DENIED */
+const GEO_ERROR_PERMISSION_DENIED = 1;
 
 const FILTER_CHIPS: {
   id: AmenityFilterId;
@@ -163,11 +176,21 @@ export default function PremiumMap() {
   const [userCoords, setUserCoords] = useState<LatLng | null>(null);
   const [geoDenied, setGeoDenied] = useState(false);
   const [locBannerDismissed, setLocBannerDismissed] = useState(false);
+  const [locating, setLocating] = useState(false);
+  const [isTracking, setIsTracking] = useState(false);
+  const [farFromUser, setFarFromUser] = useState(false);
+  const [locateFailed, setLocateFailed] = useState(false);
 
   const mapRef = useRef<MapRef>(null);
   const geolocateControlRef = useRef<MapboxGeolocateControl | null>(null);
   const didAutoGeolocate = useRef(false);
+  // The Mapbox control's trigger() toggles: from an error state it turns
+  // tracking off, so a retry then needs a second trigger().
+  const geolocateErroredRef = useRef(false);
+  const locateTimeoutRef = useRef<number | null>(null);
   const showLocDenied = geoDenied && !locBannerDismissed && !userCoords;
+  const showNearMe =
+    locating || !userCoords || (!isTracking && farFromUser);
 
   const mapStyle = theme === "dark" ? MAP_STYLE_DARK : MAP_STYLE_LIGHT;
 
@@ -233,8 +256,59 @@ export default function PremiumMap() {
     });
   }, []);
 
+  const stopLocating = useCallback(() => {
+    setLocating(false);
+    if (locateTimeoutRef.current !== null) {
+      window.clearTimeout(locateTimeoutRef.current);
+      locateTimeoutRef.current = null;
+    }
+  }, []);
+
+  useEffect(() => stopLocating, [stopLocating]);
+
+  useEffect(() => {
+    if (!locateFailed) return;
+    const id = window.setTimeout(
+      () => setLocateFailed(false),
+      GEOLOCATE_ERROR_HINT_MS
+    );
+    return () => window.clearTimeout(id);
+  }, [locateFailed]);
+
+  const updateFarFromUser = useCallback((coords: LatLng | null) => {
+    const center = mapRef.current?.getCenter();
+    if (!coords || !center) return;
+    setFarFromUser(
+      distanceMeters(coords, { lat: center.lat, lng: center.lng }) >
+        RECENTER_BUTTON_DISTANCE_M
+    );
+  }, []);
+
+  // The user may also walk away from where the map was left.
+  useEffect(() => {
+    updateFarFromUser(userCoords);
+  }, [userCoords, updateFarFromUser]);
+
   const handleNearMe = () => {
-    geolocateControlRef.current?.trigger();
+    const control = geolocateControlRef.current;
+    if (!control || locating) return;
+    setLocateFailed(false);
+    if (userCoords && !geolocateErroredRef.current) {
+      // Position already known: the control just recenters on it.
+      control.trigger();
+      return;
+    }
+    setLocating(true);
+    locateTimeoutRef.current = window.setTimeout(() => {
+      locateTimeoutRef.current = null;
+      setLocating(false);
+      setLocateFailed(true);
+    }, GEOLOCATE_TIMEOUT_MS);
+    if (geolocateErroredRef.current) {
+      geolocateErroredRef.current = false;
+      control.trigger();
+    }
+    if (!control.trigger()) stopLocating();
   };
 
   const handleEnableLocation = useCallback(async () => {
@@ -339,6 +413,7 @@ export default function PremiumMap() {
         attributionControl={false}
         onError={handleMapError}
         onLoad={handleMapLoad}
+        onMove={() => updateFarFromUser(userCoords)}
         onClick={() => setSelectedPlace(null)}
       >
         <GeolocateControl
@@ -347,17 +422,33 @@ export default function PremiumMap() {
           trackUserLocation
           showUserLocation
           showUserHeading
-          positionOptions={{ enableHighAccuracy: true }}
+          positionOptions={{
+            enableHighAccuracy: true,
+            timeout: GEOLOCATE_TIMEOUT_MS,
+          }}
           style={{ display: "none" }}
           onGeolocate={(e) => {
+            geolocateErroredRef.current = false;
+            stopLocating();
+            setLocateFailed(false);
             setGeoDenied(false);
             setUserCoords({
               lat: e.coords.latitude,
               lng: e.coords.longitude,
             });
           }}
-          onError={() => {
-            setGeoDenied(true);
+          onTrackUserLocationStart={() => setIsTracking(true)}
+          onTrackUserLocationEnd={() => setIsTracking(false)}
+          onError={(e) => {
+            if (e.code === GEO_ERROR_PERMISSION_DENIED) {
+              // The control is already off in this case.
+              setGeoDenied(true);
+              setLocBannerDismissed(false);
+            } else {
+              geolocateErroredRef.current = true;
+              if (locating) setLocateFailed(true);
+            }
+            stopLocating();
           }}
         />
 
@@ -418,14 +509,47 @@ export default function PremiumMap() {
         <button
           type="button"
           onClick={handleNearMe}
+          disabled={locating}
+          aria-busy={locating}
+          aria-hidden={!showNearMe}
+          tabIndex={showNearMe ? 0 : -1}
           className={cn(
-            "absolute left-1/2 z-20 flex h-[52px] -translate-x-1/2 items-center justify-center gap-2 rounded-[26px] bg-ds-accent px-5 text-base font-bold text-ds-onaccent shadow-ds",
-            selectedPlace ? "bottom-[13.5rem]" : "bottom-28"
+            "absolute left-1/2 z-20 flex h-[52px] -translate-x-1/2 items-center justify-center gap-2 rounded-[26px] bg-ds-accent px-5 text-base font-bold text-ds-onaccent shadow-ds transition-[opacity,transform,bottom] duration-300",
+            selectedPlace ? "bottom-[13.5rem]" : "bottom-28",
+            showNearMe
+              ? "translate-y-0 scale-100 opacity-100"
+              : "pointer-events-none translate-y-3 scale-90 opacity-0"
           )}
         >
-          <Crosshair size={22} weight="regular" aria-hidden />
-          Près de moi
+          {locating ? (
+            <>
+              <CircleNotch
+                size={22}
+                weight="bold"
+                className="animate-spin"
+                aria-hidden
+              />
+              Recherche…
+            </>
+          ) : (
+            <>
+              <Crosshair size={22} weight="regular" aria-hidden />
+              Près de moi
+            </>
+          )}
         </button>
+      ) : null}
+
+      {locateFailed && !showLocDenied ? (
+        <p
+          role="status"
+          className={cn(
+            "absolute left-1/2 z-20 -translate-x-1/2 whitespace-nowrap rounded-full bg-ds-surface px-4 py-2 text-sm font-medium text-ds-text shadow-ds",
+            selectedPlace ? "bottom-[17.5rem]" : "bottom-[11rem]"
+          )}
+        >
+          Position introuvable, réessaie dans un instant.
+        </p>
       ) : null}
 
       {showLocDenied ? (

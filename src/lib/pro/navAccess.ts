@@ -3,15 +3,19 @@ import type { PlaceMemberRole } from '@/app/(pro)/dashboard-pro/lib/api/vendor';
 const OWNER_ONLY_PREFIXES = [
   '/equipe',
   '/abonnement',
-  '/reglages',
   '/dashboard-pro/settings',
 ];
 
-/** Établissement + spécificités : lecture pour tous les rôles. */
+/** Établissement, spécificités, réglages : tous les rôles. */
 const ETABLISSEMENT_PREFIX = '/etablissement';
 const SPECIFICITES_PREFIX = '/specificites';
+const REGLAGES_PREFIX = '/reglages';
 
-const READ_ALL_ROLES_PREFIXES = [ETABLISSEMENT_PREFIX, SPECIFICITES_PREFIX];
+const READ_ALL_ROLES_PREFIXES = [
+  ETABLISSEMENT_PREFIX,
+  SPECIFICITES_PREFIX,
+  REGLAGES_PREFIX,
+];
 
 const MANAGER_EXTRA_PREFIXES = [
   '/dashboard-pro/drops',
@@ -162,7 +166,8 @@ export function filterProNavHref(
     return (
       path === '/dashboard-pro' ||
       path === '/valider' ||
-      path === SPECIFICITES_PREFIX
+      path === SPECIFICITES_PREFIX ||
+      path === REGLAGES_PREFIX
     );
   }
   if (role === 'manager') {
@@ -172,7 +177,8 @@ export function filterProNavHref(
       path === '/dashboard-pro/drops' ||
       path.startsWith('/dashboard-pro/drops/') ||
       path === ETABLISSEMENT_PREFIX ||
-      path === SPECIFICITES_PREFIX
+      path === SPECIFICITES_PREFIX ||
+      path === REGLAGES_PREFIX
     );
   }
   return true;

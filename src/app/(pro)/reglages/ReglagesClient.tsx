@@ -77,6 +77,8 @@ export default function ReglagesClient() {
   const [nameDraft, setNameDraft] = useState('');
   const [editingEmail, setEditingEmail] = useState(false);
   const [emailDraft, setEmailDraft] = useState('');
+  const [editingPassword, setEditingPassword] = useState(false);
+  const [passwordDraft, setPasswordDraft] = useState('');
   const [busy, setBusy] = useState(false);
 
   const [leaveOpen, setLeaveOpen] = useState(false);
@@ -191,30 +193,31 @@ export default function ReglagesClient() {
     }
   };
 
+  // Signed-in user sets the new password here: the app has no
+  // "new password" page for a reset link.
   const changePassword = async () => {
-    if (!supabase || !authEmail) {
-      setError('Aucune adresse e-mail sur ce compte.');
+    if (!supabase) return;
+    const next = passwordDraft;
+    if (next.length < 8) {
+      setError('Le mot de passe doit faire au moins 8 caractères.');
       return;
     }
     setBusy(true);
     setError(null);
     setInfo(null);
     try {
-      const redirectTo =
-        typeof window !== 'undefined'
-          ? `${window.location.origin}/login`
-          : undefined;
-      const { error: resetError } = await supabase.auth.resetPasswordForEmail(
-        authEmail,
-        redirectTo ? { redirectTo } : undefined
-      );
-      if (resetError) throw resetError;
-      setInfo(
-        'Un e-mail pour changer ton mot de passe vient de t’être envoyé.'
-      );
+      const { error: updateError } = await supabase.auth.updateUser({
+        password: next,
+      });
+      if (updateError) throw updateError;
+      setEditingPassword(false);
+      setPasswordDraft('');
+      setInfo('Ton mot de passe a été changé.');
     } catch (err) {
       console.error(err);
-      setError('Impossible d’envoyer l’e-mail de réinitialisation.');
+      setError(
+        'Impossible de changer le mot de passe. Déconnecte-toi, reconnecte-toi puis réessaie.'
+      );
     } finally {
       setBusy(false);
     }
@@ -433,22 +436,24 @@ export default function ReglagesClient() {
               onSave={() => void saveEmail()}
               busy={busy}
             />
-            <div className="flex items-center gap-3.5 border-t border-ds-line px-5 py-3">
-              <span className="w-[110px] shrink-0 text-[13px] text-ds-text2">
-                Mot de passe
-              </span>
-              <span className="flex-1 font-semibold tracking-widest">
-                ••••••••
-              </span>
-              <Button
-                variant="outline"
-                className="h-9 rounded-[10px] px-3 text-sm"
-                disabled={busy}
-                onClick={() => void changePassword()}
-              >
-                Changer
-              </Button>
-            </div>
+            <AccountRow
+              label="Mot de passe"
+              value="••••••••"
+              editing={editingPassword}
+              draft={passwordDraft}
+              onDraft={setPasswordDraft}
+              inputType="password"
+              onEdit={() => {
+                setEditingPassword(true);
+                setPasswordDraft('');
+              }}
+              onCancel={() => {
+                setEditingPassword(false);
+                setPasswordDraft('');
+              }}
+              onSave={() => void changePassword()}
+              busy={busy}
+            />
           </section>
 
           {/* Affichage */}

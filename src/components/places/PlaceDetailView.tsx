@@ -9,7 +9,8 @@ import {
 } from 'react';
 import { useRouter } from 'next/navigation';
 import {
-  ArrowLeft,
+  CaretLeft,
+  CaretRight,
   Coffee,
   WifiHigh,
   Plugs,
@@ -20,11 +21,15 @@ import {
   MapPin,
   NavigationArrow,
   Lightning,
+  ShareNetwork,
+  Images,
+  Clock,
 } from '@phosphor-icons/react';
 import FavoriteButton from '@/components/places/FavoriteButton';
+import PhotoViewer from '@/components/places/PhotoViewer';
 import CheckInModal from '@/components/spots/CheckInModal';
 import TrophyModal from '@/components/places/TrophyModal';
-import TrophyBadge, { mockTrophyForPlace } from '@/components/places/TrophyBadge';
+import TrophyBadge from '@/components/places/TrophyBadge';
 import { Place } from '@/lib/api/places';
 import { CheckIn, crowdConfig } from '@/lib/api/checkins';
 import { getPlaceTopTrophy, type PlaceTrophy } from '@/lib/api/endorsements';
@@ -38,12 +43,8 @@ import {
   noiseLabel,
   wifiLabel,
 } from '@/lib/placeAmenities';
-import {
-  groupPlaceMedia,
-  PLACE_MEDIA_TABS,
-  type PlaceMedia,
-  type PlaceMediaCategory,
-} from '@/lib/api/placeMedia';
+import type { PlaceMedia } from '@/lib/api/placeMedia';
+import { buildPlaceGallery, sectionForIndex } from '@/lib/placeGallery';
 import { getPlaceOpenStatus } from '@/lib/api/openingHours';
 import {
   cafeOpenStatus,
@@ -74,6 +75,12 @@ const OPEN_STATUS_CLASS: Record<CafeOpenStatus, string> = {
   closed: 'text-ds-text2 font-bold',
 };
 
+/** Au-delà, les points du carrousel deviennent illisibles : le compteur suffit. */
+const MAX_CAROUSEL_DOTS = 8;
+
+const ROUND_BUTTON =
+  'w-11 h-11 flex items-center justify-center rounded-full bg-ds-surface text-ds-text shadow-[var(--shadow)] active:scale-95 transition-all';
+
 function timeAgo(iso: string): string {
   const minutes = Math.round((Date.now() - new Date(iso).getTime()) / 60000);
   if (minutes < 1) return "à l'instant";
@@ -99,33 +106,21 @@ export default function PlaceDetailView({
     name: string;
   } | null>(null);
   const [toast, setToast] = useState<string | null>(null);
-  const [activeCategory, setActiveCategory] =
-    useState<PlaceMediaCategory>('venue');
   const [slideIndex, setSlideIndex] = useState(0);
+  const [viewerIndex, setViewerIndex] = useState<number | null>(null);
   const galleryRef = useRef<HTMLDivElement>(null);
+  const toastTimer = useRef<number | null>(null);
   const [openMeta, setOpenMeta] = useState<{
     status: CafeOpenStatus;
     statusDetail?: string;
   } | null>(null);
 
-  const grouped = useMemo(() => groupPlaceMedia(media), [media]);
-
-  const availableTabs = useMemo(
-    () =>
-      PLACE_MEDIA_TABS.filter((tab) => grouped[tab.category].length > 0),
-    [grouped]
+  const gallery = useMemo(
+    () => buildPlaceGallery(media, place.image_url),
+    [media, place.image_url]
   );
-
-  // Fallback cover si aucune entrée place_media
-  const fallbackUrls = useMemo(() => {
-    if (media.length > 0) return [] as string[];
-    return place.image_url ? [place.image_url] : [];
-  }, [media.length, place.image_url]);
-
-  const galleryUrls = useMemo(() => {
-    if (availableTabs.length === 0) return fallbackUrls;
-    return grouped[activeCategory].map((m) => m.url);
-  }, [availableTabs.length, grouped, activeCategory, fallbackUrls]);
+  const photos = gallery.photos;
+  const currentSection = sectionForIndex(gallery, slideIndex);
 
   useEffect(() => {
     getPlaceTopTrophy(place.id).then(setTrophy);
@@ -142,18 +137,18 @@ export default function PlaceDetailView({
     };
   }, [place]);
 
-  // Onglet initial = première catégorie non vide
-  useEffect(() => {
-    if (availableTabs.length === 0) return;
-    if (!availableTabs.some((t) => t.category === activeCategory)) {
-      setActiveCategory(availableTabs[0].category);
-    }
-  }, [availableTabs, activeCategory]);
+  useEffect(
+    () => () => {
+      if (toastTimer.current) window.clearTimeout(toastTimer.current);
+    },
+    []
+  );
 
-  useEffect(() => {
-    setSlideIndex(0);
-    galleryRef.current?.scrollTo({ left: 0 });
-  }, [activeCategory, place.id]);
+  const showToast = (message: string) => {
+    setToast(message);
+    if (toastTimer.current) window.clearTimeout(toastTimer.current);
+    toastTimer.current = window.setTimeout(() => setToast(null), 2800);
+  };
 
   const handleBack = () => {
     if (typeof window !== 'undefined' && window.history.length > 1) {
@@ -163,214 +158,229 @@ export default function PlaceDetailView({
     router.push(backHref);
   };
 
+  const handleShare = async () => {
+    const url = window.location.href;
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: place.name, url });
+        return;
+      }
+      await navigator.clipboard.writeText(url);
+      showToast('Lien copié');
+    } catch (err) {
+      // Partage annulé par l'utilisateur : rien à signaler.
+      if (err instanceof DOMException && err.name === 'AbortError') return;
+      console.error(err);
+    }
+  };
+
   const address = formatAddress(place);
   const crowd = vibe ? crowdConfig[vibe.crowd_level] : null;
 
   const features = [
     place.wifi_speed && {
       icon: WifiHigh,
-      label: `Wi-Fi ${wifiLabel(place.wifi_speed)}`,
+      label: 'Wi-Fi',
+      value: wifiLabel(place.wifi_speed),
     },
-    place.has_plugs && { icon: Plugs, label: 'Prises dispo' },
+    place.has_plugs && { icon: Plugs, label: 'Prises', value: 'Disponibles' },
     place.noise_level && {
       icon: SpeakerHigh,
-      label: noiseLabel(place.noise_level),
+      label: 'Ambiance',
+      value: noiseLabel(place.noise_level),
     },
     place.laptop_policy && {
       icon: Laptop,
-      label: laptopLabel(place.laptop_policy),
+      label: 'Ordinateur',
+      value: laptopLabel(place.laptop_policy),
     },
-    place.has_terrace && { icon: SunDim, label: 'Terrasse' },
-    place.is_vegan && { icon: Leaf, label: 'Vegan' },
-  ].filter(Boolean) as { icon: typeof WifiHigh; label: string }[];
+    place.has_terrace && { icon: SunDim, label: 'Terrasse', value: 'Oui' },
+    place.is_vegan && { icon: Leaf, label: 'Vegan', value: 'Options vegan' },
+  ].filter(Boolean) as { icon: typeof WifiHigh; label: string; value: string }[];
 
   const onGalleryScroll = (e: UIEvent<HTMLDivElement>) => {
     const el = e.currentTarget;
-    const w = el.clientWidth || 1;
-    setSlideIndex(Math.round(el.scrollLeft / w));
+    const i = Math.round(el.scrollLeft / (el.clientWidth || 1));
+    if (i !== slideIndex) setSlideIndex(i);
   };
 
-  const scrollToSlide = (i: number) => {
-    setSlideIndex(i);
+  const scrollToSlide = (i: number, behavior: ScrollBehavior = 'smooth') => {
+    const next = Math.max(0, Math.min(photos.length - 1, i));
+    setSlideIndex(next);
     const track = galleryRef.current;
-    if (track) {
-      track.scrollTo({ left: i * track.clientWidth, behavior: 'smooth' });
-    }
+    if (track) track.scrollTo({ left: next * track.clientWidth, behavior });
+  };
+
+  const closeViewer = (lastIndex: number) => {
+    setViewerIndex(null);
+    scrollToSlide(lastIndex, 'instant');
   };
 
   return (
     <div className="flex flex-col min-h-[100dvh] bg-ds-bg">
-      {/* Galerie / carrousel */}
-      <div className="relative flex-shrink-0 bg-gradient-to-br from-[#2C1E16] to-[#8B6B5D]">
+      {/* Carrousel photos plein écran */}
+      <div className="relative flex-shrink-0 h-[58vh] min-h-[320px] max-h-[500px] bg-ds-surface2">
         <div
           ref={galleryRef}
-          className="flex overflow-x-auto snap-x snap-mandatory scrollbar-hide h-[42vh] min-h-[220px] max-h-[360px]"
+          className="flex h-full overflow-x-auto snap-x snap-mandatory scrollbar-hide"
           onScroll={onGalleryScroll}
-          aria-label="Galerie photos"
+          aria-label="Photos du café"
         >
-          {galleryUrls.length > 0 ? (
-            galleryUrls.map((url, i) => (
-              <div
-                key={`${url}-${i}`}
-                className="relative w-full min-w-full h-full snap-center flex-shrink-0"
+          {photos.length > 0 ? (
+            photos.map((photo, i) => (
+              <button
+                key={photo.url}
+                type="button"
+                onClick={() => setViewerIndex(i)}
+                aria-label={`Agrandir la photo ${i + 1}`}
+                className="relative w-full min-w-full h-full snap-center flex-shrink-0 cursor-zoom-in"
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                  src={url}
-                  alt={`${place.name} — photo ${i + 1}`}
+                  src={photo.url}
+                  alt={`${place.name}, photo ${i + 1}`}
+                  loading={i === 0 ? 'eager' : 'lazy'}
+                  fetchPriority={i === 0 ? 'high' : 'auto'}
                   className="absolute inset-0 w-full h-full object-cover"
                   draggable={false}
                 />
-              </div>
+              </button>
             ))
           ) : (
             <div className="w-full min-w-full h-full flex items-center justify-center snap-center">
-              <Coffee size={48} weight="duotone" className="text-white/30" />
+              <Coffee size={52} weight="duotone" className="text-ds-text2/50" />
             </div>
           )}
         </div>
 
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-ds-bg via-transparent to-black/30" />
-
-        <div className="absolute top-3 left-3 right-3 z-10 flex items-center justify-between gap-2">
+        <div className="absolute top-[max(1rem,env(safe-area-inset-top))] left-4 right-4 z-10 flex items-center justify-between gap-2">
           <button
             type="button"
             onClick={handleBack}
             aria-label="Retour"
-            className="w-10 h-10 flex items-center justify-center bg-ds-surface/90 backdrop-blur-sm rounded-full shadow-md hover:bg-ds-surface active:scale-95 transition-all"
+            className={ROUND_BUTTON}
           >
-            <ArrowLeft size={20} weight="bold" className="text-ds-text" />
+            <CaretLeft size={20} weight="bold" />
           </button>
-          <FavoriteButton
-            placeId={place.id}
-            isSaved={isSaved}
-            onToggle={onToggleSave}
-            size={18}
-            className="w-10 h-10 shadow-md"
-          />
+          <div className="flex gap-2.5">
+            <button
+              type="button"
+              onClick={() => void handleShare()}
+              aria-label="Partager"
+              className={ROUND_BUTTON}
+            >
+              <ShareNetwork size={19} weight="bold" />
+            </button>
+            <FavoriteButton
+              placeId={place.id}
+              isSaved={isSaved}
+              onToggle={onToggleSave}
+              size={19}
+              className="w-11 h-11 !bg-ds-surface shadow-[var(--shadow)]"
+            />
+          </div>
         </div>
 
-        {galleryUrls.length > 1 && (
-          <div className="absolute bottom-4 left-0 right-0 z-10 flex justify-center gap-1.5">
-            {galleryUrls.map((_, i) => (
+        {photos.length > 1 && (
+          <>
+            {slideIndex > 0 && (
+              <button
+                type="button"
+                onClick={() => scrollToSlide(slideIndex - 1)}
+                aria-label="Photo précédente"
+                className="hidden md:flex absolute left-3 top-1/2 -translate-y-1/2 z-10 w-10 h-10 items-center justify-center rounded-full bg-ds-surface/90 text-ds-text shadow-md"
+              >
+                <CaretLeft size={18} weight="bold" />
+              </button>
+            )}
+            {slideIndex < photos.length - 1 && (
+              <button
+                type="button"
+                onClick={() => scrollToSlide(slideIndex + 1)}
+                aria-label="Photo suivante"
+                className="hidden md:flex absolute right-3 top-1/2 -translate-y-1/2 z-10 w-10 h-10 items-center justify-center rounded-full bg-ds-surface/90 text-ds-text shadow-md"
+              >
+                <CaretRight size={18} weight="bold" />
+              </button>
+            )}
+          </>
+        )}
+
+        {photos.length > 1 && photos.length <= MAX_CAROUSEL_DOTS && (
+          <div
+            className="pointer-events-none absolute bottom-12 left-0 right-0 z-10 flex justify-center gap-1.5"
+            aria-hidden="true"
+          >
+            {photos.map((photo, i) => (
               <span
-                key={i}
-                className={`h-1.5 rounded-full transition-all ${
-                  i === slideIndex
-                    ? 'w-5 bg-white'
-                    : 'w-1.5 bg-white/50'
+                key={`dot-${photo.url}`}
+                className={`h-1.5 rounded-full shadow-sm transition-all ${
+                  i === slideIndex ? 'w-[18px] bg-white' : 'w-1.5 bg-white/55'
                 }`}
               />
             ))}
           </div>
         )}
+
+        {photos.length > 0 && (
+          <button
+            type="button"
+            onClick={() => setViewerIndex(slideIndex)}
+            className="absolute right-4 bottom-11 z-10 inline-flex items-center gap-1.5 h-8 px-3 rounded-full bg-[#14100D]/75 text-white text-[13px] font-bold backdrop-blur-sm"
+          >
+            <Images size={15} weight="bold" />
+            {currentSection && gallery.sections.length > 1
+              ? `${currentSection.label} · `
+              : ''}
+            <span className="tabular-nums">
+              {slideIndex + 1} / {photos.length}
+            </span>
+          </button>
+        )}
       </div>
 
-      {/* Contenu */}
-      <div className="flex-1 px-5 pt-1 pb-36 -mt-6 relative">
-        <h1 className="text-2xl font-extrabold text-ds-text tracking-tight mb-2">
-          {place.name}
-        </h1>
-
-        {openMeta ? (
-          <p className="text-sm text-ds-text2 mb-3">
-            <span className={OPEN_STATUS_CLASS[openMeta.status]}>
-              {OPEN_STATUS_LABEL[openMeta.status]}
+      {/* Contenu, en feuille qui recouvre le bas de la photo */}
+      <div className="relative flex-1 -mt-7 rounded-t-[26px] bg-ds-bg px-4 pt-6 pb-40 flex flex-col gap-5">
+        <div className="flex flex-col gap-1.5 px-1">
+          {place.city && (
+            <span className="text-[13px] font-bold uppercase tracking-[0.06em] text-ds-accenttext">
+              Café · {place.city}
             </span>
-            {openMeta.statusDetail ? (
-              <>
-                {' '}
-                · {openMeta.statusDetail}
-              </>
-            ) : null}
-          </p>
-        ) : null}
-
-        <div className="mb-3">
-          <TrophyBadge
-            trophy={trophy ?? mockTrophyForPlace(place.id)}
-            size="md"
-          />
+          )}
+          <h1 className="font-display text-[30px] font-extrabold leading-[1.1] tracking-tight text-ds-text">
+            {place.name}
+          </h1>
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-[15px] text-ds-text2 min-w-0">
+              {openMeta ? (
+                <>
+                  <span className={OPEN_STATUS_CLASS[openMeta.status]}>
+                    {OPEN_STATUS_LABEL[openMeta.status]}
+                  </span>
+                  {openMeta.statusDetail ? ` · ${openMeta.statusDetail}` : null}
+                </>
+              ) : null}
+            </p>
+            <button
+              type="button"
+              onClick={() => openDirections(place)}
+              className="shrink-0 inline-flex items-center gap-1 h-11 text-[15px] font-bold text-ds-accent"
+            >
+              <NavigationArrow size={18} weight="fill" />
+              Itinéraire
+            </button>
+          </div>
         </div>
 
-        {address && (
-          <p className="flex items-start gap-1.5 text-sm text-ds-text2 mb-4">
-            <MapPin
-              size={16}
-              weight="fill"
-              className="text-ds-accent flex-shrink-0 mt-0.5"
-            />
-            {address}
-          </p>
-        )}
-
-        {/* Onglets catégories photos */}
-        {availableTabs.length > 0 && (
-          <div className="mb-5 -mx-5 px-5">
-            <div
-              className="flex gap-2 overflow-x-auto scrollbar-hide pb-1"
-              role="tablist"
-              aria-label="Catégories photos"
-            >
-              {availableTabs.map((tab) => {
-                const active = tab.category === activeCategory;
-                const count = grouped[tab.category].length;
-                return (
-                  <button
-                    key={tab.category}
-                    type="button"
-                    role="tab"
-                    aria-selected={active}
-                    onClick={() => setActiveCategory(tab.category)}
-                    className={`shrink-0 rounded-full px-3.5 py-2 text-xs font-bold border transition-all active:scale-95 ${
-                      active
-                        ? 'bg-ds-pin text-white border-ds-pin'
-                        : 'bg-ds-surface text-ds-text border-ds-text2/15'
-                    }`}
-                  >
-                    {tab.label}
-                    <span
-                      className={`ml-1.5 tabular-nums ${
-                        active ? 'text-white/70' : 'text-ds-text2'
-                      }`}
-                    >
-                      {count}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-
-            {/* Miniatures horizontales de la catégorie active */}
-            {galleryUrls.length > 1 && (
-              <div className="mt-3 flex gap-2 overflow-x-auto snap-x snap-mandatory scrollbar-hide pb-1">
-                {galleryUrls.map((url, i) => (
-                  <button
-                    key={`thumb-${i}`}
-                    type="button"
-                    onClick={() => scrollToSlide(i)}
-                    className={`relative shrink-0 w-16 h-16 rounded-xl overflow-hidden snap-start border-2 transition-all ${
-                      i === slideIndex
-                        ? 'border-ds-ok'
-                        : 'border-transparent opacity-80'
-                    }`}
-                  >
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={url}
-                      alt=""
-                      className="w-full h-full object-cover"
-                    />
-                  </button>
-                ))}
-              </div>
-            )}
+        {trophy && (
+          <div className="px-1 -mt-2">
+            <TrophyBadge trophy={trophy} size="md" />
           </div>
         )}
 
         {crowd && vibe && (
           <div
-            className={`flex items-center justify-between gap-3 rounded-2xl px-4 py-3 mb-4 ${crowd.classes}`}
+            className={`flex items-center justify-between gap-3 rounded-2xl px-4 py-3 ${crowd.classes}`}
           >
             <div className="flex items-center gap-2">
               <span className="relative flex h-2 w-2">
@@ -389,51 +399,121 @@ export default function PlaceDetailView({
         )}
 
         {features.length > 0 && (
-          <div className="flex flex-wrap gap-2 mb-5">
-            {features.map(({ icon: Icon, label }) => (
-              <span
+          <div className="grid grid-cols-2 gap-2.5">
+            {features.map(({ icon: Icon, label, value }) => (
+              <div
                 key={label}
-                className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 bg-ds-surface text-ds-text rounded-full border border-ds-text2/10 shadow-sm"
+                className="flex flex-col gap-1.5 p-3.5 rounded-[18px] bg-ds-surface border border-ds-line"
               >
-                <Icon size={14} weight="duotone" className="text-ds-text2" />
-                {label}
-              </span>
+                <div className="flex items-center gap-2">
+                  <span className="w-8 h-8 flex items-center justify-center rounded-[10px] bg-ds-accentsoft text-ds-accenttext">
+                    <Icon size={18} weight="bold" />
+                  </span>
+                  <span className="text-sm font-semibold text-ds-text2">
+                    {label}
+                  </span>
+                </div>
+                <span className="text-base font-bold text-ds-text">{value}</span>
+              </div>
             ))}
           </div>
         )}
 
-        <h2 className="text-sm font-bold uppercase tracking-wider text-ds-text2 mb-2">
-          L&apos;histoire du spot
-        </h2>
-        {place.description ? (
-          <p className="text-sm text-ds-text/90 leading-relaxed whitespace-pre-line">
-            {place.description}
-          </p>
-        ) : (
-          <p className="text-sm text-ds-text2/70 italic">
-            L&apos;équipe prépare la présentation de ce café. Reviens bientôt !
-          </p>
+        {photos.length > 1 && (
+          <section className="flex flex-col gap-2.5">
+            <div className="flex items-center justify-between px-1">
+              <h2 className="font-display text-xl font-extrabold text-ds-text">
+                Photos
+              </h2>
+              <button
+                type="button"
+                onClick={() => setViewerIndex(0)}
+                className="h-11 text-[15px] font-bold text-ds-accent"
+              >
+                Tout voir ({photos.length})
+              </button>
+            </div>
+            <div className="grid grid-cols-3 gap-2">
+              {gallery.sections.map((s) => (
+                <button
+                  key={s.category}
+                  type="button"
+                  onClick={() => setViewerIndex(s.firstIndex)}
+                  className="flex flex-col gap-1.5 text-left active:scale-[0.98] transition-transform"
+                >
+                  <span className="block w-full aspect-square rounded-[14px] overflow-hidden bg-ds-surface2">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={photos[s.firstIndex].url}
+                      alt=""
+                      loading="lazy"
+                      className="w-full h-full object-cover"
+                    />
+                  </span>
+                  <span className="text-sm font-bold text-ds-text leading-tight">
+                    {s.label}
+                  </span>
+                  <span className="text-[13px] text-ds-text2 -mt-1">
+                    {s.count} photo{s.count > 1 ? 's' : ''}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </section>
         )}
 
-        {place.opening_hours && (
-          <div className="mt-6">
-            <h2 className="text-sm font-bold uppercase tracking-wider text-ds-text2 mb-2">
-              Horaires
-            </h2>
-            <p className="text-sm text-ds-text/90 leading-relaxed">
-              {place.opening_hours}
+        <section className="flex flex-col gap-2 px-1">
+          <h2 className="font-display text-xl font-extrabold text-ds-text">
+            L&apos;histoire du spot
+          </h2>
+          {place.description ? (
+            <p className="text-[15px] text-ds-text/90 leading-relaxed whitespace-pre-line">
+              {place.description}
             </p>
-          </div>
+          ) : (
+            <p className="text-[15px] text-ds-text2 italic">
+              L&apos;équipe prépare la présentation de ce café. Reviens bientôt !
+            </p>
+          )}
+        </section>
+
+        {(place.opening_hours || address) && (
+          <section className="flex flex-col gap-3 p-4 rounded-[18px] bg-ds-surface border border-ds-line">
+            {place.opening_hours && (
+              <div className="flex items-start gap-2.5">
+                <Clock size={18} weight="bold" className="text-ds-text2 mt-0.5 shrink-0" />
+                <div className="flex flex-col gap-0.5">
+                  <h2 className="text-[15px] font-bold text-ds-text">Horaires</h2>
+                  <p className="text-[15px] text-ds-text2 leading-relaxed whitespace-pre-line">
+                    {place.opening_hours}
+                  </p>
+                </div>
+              </div>
+            )}
+            {place.opening_hours && address && (
+              <div className="h-px bg-ds-line" aria-hidden="true" />
+            )}
+            {address && (
+              <button
+                type="button"
+                onClick={() => openDirections(place)}
+                className="flex items-start gap-2.5 text-left"
+              >
+                <MapPin size={18} weight="fill" className="text-ds-accent mt-0.5 shrink-0" />
+                <span className="text-[15px] text-ds-text">{address}</span>
+              </button>
+            )}
+          </section>
         )}
       </div>
 
       {/* Actions sticky au-dessus de la BottomNav */}
       <div className="fixed bottom-[calc(4.75rem+env(safe-area-inset-bottom))] left-0 right-0 z-40 mx-auto w-full max-w-md px-4 pb-2">
-        <div className="flex gap-2 rounded-2xl bg-ds-surface/95 backdrop-blur-md border border-ds-text2/10 p-3 shadow-xl">
+        <div className="flex gap-2.5 rounded-2xl bg-ds-surface/95 backdrop-blur-md border border-ds-line p-3 shadow-xl">
           <button
             type="button"
             onClick={() => openDirections(place)}
-            className="flex-1 flex items-center justify-center gap-2 bg-ds-pin text-white font-bold py-3.5 rounded-xl shadow-md hover:bg-ds-pin/90 active:scale-[0.98] transition-all"
+            className="flex-1 flex items-center justify-center gap-2 h-[52px] bg-ds-accent text-ds-onaccent font-bold rounded-[14px] hover:opacity-95 active:scale-[0.98] transition-all"
           >
             <NavigationArrow size={20} weight="fill" />
             S&apos;y rendre
@@ -441,13 +521,22 @@ export default function PlaceDetailView({
           <button
             type="button"
             onClick={() => setShowCheckIn(true)}
-            className="flex items-center justify-center gap-2 bg-ds-ok/10 text-ds-ok font-bold px-5 py-3.5 rounded-xl hover:bg-ds-ok/20 active:scale-[0.98] transition-all"
+            className="flex items-center justify-center gap-2 h-[52px] px-5 bg-ds-accentsoft text-ds-accenttext font-bold rounded-[14px] active:scale-[0.98] transition-all"
           >
             <Lightning size={20} weight="fill" />
             Checker
           </button>
         </div>
       </div>
+
+      {viewerIndex !== null && photos.length > 0 && (
+        <PhotoViewer
+          gallery={gallery}
+          placeName={place.name}
+          initialIndex={viewerIndex}
+          onClose={closeViewer}
+        />
+      )}
 
       {showCheckIn && (
         <CheckInModal
@@ -469,15 +558,14 @@ export default function PlaceDetailView({
           place={trophyPlace}
           onClose={() => setTrophyPlace(null)}
           onVoted={() => {
-            setToast('Merci ! 🎉');
+            showToast('Merci ! 🎉');
             getPlaceTopTrophy(place.id).then(setTrophy);
-            window.setTimeout(() => setToast(null), 2800);
           }}
         />
       )}
 
       {toast && (
-        <div className="fixed bottom-36 left-1/2 z-[80] -translate-x-1/2 rounded-2xl bg-ds-pin text-white px-4 py-3 text-sm font-bold shadow-xl">
+        <div className="fixed bottom-40 left-1/2 z-[80] -translate-x-1/2 rounded-2xl bg-ds-pin text-ds-onpin px-4 py-3 text-sm font-bold shadow-xl">
           {toast}
         </div>
       )}

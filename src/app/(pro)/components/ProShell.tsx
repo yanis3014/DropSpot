@@ -19,6 +19,7 @@ import { useVendorProfile } from "@/app/(pro)/dashboard-pro/hooks/useVendorProfi
 import { useVendorPlan } from "@/hooks/useVendorPlan";
 import { useActivePlace } from "@/app/(pro)/hooks/useActivePlace";
 import { filterProNavHref } from "@/lib/pro/navAccess";
+import PlanBadge from "@/components/pro/PlanBadge";
 import {
   CafeSelectTrigger,
   ProCafeSwitcher,
@@ -61,7 +62,7 @@ function ProShellInner({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, loading: authLoading, displayName, avatarUrl } =
     useAuth();
   const { profile } = useVendorProfile(isAuthenticated, authLoading);
-  const { hasPro: hasProSubscription } = useVendorPlan(
+  const { plan, hasPro: hasProSubscription } = useVendorPlan(
     isAuthenticated && !authLoading
   );
   const {
@@ -146,16 +147,7 @@ function ProShellInner({ children }: { children: React.ReactNode }) {
         <div className="mt-auto flex flex-col gap-3">
           <div className="flex flex-col gap-2 rounded-[14px] bg-ds-surface2 p-3.5">
             <div className="flex items-center gap-2">
-              <span
-                className={cn(
-                  "inline-flex h-6 items-center rounded-xl px-2.5 text-[12px] font-extrabold uppercase tracking-[0.04em]",
-                  hasProSubscription
-                    ? "bg-ds-text text-ds-bg"
-                    : "border-[1.5px] border-ds-line text-ds-text2"
-                )}
-              >
-                {hasProSubscription ? "Pro" : "Gratuit"}
-              </span>
+              <PlanBadge plan={plan} />
               <span className="text-[13px] text-ds-text2">Ton offre</span>
             </div>
             {!hasProSubscription && (

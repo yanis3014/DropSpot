@@ -5,27 +5,29 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
   ArrowClockwise,
-  ArrowRight,
-  Clock,
   Lightning,
   QrCode,
   WifiSlash,
 } from "@phosphor-icons/react";
-import DropDetailModal from "@/components/drops/DropDetailModal";
+import DropCard from "@/components/drops/DropCard";
 import DropCodePanel from "@/components/drops/DropCodePanel";
-import LoginModal from "@/components/auth/LoginModal";
-import Button from "@/components/ui/Button";
 import Chip from "@/components/ui/Chip";
 import EmptyState from "@/components/ui/EmptyState";
 import GrainsBadge from "@/components/ui/GrainsBadge";
 import { useAuth } from "@/lib/hooks/useAuth";
 import { useProfile } from "@/lib/hooks/useProfile";
+import { useDropParticipation } from "@/lib/hooks/useDropParticipation";
+import { useKnownPosition } from "@/lib/hooks/useKnownPosition";
 import {
+  DROP_MOMENT_LABELS,
+  EVENT_CATEGORIES,
+  EVENT_CATEGORY_LABELS,
+  dropMoment,
   getExploreDrops,
-  Drop,
-  formatCountdown,
-  formatStartLabel,
   getDropTiming,
+  type Drop,
+  type DropMoment,
+  type EventCategory,
 } from "@/lib/api/drops";
 import {
   claimDrop,
@@ -35,23 +37,23 @@ import {
 } from "@/lib/api/dropCodes";
 import { claimDropErrorMessage } from "@/lib/dropCodes/errors";
 import { formatDropCodeDisplay } from "@/lib/dropCodes/format";
-import { dropMatchesFilter, normalizeKey } from "@/lib/filters";
-import { openDirections } from "@/lib/utils/directions";
-import { cn } from "@/lib/cn";
+import { distanceMeters, formatDistance } from "@/lib/geo";
 import { formatParisTimeHHMM } from "@/app/(pro)/dashboard-pro/lib/proHome/parisTime";
 import type { DropCodeStatus } from "@/lib/dropCodes/screen";
 
-type ChipId = "all" | "promo" | "matcha" | "event";
+/** Feed filter: all, one event category (without « other »), or offers. */
+type FilterId = "all" | Exclude<EventCategory, "other"> | "offers";
 type MainTab = "drops" | "codes";
 
-const DROP_CHIPS: { id: ChipId; label: string }[] = [
+const FILTERS: { id: FilterId; label: string }[] = [
   { id: "all", label: "Tous" },
-  { id: "promo", label: "Boissons" },
-  { id: "matcha", label: "Matcha" },
-  { id: "event", label: "Activités" },
+  ...EVENT_CATEGORIES.filter(
+    (c): c is Exclude<EventCategory, "other"> => c !== "other"
+  ).map((c) => ({ id: c, label: EVENT_CATEGORY_LABELS[c] })),
+  { id: "offers", label: "Offres" },
 ];
 
-const URGENT_MS = 15 * 60 * 1000;
+const MOMENTS: DropMoment[] = ["now", "today", "weekend", "later"];
 
 type ActiveCodeView = {
   dropCodeId: string;
@@ -62,63 +64,10 @@ type ActiveCodeView = {
   status: DropCodeStatus;
 };
 
-/** Display-only remaining time (does not drive claims or logic). */
-function formatRemainingLabel(endTime: string, now: number): string {
-  const end = new Date(endTime).getTime();
-  const diff = end - now;
-  if (!Number.isFinite(end) || diff <= 0) return "Terminé";
-
-  const totalSec = Math.floor(diff / 1000);
-  const hours = Math.floor(totalSec / 3600);
-  const minutes = Math.floor((totalSec % 3600) / 60);
-  const seconds = totalSec % 60;
-
-  if (hours >= 1) {
-    return `Encore ${hours} h ${String(minutes).padStart(2, "0")}`;
-  }
-  if (diff >= URGENT_MS) {
-    return `Encore ${minutes} min`;
-  }
-  return `Encore ${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
-}
-
-function msRemaining(endTime: string, now: number): number {
-  const end = new Date(endTime).getTime();
-  if (!Number.isFinite(end)) return Number.POSITIVE_INFINITY;
-  return end - now;
-}
-
-function dropMentionsMatcha(drop: Drop): boolean {
-  const hay = normalizeKey(
-    [drop.title, drop.description, drop.places?.name, drop.places?.category]
-      .filter(Boolean)
-      .join(" ")
-  );
-  return hay.includes("matcha") || hay.includes("chai");
-}
-
-function matchesChip(drop: Drop, chip: ChipId): boolean {
-  if (chip === "all") return true;
-  if (chip === "promo") return dropMatchesFilter(drop, "promo");
-  if (chip === "matcha") return dropMentionsMatcha(drop);
-  return (
-    dropMatchesFilter(drop, "event") || dropMatchesFilter(drop, "sport")
-  );
-}
-
-function stockLabel(drop: Drop): string | null {
-  if (typeof drop.capacity !== "number" || !Number.isFinite(drop.capacity)) {
-    return null;
-  }
-  const used =
-    typeof drop.current_participants === "number"
-      ? drop.current_participants
-      : 0;
-  const left = Math.max(0, Math.floor(drop.capacity) - Math.floor(used));
-  if (drop.drop_type === "event" || drop.drop_type === "sport") {
-    return `${left} place${left === 1 ? "" : "s"}`;
-  }
-  return `${left} restant${left === 1 ? "" : "s"}`;
+function matchesFilter(drop: Drop, filter: FilterId): boolean {
+  if (filter === "all") return true;
+  if (filter === "offers") return drop.family === "offer";
+  return drop.family === "event" && drop.event_category === filter;
 }
 
 function subscribeOnline(onStoreChange: () => void) {
@@ -138,10 +87,6 @@ function getOnlineServerSnapshot() {
   return true;
 }
 
-function isFlashDrop(drop: Drop): boolean {
-  return drop.source === "flash_drops";
-}
-
 export default function DropsPage() {
   const router = useRouter();
   const pathname = usePathname();
@@ -158,14 +103,11 @@ export default function DropsPage() {
   const [drops, setDrops] = useState<Drop[]>([]);
   const [loading, setLoading] = useState(true);
   const [now, setNow] = useState(() => Date.now());
-  const [chip, setChip] = useState<ChipId>("all");
+  const [filter, setFilter] = useState<FilterId>("all");
   const [mainTab, setMainTab] = useState<MainTab>("drops");
-  const [selectedDrop, setSelectedDrop] = useState<Drop | null>(null);
-  const [legacyClaimed, setLegacyClaimed] = useState<string[]>([]);
-  const [showLogin, setShowLogin] = useState(false);
   const [reloadKey, setReloadKey] = useState(0);
   const [claimBusy, setClaimBusy] = useState(false);
-  const [claimError, setClaimError] = useState<string | null>(null);
+  const [claimError, setClaimError] = useState<{ dropId: string; message: string } | null>(null);
   const [activeCode, setActiveCode] = useState<ActiveCodeView | null>(null);
   const [myCodes, setMyCodes] = useState<MyDropCode[]>([]);
   const [codesLoading, setCodesLoading] = useState(false);
@@ -212,22 +154,56 @@ export default function DropsPage() {
   const showGrainsBadge =
     isAuthenticated && !authLoading && !profileLoading && profile != null;
 
-  const filtered = useMemo(() => {
-    return drops
-      .filter((d) => matchesChip(d, chip))
-      .filter((d) => getDropTiming(d, now) !== "ended")
-      .sort((a, b) => {
-        const timingRank = (d: Drop) => {
-          const t = getDropTiming(d, now);
-          return t === "live" ? 0 : t === "upcoming" ? 1 : 2;
-        };
-        const r = timingRank(a) - timingRank(b);
-        if (r !== 0) return r;
-        return msRemaining(a.end_time, now) - msRemaining(b.end_time, now);
-      });
-  }, [drops, chip, now]);
+  const position = useKnownPosition();
 
-  const mostUrgentId = filtered[0]?.id ?? null;
+  const visible = useMemo(
+    () =>
+      drops
+        .filter((d) => getDropTiming(d, now) !== "ended")
+        .sort(
+          (a, b) =>
+            new Date(a.start_time).getTime() - new Date(b.start_time).getTime()
+        ),
+    [drops, now]
+  );
+
+  const eventIds = useMemo(
+    () => visible.filter((d) => d.family === "event").map((d) => d.id),
+    [visible]
+  );
+  const participation = useDropParticipation(eventIds, isAuthenticated);
+
+  // Only show the filters that have something behind them.
+  const filters = useMemo(
+    () =>
+      FILTERS.filter(
+        (f) => f.id === "all" || visible.some((d) => matchesFilter(d, f.id))
+      ),
+    [visible]
+  );
+  const activeFilter = filters.some((f) => f.id === filter) ? filter : "all";
+
+  const sections = useMemo(() => {
+    const filtered = visible.filter((d) => matchesFilter(d, activeFilter));
+    return MOMENTS.map((moment) => ({
+      moment,
+      drops: filtered.filter((d) => dropMoment(d, now) === moment),
+    })).filter((section) => section.drops.length > 0);
+  }, [visible, activeFilter, now]);
+
+  const primaryId = sections[0]?.drops[0]?.id ?? null;
+
+  const distanceLabel = useCallback(
+    (drop: Drop): string | null => {
+      const lat = drop.places?.lat;
+      const lng = drop.places?.lng;
+      if (!position || typeof lat !== "number" || typeof lng !== "number") {
+        return null;
+      }
+      return formatDistance(distanceMeters(position, { lat, lng }));
+    },
+    [position]
+  );
 
   const redirectToLogin = useCallback(() => {
     const redirect = pathname || "/drops";
@@ -236,13 +212,10 @@ export default function DropsPage() {
 
   const openCodePanel = useCallback((view: ActiveCodeView) => {
     setActiveCode(view);
-    setSelectedDrop(null);
     setClaimError(null);
   }, []);
 
   const handleObtainCode = async (drop: Drop) => {
-    if (!isFlashDrop(drop)) return;
-
     if (!isAuthenticated) {
       redirectToLogin();
       return;
@@ -253,7 +226,10 @@ export default function DropsPage() {
     try {
       const result = await claimDrop(drop.id);
       if (!result.ok) {
-        setClaimError(claimDropErrorMessage(result.error, drop));
+        setClaimError({
+          dropId: drop.id,
+          message: claimDropErrorMessage(result.error, drop),
+        });
         return;
       }
       openCodePanel({
@@ -267,39 +243,18 @@ export default function DropsPage() {
       void refreshMyCodes();
     } catch (err) {
       console.error(err);
-      setClaimError("Impossible d’obtenir un code. Réessaie.");
+      setClaimError({
+        dropId: drop.id,
+        message: "Impossible d’obtenir un code. Réessaie.",
+      });
     } finally {
       setClaimBusy(false);
     }
   };
 
-  const handleLegacyClaim = (drop: Drop) => {
-    if (!isAuthenticated) {
-      setShowLogin(true);
-      return;
-    }
-    setLegacyClaimed((prev) =>
-      prev.includes(drop.id) ? prev : [...prev, drop.id]
-    );
-  };
-
-  const handleModalClaim = () => {
-    if (!selectedDrop) return;
-    if (isFlashDrop(selectedDrop)) {
-      void handleObtainCode(selectedDrop);
-      return;
-    }
-    handleLegacyClaim(selectedDrop);
-  };
-
-  const goToDrop = (drop: Drop) => {
-    openDirections({
-      name: drop.places?.name ?? drop.title,
-      address: drop.places?.address,
-      city: drop.places?.city,
-      lat: Number.NaN,
-      lng: Number.NaN,
-    });
+  const handleToggleJoin = async (drop: Drop) => {
+    const allowed = await participation.toggle(drop.id);
+    if (!allowed) redirectToLogin();
   };
 
   const handleRetry = () => {
@@ -311,7 +266,7 @@ export default function DropsPage() {
     <div className="flex flex-1 flex-col bg-ds-bg pb-28 text-ds-text">
       <div className="flex items-center justify-between px-5 pb-1 pt-8">
         <h1 className="font-display text-[34px] font-extrabold leading-tight text-ds-text">
-          Drops flash
+          Drops
         </h1>
         {showGrainsBadge ? (
           <Link
@@ -358,14 +313,14 @@ export default function DropsPage() {
           Mes codes
           {myCodes.length > 0 ? ` (${myCodes.length})` : ""}
         </Chip>
-        {mainTab === "drops" && online
-          ? DROP_CHIPS.map((c) => (
+        {mainTab === "drops" && online && filters.length > 2
+          ? filters.map((f) => (
               <Chip
-                key={c.id}
-                active={chip === c.id}
-                onClick={() => setChip(c.id)}
+                key={f.id}
+                active={activeFilter === f.id}
+                onClick={() => setFilter(f.id)}
               >
-                {c.label}
+                {f.label}
               </Chip>
             ))
           : null}
@@ -481,7 +436,7 @@ export default function DropsPage() {
               className="h-36 animate-pulse rounded-[22px] border border-ds-line bg-ds-surface"
             />
           ))
-        ) : filtered.length === 0 ? (
+        ) : sections.length === 0 ? (
           <EmptyState
             icon={<Lightning weight="regular" />}
             title={"Aucun drop pour l'instant"}
@@ -491,100 +446,44 @@ export default function DropsPage() {
             className="px-4 pt-[12rem]"
           />
         ) : (
-          filtered.map((drop) => {
-            const upcoming = getDropTiming(drop, now) === "upcoming";
-            const remaining = msRemaining(drop.end_time, now);
-            const urgent = !upcoming && remaining > 0 && remaining < URGENT_MS;
-            const isPrimary = drop.id === mostUrgentId;
-            const cafe = drop.places?.name ?? "Café";
-            const stock = stockLabel(drop);
-            const flash = isFlashDrop(drop);
-
-            return (
-              <article
-                key={drop.id}
-                className="flex flex-col gap-3 rounded-[22px] border border-ds-line bg-ds-surface p-4"
-              >
-                <div className="flex items-center justify-between gap-2">
-                  {online ? (
-                    <span
-                      className={cn(
-                        "inline-flex h-[30px] items-center gap-1.5 rounded-[15px] px-2.5 text-sm font-bold tabular-nums",
-                        urgent
-                          ? "bg-ds-accent text-ds-onaccent"
-                          : "bg-ds-accentsoft text-ds-accenttext"
-                      )}
+          sections.map((section) => (
+            <section key={section.moment} className="flex flex-col gap-3">
+              <h2 className="font-display m-0 px-1 pt-2 text-lg font-extrabold text-ds-text">
+                {DROP_MOMENT_LABELS[section.moment]}
+              </h2>
+              {section.drops.map((drop) => (
+                <div key={drop.id} className="flex flex-col gap-1.5">
+                  <DropCard
+                    drop={drop}
+                    now={now}
+                    distanceLabel={distanceLabel(drop)}
+                    primary={drop.id === primaryId}
+                    participants={participation.participants(drop.id)}
+                    joined={participation.isJoined(drop.id)}
+                    joinBusy={participation.busyId === drop.id}
+                    joinError={
+                      participation.error?.dropId === drop.id
+                        ? participation.error.message
+                        : null
+                    }
+                    onToggleJoin={(d) => void handleToggleJoin(d)}
+                    claimBusy={claimBusy}
+                    onObtainCode={(d) => void handleObtainCode(d)}
+                  />
+                  {claimError?.dropId === drop.id ? (
+                    <p
+                      role="alert"
+                      className="m-0 text-center text-sm font-semibold text-ds-danger"
                     >
-                      <Clock size={16} weight="regular" aria-hidden />
-                      {upcoming
-                        ? formatStartLabel(drop.start_time, now)
-                        : formatRemainingLabel(drop.end_time, now)}
-                    </span>
-                  ) : (
-                    <span />
-                  )}
+                      {claimError.message}
+                    </p>
+                  ) : null}
                 </div>
-
-                <div className="flex flex-col gap-0.5">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setClaimError(null);
-                      setSelectedDrop(drop);
-                    }}
-                    className="text-left"
-                  >
-                    <h3 className="font-display m-0 text-xl font-bold text-ds-text">
-                      {drop.title}
-                    </h3>
-                  </button>
-                  <p className="m-0 text-[15px] text-ds-text2">
-                    {cafe}
-                    {online && stock ? ` · ${stock}` : null}
-                  </p>
-                </div>
-
-                {flash ? (
-                  <Button
-                    variant={isPrimary ? "main" : "tonal"}
-                    className="h-12 w-full"
-                    disabled={claimBusy}
-                    onClick={() => void handleObtainCode(drop)}
-                  >
-                    <QrCode size={18} weight="regular" aria-hidden />
-                    Obtenir mon code
-                  </Button>
-                ) : (
-                  <Button
-                    variant={isPrimary ? "main" : "tonal"}
-                    className="h-12 w-full"
-                    onClick={() => goToDrop(drop)}
-                  >
-                    Je m&apos;y rends
-                    <ArrowRight size={18} weight="regular" aria-hidden />
-                  </Button>
-                )}
-              </article>
-            );
-          })
+              ))}
+            </section>
+          ))
         )}
       </div>
-
-      {selectedDrop && (
-        <DropDetailModal
-          drop={selectedDrop}
-          countdown={formatCountdown(selectedDrop.end_time, now)}
-          isAuthenticated={isAuthenticated}
-          isClaimed={legacyClaimed.includes(selectedDrop.id)}
-          claimBusy={claimBusy}
-          claimError={claimError}
-          onClaim={handleModalClaim}
-          onClose={() => {
-            setSelectedDrop(null);
-            setClaimError(null);
-          }}
-        />
-      )}
 
       {activeCode ? (
         <DropCodePanel
@@ -601,7 +500,6 @@ export default function DropsPage() {
         />
       ) : null}
 
-      <LoginModal isOpen={showLogin} onClose={() => setShowLogin(false)} />
     </div>
   );
 }

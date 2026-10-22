@@ -6,6 +6,7 @@ import {
 } from '@/app/(pro)/dashboard-pro/lib/api/flashDrops';
 import { DEFAULT_DROP_CONDITIONS } from '@/app/(pro)/dashboard-pro/lib/proDrops/dropForm';
 import { getVendorTodayStats } from '@/app/(pro)/dashboard-pro/lib/api/validate';
+import { withParticipants } from '@/app/(pro)/dashboard-pro/lib/api/proDropsList';
 import type { PlaceChecklistInput } from '@/app/(pro)/dashboard-pro/lib/proHome/checklist';
 
 export interface PlaceHomeMeta {
@@ -77,7 +78,7 @@ export async function getLiveFlashDropsForPlace(
   const { data, error } = await supabase
     .from('flash_drops')
     .select(
-      'id, vendor_id, place_id, title, description, starts_at, ends_at, is_active, current_uses, max_uses, grains_reward, created_at, stopped_at'
+      'id, vendor_id, place_id, title, description, starts_at, ends_at, is_active, current_uses, max_uses, grains_reward, created_at, stopped_at, kind, event_category'
     )
     .eq('place_id', placeId)
     .eq('is_active', true)
@@ -104,9 +105,11 @@ export async function getLiveFlashDropsForPlace(
     throw error;
   }
 
-  return ((data ?? []) as Record<string, unknown>[])
-    .filter((row) => !row.stopped_at)
-    .map(normalizeFlashDrop);
+  return withParticipants(
+    ((data ?? []) as Record<string, unknown>[])
+      .filter((row) => !row.stopped_at)
+      .map(normalizeFlashDrop)
+  );
 }
 
 export async function stopFlashDrop(
@@ -138,6 +141,7 @@ export async function duplicateFlashDrop(
     vendor_id: drop.vendor_id,
     title: drop.title,
     description: drop.description ?? null,
+    event_category: kind === 'activity' ? (drop.event_category ?? null) : null,
     kind,
     discount_value:
       kind === 'discount' || kind === 'special_price'

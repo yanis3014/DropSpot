@@ -1,7 +1,10 @@
+import type { EventCategory } from '@/lib/api/drops';
+
 export type DropFormExample = {
   id: string;
   title: string;
   kind: 'discount' | 'offer' | 'special_price' | 'activity';
+  eventCategory?: EventCategory;
   conditions?: string;
   description?: string;
 };

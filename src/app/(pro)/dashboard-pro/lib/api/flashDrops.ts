@@ -1,5 +1,6 @@
 import { supabase } from '@/lib/supabase/client';
 import { invalidateCache } from '@/lib/cache/clientCache';
+import type { EventCategory } from '@/lib/api/drops';
 import type { DropContentWritePayload } from '@/app/(pro)/dashboard-pro/lib/proDrops/dropForm';
 
 export type FlashDropKind =
@@ -24,6 +25,10 @@ export interface FlashDrop {
   created_at?: string;
   stopped_at?: string | null;
   kind?: FlashDropKind;
+  /** Events only (kind = activity). */
+  event_category?: EventCategory | null;
+  /** Events only: « Je participe » count (filled by withParticipants). */
+  participants?: number;
   conditions?: string | null;
   discount_value?: number | null;
   discount_unit?: 'percent' | 'eur' | null;
@@ -69,6 +74,10 @@ export function normalizeFlashDrop(row: RawFlashDrop): FlashDrop {
     created_at: (row.created_at as string | undefined) ?? undefined,
     stopped_at: (row.stopped_at as string | null | undefined) ?? null,
     kind: (row.kind as FlashDropKind | undefined) ?? 'offer',
+    event_category:
+      typeof row.event_category === 'string'
+        ? (row.event_category as EventCategory)
+        : null,
     conditions: (row.conditions as string | null | undefined) ?? null,
     discount_value:
       typeof row.discount_value === 'number' ? row.discount_value : null,
@@ -82,7 +91,7 @@ export function normalizeFlashDrop(row: RawFlashDrop): FlashDrop {
 }
 
 const VENDOR_DROP_SELECT =
-  'id, vendor_id, place_id, title, description, starts_at, ends_at, is_active, pin_code, current_uses, max_uses, grains_reward, created_at, stopped_at, kind, conditions, discount_value, discount_unit, is_recurring, places(name, image_url, address, city)';
+  'id, vendor_id, place_id, title, description, starts_at, ends_at, is_active, pin_code, current_uses, max_uses, grains_reward, created_at, stopped_at, kind, event_category, conditions, discount_value, discount_unit, is_recurring, places(name, image_url, address, city)';
 
 /** Drop vendor par id (duplication / édition). */
 export async function getFlashDropById(
@@ -201,27 +210,3 @@ export async function updateFlashDrop(
   return normalizeFlashDrop(data as RawFlashDrop);
 }
 
-/**
- * Flash drops actifs pour le feed client (étape 3).
- * is_active = true AND ends_at > now()
- */
-export async function getActiveFlashDrops(): Promise<FlashDrop[]> {
-  if (!supabase) return [];
-  const now = new Date().toISOString();
-
-  const { data, error } = await supabase
-    .from('flash_drops')
-    .select(
-      'id, vendor_id, place_id, title, description, starts_at, ends_at, is_active, created_at, places(name, image_url, address, city)'
-    )
-    .eq('is_active', true)
-    .gt('ends_at', now)
-    .order('starts_at', { ascending: false });
-
-  if (error) {
-    console.error('Error fetching active flash drops:', error);
-    throw error;
-  }
-
-  return ((data ?? []) as RawFlashDrop[]).map(normalizeFlashDrop);
-}

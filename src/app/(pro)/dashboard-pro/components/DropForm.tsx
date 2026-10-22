@@ -22,6 +22,7 @@ import Button from "@/components/ui/Button";
 import ProLock from "@/components/pro/ProLock";
 import ProEmptyState from "@/components/pro/ProEmptyState";
 import { cn } from "@/lib/cn";
+import { EVENT_CATEGORIES, EVENT_CATEGORY_LABELS } from "@/lib/api/drops";
 
 export interface DropFormProps {
   place: Place;
@@ -37,10 +38,10 @@ export interface DropFormProps {
 }
 
 const KIND_OPTIONS: { id: FlashDropKind; label: string }[] = [
+  { id: "activity", label: "Événement" },
   { id: "discount", label: "Réduction" },
   { id: "offer", label: "Offre" },
   { id: "special_price", label: "Prix spécial" },
-  { id: "activity", label: "Activité" },
 ];
 
 export default function DropForm({
@@ -171,7 +172,11 @@ export default function DropForm({
                 title: e.target.value.slice(0, 60),
               }))
             }
-            placeholder="−20 % sur les boissons chaudes"
+            placeholder={
+              state.kind === "activity"
+                ? "Run du dimanche, DJ set, atelier latte art…"
+                : "−20 % sur les boissons chaudes"
+            }
             className="h-11 w-full rounded-xl border border-ds-line bg-ds-bg px-3 text-[15px] font-medium text-ds-text outline-none focus:border-ds-accent"
           />
         </label>
@@ -188,6 +193,8 @@ export default function DropForm({
                   setState((prev) => ({
                     ...prev,
                     kind: opt.id,
+                    eventCategory:
+                      opt.id === "activity" ? prev.eventCategory : null,
                     discountUnit:
                       opt.id === "special_price" ? "eur" : prev.discountUnit,
                   }))
@@ -198,6 +205,41 @@ export default function DropForm({
             ))}
           </div>
         </div>
+
+        {/* Événement : catégorie + description */}
+        {state.kind === "activity" ? (
+          <>
+            <div className="flex flex-col gap-2 text-sm font-bold text-ds-text">
+              <span>Type d’événement</span>
+              <div className="flex flex-wrap gap-2">
+                {EVENT_CATEGORIES.map((category) => (
+                  <Chip
+                    key={category}
+                    active={state.eventCategory === category}
+                    onClick={() =>
+                      setState((prev) => ({ ...prev, eventCategory: category }))
+                    }
+                  >
+                    {category === "other" ? "Autre" : EVENT_CATEGORY_LABELS[category]}
+                  </Chip>
+                ))}
+              </div>
+            </div>
+            <label className="flex flex-col gap-2 text-sm font-bold text-ds-text">
+              <span>Description</span>
+              <textarea
+                rows={3}
+                maxLength={500}
+                value={state.description}
+                onChange={(e) =>
+                  setState((prev) => ({ ...prev, description: e.target.value }))
+                }
+                placeholder="Départ du café à 9 h, 5 km le long de la Prom’, café offert au retour."
+                className="w-full resize-none rounded-xl border border-ds-line bg-ds-bg px-3 py-2.5 text-[15px] font-medium text-ds-text outline-none focus:border-ds-accent"
+              />
+            </label>
+          </>
+        ) : null}
 
         {/* Réduction : discount_value + bascule % / € */}
         {state.kind === "discount" ? (
@@ -328,7 +370,7 @@ export default function DropForm({
 
         {/* Quantité */}
         <div className="flex flex-col gap-2 text-sm font-bold text-ds-text">
-          <span>Quantité</span>
+          <span>{state.kind === "activity" ? "Places" : "Quantité"}</span>
           <div className="flex flex-wrap items-center gap-[18px] font-semibold">
             <label className="inline-flex items-center gap-2">
               <input

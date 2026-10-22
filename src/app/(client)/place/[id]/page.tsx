@@ -7,6 +7,7 @@ import PlaceDetailView from '@/components/places/PlaceDetailView';
 import { getPlaceById, Place } from '@/lib/api/places';
 import { getPlaceMedia, type PlaceMedia } from '@/lib/api/placeMedia';
 import { getPlaceVibe, type AggregatedVibe } from '@/lib/api/checkins';
+import { getPlaceDrops, type Drop } from '@/lib/api/drops';
 import { getSavedPlaceIds, savePlace, unsavePlace } from '@/lib/api/saved';
 import { useAuth } from '@/lib/hooks/useAuth';
 
@@ -19,6 +20,7 @@ export default function PlacePage() {
   const [place, setPlace] = useState<Place | null>(null);
   const [media, setMedia] = useState<PlaceMedia[]>([]);
   const [vibe, setVibe] = useState<AggregatedVibe | null>(null);
+  const [drops, setDrops] = useState<Drop[]>([]);
   const [savedIds, setSavedIds] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -36,10 +38,11 @@ export default function PlacePage() {
 
     (async () => {
       try {
-        const [fresh, placeVibe, placeMedia] = await Promise.all([
+        const [fresh, placeVibe, placeMedia, placeDrops] = await Promise.all([
           getPlaceById(id),
           getPlaceVibe(id).catch(() => null),
           getPlaceMedia(id).catch(() => [] as PlaceMedia[]),
+          getPlaceDrops(id).catch(() => [] as Drop[]),
         ]);
         if (cancelled) return;
         if (!fresh) {
@@ -50,6 +53,7 @@ export default function PlacePage() {
           setPlace(fresh);
           setMedia(placeMedia);
           setVibe(placeVibe);
+          setDrops(placeDrops);
         }
       } catch (err) {
         console.error(err);
@@ -146,6 +150,7 @@ export default function PlacePage() {
       place={place}
       media={media}
       vibe={vibe}
+      drops={drops}
       isAuthenticated={isAuthenticated}
       isSaved={savedIds.includes(place.id)}
       onToggleSave={handleToggleSave}

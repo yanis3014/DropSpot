@@ -198,6 +198,7 @@ export default function QuickDropSheet({
         title: title.slice(0, 60),
         description: null,
         kind: built.kind,
+        event_category: null,
         discount_value: built.discountValue,
         discount_unit: built.discountUnit,
         conditions: DEFAULT_DROP_CONDITIONS,

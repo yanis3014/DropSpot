@@ -4,9 +4,20 @@ import {
   type FlashDrop,
 } from '@/app/(pro)/dashboard-pro/lib/api/flashDrops';
 import { classifyFlashDrop } from '@/app/(pro)/dashboard-pro/lib/proDrops/classify';
+import { getParticipantCounts } from '@/lib/api/drops';
+
+/** Adds the participant count to event drops (kind = activity). */
+export async function withParticipants(drops: FlashDrop[]): Promise<FlashDrop[]> {
+  const ids = drops.filter((d) => d.kind === 'activity').map((d) => d.id);
+  if (ids.length === 0) return drops;
+  const counts = await getParticipantCounts(ids);
+  return drops.map((d) =>
+    d.kind === 'activity' ? { ...d, participants: counts[d.id] ?? 0 } : d
+  );
+}
 
 const PLACE_DROP_SELECT =
-  'id, vendor_id, place_id, title, description, starts_at, ends_at, is_active, pin_code, current_uses, max_uses, grains_reward, created_at, stopped_at, kind, conditions, discount_value, discount_unit, is_recurring';
+  'id, vendor_id, place_id, title, description, starts_at, ends_at, is_active, pin_code, current_uses, max_uses, grains_reward, created_at, stopped_at, kind, event_category, conditions, discount_value, discount_unit, is_recurring';
 
 const FINISHED_PAGE_SIZE = 20;
 
@@ -49,7 +60,7 @@ export async function getActiveAndScheduledDrops(
   nowMs: number = Date.now()
 ): Promise<{ live: FlashDrop[]; scheduled: FlashDrop[] }> {
   const rows = await selectPlaceDrops(placeId, PLACE_DROP_SELECT);
-  const drops = rows.map(normalizeFlashDrop);
+  const drops = await withParticipants(rows.map(normalizeFlashDrop));
   const live: FlashDrop[] = [];
   const scheduled: FlashDrop[] = [];
 

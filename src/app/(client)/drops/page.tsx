@@ -1,16 +1,19 @@
 "use client";
 
-import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
 import {
   ArrowClockwise,
   ArrowRight,
   Bell,
   Clock,
   Lightning,
+  QrCode,
   WifiSlash,
 } from "@phosphor-icons/react";
 import DropDetailModal from "@/components/drops/DropDetailModal";
+import DropCodePanel from "@/components/drops/DropCodePanel";
 import LoginModal from "@/components/auth/LoginModal";
 import Button from "@/components/ui/Button";
 import Chip from "@/components/ui/Chip";
@@ -24,12 +27,23 @@ import {
   formatCountdown,
   getDropTiming,
 } from "@/lib/api/drops";
+import {
+  claimDrop,
+  listMyActiveDropCodes,
+  readLastShownDropCode,
+  type MyDropCode,
+} from "@/lib/api/dropCodes";
+import { claimDropErrorMessage } from "@/lib/dropCodes/errors";
+import { formatDropCodeDisplay } from "@/lib/dropCodes/format";
 import { setDropAlertsEnabled } from "@/lib/dropAlerts";
 import { dropMatchesFilter, normalizeKey } from "@/lib/filters";
 import { openDirections } from "@/lib/utils/directions";
 import { cn } from "@/lib/cn";
+import { formatParisTimeHHMM } from "@/app/(pro)/dashboard-pro/lib/proHome/parisTime";
+import type { DropCodeStatus } from "@/lib/dropCodes/screen";
 
 type ChipId = "all" | "promo" | "matcha" | "event";
+type MainTab = "drops" | "codes";
 
 const DROP_CHIPS: { id: ChipId; label: string }[] = [
   { id: "all", label: "Tous" },
@@ -39,6 +53,15 @@ const DROP_CHIPS: { id: ChipId; label: string }[] = [
 ];
 
 const URGENT_MS = 15 * 60 * 1000;
+
+type ActiveCodeView = {
+  dropCodeId: string;
+  code: string;
+  title: string;
+  cafeName: string;
+  endsAt: string;
+  status: DropCodeStatus;
+};
 
 /** Display-only remaining time (does not drive claims or logic). */
 function formatRemainingLabel(endTime: string, now: number): string {
@@ -79,7 +102,6 @@ function matchesChip(drop: Drop, chip: ChipId): boolean {
   if (chip === "all") return true;
   if (chip === "promo") return dropMatchesFilter(drop, "promo");
   if (chip === "matcha") return dropMentionsMatcha(drop);
-  // Activités → event + sport (existing types)
   return (
     dropMatchesFilter(drop, "event") || dropMatchesFilter(drop, "sport")
   );
@@ -117,19 +139,13 @@ function getOnlineServerSnapshot() {
   return true;
 }
 
-function readStoredClaims(): string[] {
-  if (typeof window === "undefined") return [];
-  try {
-    const stored = JSON.parse(
-      localStorage.getItem("dropspot_claims") ?? "[]"
-    );
-    return Array.isArray(stored) ? stored : [];
-  } catch {
-    return [];
-  }
+function isFlashDrop(drop: Drop): boolean {
+  return drop.source === "flash_drops";
 }
 
 export default function DropsPage() {
+  const router = useRouter();
+  const pathname = usePathname();
   const { isAuthenticated, loading: authLoading } = useAuth();
   const { profile, loading: profileLoading } = useProfile(
     isAuthenticated,
@@ -144,11 +160,32 @@ export default function DropsPage() {
   const [loading, setLoading] = useState(true);
   const [now, setNow] = useState(() => Date.now());
   const [chip, setChip] = useState<ChipId>("all");
+  const [mainTab, setMainTab] = useState<MainTab>("drops");
   const [selectedDrop, setSelectedDrop] = useState<Drop | null>(null);
-  const [claimedDrops, setClaimedDrops] = useState<string[]>(readStoredClaims);
+  const [legacyClaimed, setLegacyClaimed] = useState<string[]>([]);
   const [showLogin, setShowLogin] = useState(false);
   const [alertsJustEnabled, setAlertsJustEnabled] = useState(false);
   const [reloadKey, setReloadKey] = useState(0);
+  const [claimBusy, setClaimBusy] = useState(false);
+  const [claimError, setClaimError] = useState<string | null>(null);
+  const [activeCode, setActiveCode] = useState<ActiveCodeView | null>(null);
+  const [myCodes, setMyCodes] = useState<MyDropCode[]>([]);
+  const [codesLoading, setCodesLoading] = useState(false);
+
+  const refreshMyCodes = useCallback(async () => {
+    if (!isAuthenticated) {
+      setMyCodes([]);
+      setCodesLoading(false);
+      return;
+    }
+    setCodesLoading(true);
+    try {
+      const rows = await listMyActiveDropCodes();
+      setMyCodes(rows);
+    } finally {
+      setCodesLoading(false);
+    }
+  }, [isAuthenticated]);
 
   useEffect(() => {
     let cancelled = false;
@@ -194,16 +231,67 @@ export default function DropsPage() {
 
   const mostUrgentId = filtered[0]?.id ?? null;
 
-  const handleClaim = (drop: Drop) => {
+  const redirectToLogin = useCallback(() => {
+    const redirect = pathname || "/drops";
+    router.push(`/login?redirect=${encodeURIComponent(redirect)}`);
+  }, [pathname, router]);
+
+  const openCodePanel = useCallback((view: ActiveCodeView) => {
+    setActiveCode(view);
+    setSelectedDrop(null);
+    setClaimError(null);
+  }, []);
+
+  const handleObtainCode = async (drop: Drop) => {
+    if (!isFlashDrop(drop)) return;
+
+    if (!isAuthenticated) {
+      redirectToLogin();
+      return;
+    }
+
+    setClaimBusy(true);
+    setClaimError(null);
+    try {
+      const result = await claimDrop(drop.id);
+      if (!result.ok) {
+        setClaimError(claimDropErrorMessage(result.error, drop));
+        return;
+      }
+      openCodePanel({
+        dropCodeId: result.dropCodeId,
+        code: result.code,
+        title: drop.title,
+        cafeName: drop.places?.name ?? "Café",
+        endsAt: drop.end_time,
+        status: result.status,
+      });
+      void refreshMyCodes();
+    } catch (err) {
+      console.error(err);
+      setClaimError("Impossible d’obtenir un code. Réessaie.");
+    } finally {
+      setClaimBusy(false);
+    }
+  };
+
+  const handleLegacyClaim = (drop: Drop) => {
     if (!isAuthenticated) {
       setShowLogin(true);
       return;
     }
-    setClaimedDrops((prev) => {
-      const next = [...prev, drop.id];
-      localStorage.setItem("dropspot_claims", JSON.stringify(next));
-      return next;
-    });
+    setLegacyClaimed((prev) =>
+      prev.includes(drop.id) ? prev : [...prev, drop.id]
+    );
+  };
+
+  const handleModalClaim = () => {
+    if (!selectedDrop) return;
+    if (isFlashDrop(selectedDrop)) {
+      void handleObtainCode(selectedDrop);
+      return;
+    }
+    handleLegacyClaim(selectedDrop);
   };
 
   const goToDrop = (drop: Drop) => {
@@ -256,23 +344,134 @@ export default function DropsPage() {
         </div>
       ) : null}
 
-      {online ? (
-        <div className="flex gap-2 overflow-x-auto scrollbar-hide px-4 pb-3.5">
-          {DROP_CHIPS.map((c) => (
-            <Chip
-              key={c.id}
-              active={chip === c.id}
-              onClick={() => setChip(c.id)}
-            >
-              {c.label}
-            </Chip>
-          ))}
-          <div className="w-2 shrink-0" aria-hidden />
-        </div>
-      ) : null}
+      <div className="flex gap-2 overflow-x-auto scrollbar-hide px-4 pb-3.5">
+        <Chip
+          active={mainTab === "drops"}
+          onClick={() => setMainTab("drops")}
+        >
+          Drops
+        </Chip>
+        <Chip
+          active={mainTab === "codes"}
+          onClick={() => {
+            setMainTab("codes");
+            if (isAuthenticated) void refreshMyCodes();
+            else {
+              setMyCodes([]);
+              setCodesLoading(false);
+            }
+          }}
+        >
+          Mes codes
+          {myCodes.length > 0 ? ` (${myCodes.length})` : ""}
+        </Chip>
+        {mainTab === "drops" && online
+          ? DROP_CHIPS.map((c) => (
+              <Chip
+                key={c.id}
+                active={chip === c.id}
+                onClick={() => setChip(c.id)}
+              >
+                {c.label}
+              </Chip>
+            ))
+          : null}
+        <div className="w-2 shrink-0" aria-hidden />
+      </div>
 
       <div className="flex flex-col gap-3 px-4">
-        {!online ? (
+        {mainTab === "codes" ? (
+          !isAuthenticated && !authLoading ? (
+            <EmptyState
+              icon={<QrCode weight="regular" />}
+              title="Connecte-toi pour voir tes codes"
+              description="Tes codes de drop s’affichent ici une fois obtenus."
+              actionLabel="Se connecter"
+              onAction={redirectToLogin}
+              className="px-4 pt-[8rem]"
+            />
+          ) : codesLoading ? (
+            [1, 2].map((i) => (
+              <div
+                key={i}
+                className="h-28 animate-pulse rounded-[22px] border border-ds-line bg-ds-surface"
+              />
+            ))
+          ) : myCodes.length === 0 ? (
+            (() => {
+              const last = !online ? readLastShownDropCode() : null;
+              if (last) {
+                return (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      openCodePanel({
+                        dropCodeId: last.id,
+                        code: last.code,
+                        title: last.title,
+                        cafeName: last.cafeName,
+                        endsAt: last.endsAt,
+                        status: last.status,
+                      })
+                    }
+                    className="flex flex-col gap-2 rounded-[22px] border border-ds-line bg-ds-surface p-4 text-left"
+                  >
+                    <span className="flex items-center gap-2 text-sm font-semibold text-ds-warn">
+                      <WifiSlash size={16} aria-hidden />
+                      Pas de connexion : le café vérifiera ton code au comptoir
+                    </span>
+                    <span className="font-display text-xl font-bold tracking-widest">
+                      {formatDropCodeDisplay(last.code)}
+                    </span>
+                    <span className="font-semibold">{last.title}</span>
+                    <span className="text-sm text-ds-text2">{last.cafeName}</span>
+                  </button>
+                );
+              }
+              return (
+                <EmptyState
+                  icon={<QrCode weight="regular" />}
+                  title="Aucun code en cours"
+                  description="Obtiens un code sur un drop flash, il apparaîtra ici."
+                  actionLabel="Voir les drops"
+                  onAction={() => setMainTab("drops")}
+                  className="px-4 pt-[8rem]"
+                />
+              );
+            })()
+          ) : (
+            myCodes.map((row) => (
+              <button
+                key={row.id}
+                type="button"
+                onClick={() =>
+                  openCodePanel({
+                    dropCodeId: row.id,
+                    code: row.code,
+                    title: row.title,
+                    cafeName: row.cafeName,
+                    endsAt: row.endsAt,
+                    status: row.status,
+                  })
+                }
+                className="flex flex-col gap-2 rounded-[22px] border border-ds-line bg-ds-surface p-4 text-left transition-opacity active:opacity-90"
+              >
+                <span className="font-display text-xl font-bold tracking-widest text-ds-text">
+                  {row.codeDisplay}
+                </span>
+                <span className="text-[15px] font-semibold text-ds-text">
+                  {row.title}
+                </span>
+                <span className="text-sm text-ds-text2">
+                  {row.cafeName}
+                  {row.endsAt
+                    ? ` · jusqu’à ${formatParisTimeHHMM(row.endsAt)}`
+                    : null}
+                </span>
+              </button>
+            ))
+          )
+        ) : !online ? (
           <EmptyState
             icon={<WifiSlash weight="regular" />}
             title="Pas de connexion"
@@ -309,6 +508,7 @@ export default function DropsPage() {
             const isPrimary = drop.id === mostUrgentId;
             const cafe = drop.places?.name ?? "Café";
             const stock = stockLabel(drop);
+            const flash = isFlashDrop(drop);
 
             return (
               <article
@@ -331,13 +531,15 @@ export default function DropsPage() {
                   ) : (
                     <span />
                   )}
-                  {/* Distance hidden: Drop.places has no lat/lng in the current payload */}
                 </div>
 
                 <div className="flex flex-col gap-0.5">
                   <button
                     type="button"
-                    onClick={() => setSelectedDrop(drop)}
+                    onClick={() => {
+                      setClaimError(null);
+                      setSelectedDrop(drop);
+                    }}
                     className="text-left"
                   >
                     <h3 className="font-display m-0 text-xl font-bold text-ds-text">
@@ -350,14 +552,26 @@ export default function DropsPage() {
                   </p>
                 </div>
 
-                <Button
-                  variant={isPrimary ? "main" : "tonal"}
-                  className="h-12 w-full"
-                  onClick={() => goToDrop(drop)}
-                >
-                  Je m&apos;y rends
-                  <ArrowRight size={18} weight="regular" aria-hidden />
-                </Button>
+                {flash ? (
+                  <Button
+                    variant={isPrimary ? "main" : "tonal"}
+                    className="h-12 w-full"
+                    disabled={claimBusy}
+                    onClick={() => void handleObtainCode(drop)}
+                  >
+                    <QrCode size={18} weight="regular" aria-hidden />
+                    Obtenir mon code
+                  </Button>
+                ) : (
+                  <Button
+                    variant={isPrimary ? "main" : "tonal"}
+                    className="h-12 w-full"
+                    onClick={() => goToDrop(drop)}
+                  >
+                    Je m&apos;y rends
+                    <ArrowRight size={18} weight="regular" aria-hidden />
+                  </Button>
+                )}
               </article>
             );
           })
@@ -369,11 +583,31 @@ export default function DropsPage() {
           drop={selectedDrop}
           countdown={formatCountdown(selectedDrop.end_time, now)}
           isAuthenticated={isAuthenticated}
-          isClaimed={claimedDrops.includes(selectedDrop.id)}
-          onClaim={() => handleClaim(selectedDrop)}
-          onClose={() => setSelectedDrop(null)}
+          isClaimed={legacyClaimed.includes(selectedDrop.id)}
+          claimBusy={claimBusy}
+          claimError={claimError}
+          onClaim={handleModalClaim}
+          onClose={() => {
+            setSelectedDrop(null);
+            setClaimError(null);
+          }}
         />
       )}
+
+      {activeCode ? (
+        <DropCodePanel
+          dropCodeId={activeCode.dropCodeId}
+          code={activeCode.code}
+          title={activeCode.title}
+          cafeName={activeCode.cafeName}
+          endsAt={activeCode.endsAt}
+          initialStatus={activeCode.status}
+          onClose={() => {
+            setActiveCode(null);
+            void refreshMyCodes();
+          }}
+        />
+      ) : null}
 
       <LoginModal isOpen={showLogin} onClose={() => setShowLogin(false)} />
     </div>

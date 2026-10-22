@@ -2,7 +2,9 @@ import { describe, expect, it } from 'vitest';
 import {
   canAccessProPath,
   filterProNavHref,
+  mobileTabHrefsForRole,
   moreNavHrefsForRole,
+  isMoreNavPath,
 } from '@/lib/pro/navAccess';
 
 const SIDE_NAV = [
@@ -80,5 +82,33 @@ describe('feuille Plus', () => {
     expect(hrefs).toEqual(['/etablissement', '/specificites', '/reglages']);
     expect(hrefs).not.toContain('/equipe');
     expect(hrefs).not.toContain('/abonnement');
+  });
+
+  it('ne répète pas la fiche, déjà dans la barre, pour un gérant', () => {
+    expect(moreNavHrefsForRole('owner')).toEqual([
+      '/specificites',
+      '/equipe',
+      '/abonnement',
+      '/reglages',
+    ]);
+    expect(isMoreNavPath('/etablissement', 'owner')).toBe(false);
+    expect(isMoreNavPath('/etablissement', 'staff')).toBe(true);
+  });
+});
+
+describe('barre du bas mobile', () => {
+  it('garde Valider au centre pour chaque rôle', () => {
+    for (const role of ['owner', 'manager', 'staff'] as const) {
+      // + l'onglet Plus en dernier
+      const tabs = [...mobileTabHrefsForRole(role), 'plus'];
+      expect(tabs.length % 2).toBe(1);
+      expect(tabs[(tabs.length - 1) / 2]).toBe('/valider');
+    }
+  });
+
+  it('montre Drops au gérant et au responsable, pas au staff', () => {
+    expect(mobileTabHrefsForRole('owner')).toContain('/dashboard-pro/drops');
+    expect(mobileTabHrefsForRole('manager')).toContain('/dashboard-pro/drops');
+    expect(mobileTabHrefsForRole('staff')).toEqual(['/dashboard-pro', '/valider']);
   });
 });

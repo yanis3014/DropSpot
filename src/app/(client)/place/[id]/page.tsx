@@ -143,6 +143,7 @@ export default function PlacePage() {
 
   return (
     <PlaceDetailView
+      key={place.id}
       place={place}
       media={media}
       vibe={vibe}

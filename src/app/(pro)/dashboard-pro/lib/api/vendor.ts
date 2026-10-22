@@ -1,12 +1,6 @@
 import { supabase } from '@/lib/supabase/client';
 import { normalizePlace, Place } from '@/lib/api/places';
 import {
-  geocodeAddress,
-  NICE_CENTER,
-  placeLocationPayload,
-  placeLocationWkt,
-} from '@/lib/geocode';
-import {
   normalizeNoiseLevel,
   normalizePlugsLevel,
   normalizeWifiSpeed,
@@ -363,7 +357,7 @@ export async function countVendorPlaces(vendorId: string): Promise<number> {
 }
 
 const PLACE_SELECT =
-  'id, name, image_url, lat, lng, latitude, longitude, category, description, address, city, has_plugs, has_vegan, laptop_policy, noise_level, wifi_speed, opening_hours, plugs_level, vendor_id, created_at';
+  'id, name, image_url, lat, lng, latitude, longitude, category, description, address, city, has_plugs, has_vegan, laptop_policy, noise_level, wifi_speed, opening_hours, plugs_level, vendor_id, verification_status, created_at';
 
 /** Cafés sans propriétaire — candidats à la revendication. */
 export async function listUnclaimedPlaces(): Promise<Place[]> {
@@ -384,199 +378,193 @@ export async function listUnclaimedPlaces(): Promise<Place[]> {
   return ((data ?? []) as Record<string, unknown>[]).map(normalizePlace);
 }
 
-export interface CreateVendorPlaceInput {
-  name: string;
-  address?: string | null;
-  city?: string | null;
-  description?: string | null;
-  wifi_speed?: string | null;
-  noise_level?: string | null;
-  plugs_level?: 'limited' | 'regular' | 'everywhere' | null;
-  image_url?: string | null;
-  opening_hours?: string | null;
-  has_vegan?: boolean;
-  lat?: number;
-  lng?: number;
-  category?: string | null;
-}
+/** Recherche cafés par nom (revendication) — 10 résultats max. */
+export async function searchPlacesForClaim(query: string): Promise<Place[]> {
+  if (!supabase) return [];
+  const q = query.trim();
+  if (q.length < 2) return [];
 
-/** Crée un nouveau spot lié au vendor connecté. */
-export async function createVendorPlace(
-  input: CreateVendorPlaceInput
-): Promise<Place> {
-  if (!supabase) throw new Error('Supabase client not initialized');
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) throw new Error('Not authenticated');
-
-  const name = input.name.trim();
-  if (!name) throw new Error('Le nom de l’établissement est requis.');
-
-  // Canonicaliser les enums FR → EN (CHECK constraints Supabase)
-  const plugs = normalizePlugsLevel(input.plugs_level);
-  const wifi = normalizeWifiSpeed(input.wifi_speed);
-  const noise = normalizeNoiseLevel(input.noise_level);
-
-  // Coords fournies, sinon géocodage adresse → fallback centre Nice
-  let coords =
-    Number.isFinite(input.lat) && Number.isFinite(input.lng)
-      ? { lat: input.lat as number, lng: input.lng as number }
-      : await geocodeAddress(input.address ?? '', input.city);
-
-  if (!Number.isFinite(coords.lat) || !Number.isFinite(coords.lng)) {
-    coords = { ...NICE_CENTER };
-  }
-
-  const baseRow = {
-    name,
-    address: input.address?.trim() || null,
-    city: input.city?.trim() || null,
-    description: input.description?.trim() || null,
-    wifi_speed: wifi,
-    noise_level: noise,
-    plugs_level: plugs,
-    has_plugs: plugs ? plugs !== 'limited' : false,
-    // Aligné sur les lignes seed (`always`) — évite un CHECK sans NULL
-    laptop_policy: 'always',
-    has_vegan: Boolean(input.has_vegan),
-    image_url: input.image_url || null,
-    opening_hours: input.opening_hours || null,
-    category: input.category || 'Specialty',
-    vendor_id: user.id,
-  };
-
-  // Essai 1 : GeoJSON location + lat/lng + latitude/longitude
-  let { data, error } = await supabase
+  const { data, error } = await supabase
     .from('places')
-    .insert({ ...baseRow, ...placeLocationPayload(coords) })
     .select(PLACE_SELECT)
-    .single();
-
-  // Essai 2 : location en WKT (certains schémas PostGIS)
-  if (error && (error.code === '22P02' || /location|geo/i.test(error.message ?? ''))) {
-    const retry = await supabase
-      .from('places')
-      .insert({
-        ...baseRow,
-        lat: coords.lat,
-        lng: coords.lng,
-        latitude: coords.lat,
-        longitude: coords.lng,
-        location: placeLocationWkt(coords),
-      })
-      .select(PLACE_SELECT)
-      .single();
-    data = retry.data;
-    error = retry.error;
-  }
-
-  // Essai 3 : colonnes absentes → garder uniquement location (NOT NULL) + lat/lng
-  if (
-    error &&
-    (error.code === '42703' ||
-      /column .* does not exist/i.test(error.message ?? ''))
-  ) {
-    const retry = await supabase
-      .from('places')
-      .insert({
-        ...baseRow,
-        location: placeLocationWkt(coords),
-        lat: coords.lat,
-        lng: coords.lng,
-      })
-      .select(PLACE_SELECT)
-      .single();
-    data = retry.data;
-    error = retry.error;
-  }
+    .ilike('name', `%${q}%`)
+    .order('name', { ascending: true })
+    .limit(10);
 
   if (error) {
-    console.error('Error creating vendor place:', error);
-    if (error.code === '23514') {
-      throw new Error(
-        `Contrainte base refusée sur places (${error.message}). Les équipements doivent être des enums DB (ex. ambient / average / everywhere), pas les libellés FR.`
-      );
-    }
+    console.error('Error searching places for claim:', error);
     throw error;
   }
 
-  invalidatePlacesCache();
-  return normalizePlace(data as Record<string, unknown>);
+  return ((data ?? []) as Record<string, unknown>[]).map(normalizePlace);
 }
 
-export interface ClaimVendorPlaceInput extends CreateVendorPlaceInput {
-  placeId: string;
-}
+export type SuggestPlaceResult =
+  | { ok: true; placeId: string }
+  | { ok: false; error: string };
 
-/** Revendique un spot libre (vendor_id IS NULL) et met à jour la fiche. */
-/** Demande de revendication (approve_claim côté admin → place_members). */
-export async function requestPlaceClaim(placeId: string): Promise<void> {
+/** Suggest an unclaimed café (RPC suggest_place). */
+export async function suggestPlace(input: {
+  name: string;
+  address: string;
+  city: string;
+  lat: number;
+  lng: number;
+}): Promise<SuggestPlaceResult> {
   if (!supabase) throw new Error('Supabase client not initialized');
-  const { data, error } = await supabase.rpc('request_claim', {
-    p_place_id: placeId,
-    p_declared_role: 'owner',
-    p_proof_method: 'phone',
-    p_proof_path: null,
+
+  const { data, error } = await supabase.rpc('suggest_place', {
+    p_name: input.name,
+    p_address: input.address,
+    p_city: input.city,
+    p_lat: input.lat,
+    p_lng: input.lng,
+  });
+
+  if (error) throw error;
+  const row = data as { ok?: boolean; place_id?: string; error?: string } | null;
+  if (!row?.ok || !row.place_id) {
+    return { ok: false, error: row?.error ?? 'insert_failed' };
+  }
+  invalidatePlacesCache();
+  return { ok: true, placeId: String(row.place_id) };
+}
+
+export interface PendingPlaceClaim {
+  id: string;
+  place_id: string;
+  declared_role: string | null;
+  proof_method: string | null;
+  status: string;
+  created_at: string;
+  place: Place | null;
+}
+
+/** Pending claim owned by the signed-in user (if any). */
+export async function getPendingPlaceClaim(): Promise<PendingPlaceClaim | null> {
+  if (!supabase) return null;
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return null;
+
+  const { data, error } = await supabase
+    .from('place_claims')
+    .select(
+      'id, place_id, declared_role, proof_method, status, created_at, places(id, name, image_url, lat, lng, latitude, longitude, category, description, address, city, has_plugs, has_vegan, laptop_policy, noise_level, wifi_speed, opening_hours, plugs_level, vendor_id, verification_status, created_at)'
+    )
+    .eq('user_id', user.id)
+    .eq('status', 'pending')
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (error) {
+    console.error('getPendingPlaceClaim:', error);
+    return null;
+  }
+  if (!data) return null;
+
+  const row = data as Record<string, unknown>;
+  const placeRaw = row.places;
+  const place =
+    placeRaw && typeof placeRaw === 'object' && !Array.isArray(placeRaw)
+      ? normalizePlace(placeRaw as Record<string, unknown>)
+      : null;
+
+  return {
+    id: String(row.id),
+    place_id: String(row.place_id),
+    declared_role: (row.declared_role as string | null) ?? null,
+    proof_method: (row.proof_method as string | null) ?? null,
+    status: String(row.status),
+    created_at: String(row.created_at),
+    place,
+  };
+}
+
+export async function cancelPlaceClaim(
+  claimId: string
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  if (!supabase) throw new Error('Supabase client not initialized');
+  const { data, error } = await supabase.rpc('cancel_claim', {
+    p_claim_id: claimId,
   });
   if (error) throw error;
   const row = data as { ok?: boolean; error?: string } | null;
   if (!row?.ok) {
-    throw new Error(row?.error ?? 'Revendication refusée');
+    return { ok: false, error: row?.error ?? 'not_found' };
   }
+  return { ok: true };
 }
 
-export async function claimVendorPlace(
-  input: ClaimVendorPlaceInput
-): Promise<Place> {
+const CLAIM_PROOFS_BUCKET = 'claim-proofs';
+
+/** Upload proof under `<uid>/<place_id>/<fileName>`. */
+export async function uploadClaimProof(
+  placeId: string,
+  file: File,
+  objectPath: string
+): Promise<string> {
   if (!supabase) throw new Error('Supabase client not initialized');
   const {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) throw new Error('Not authenticated');
 
-  const plugs = normalizePlugsLevel(input.plugs_level);
-  const payload: Record<string, unknown> = {
-    vendor_id: user.id,
-    name: input.name.trim() || undefined,
-    address: input.address?.trim() || null,
-    city: input.city?.trim() || null,
-    description: input.description?.trim() || null,
-    wifi_speed: normalizeWifiSpeed(input.wifi_speed),
-    noise_level: normalizeNoiseLevel(input.noise_level),
-    plugs_level: plugs,
-    has_plugs: plugs ? plugs !== 'limited' : false,
-    has_vegan: Boolean(input.has_vegan),
-    opening_hours: input.opening_hours || null,
-  };
-  if (input.image_url) payload.image_url = input.image_url;
-  if (Number.isFinite(input.lat)) payload.lat = input.lat;
-  if (Number.isFinite(input.lng)) payload.lng = input.lng;
+  if (!objectPath.startsWith(`${user.id}/`)) {
+    throw new Error('invalid_proof_path');
+  }
 
-  Object.keys(payload).forEach((k) => {
-    if (payload[k] === undefined) delete payload[k];
-  });
-
-  const { data, error } = await supabase
-    .from('places')
-    .update(payload)
-    .eq('id', input.placeId)
-    .is('vendor_id', null)
-    .select(PLACE_SELECT)
-    .maybeSingle();
+  const { error } = await supabase.storage
+    .from(CLAIM_PROOFS_BUCKET)
+    .upload(objectPath, file, {
+      cacheControl: '3600',
+      upsert: true,
+      contentType: file.type || undefined,
+    });
 
   if (error) {
-    console.error('Error claiming vendor place:', error);
+    console.error('uploadClaimProof:', error);
     throw error;
   }
-  if (!data) {
-    throw new Error(
-      'Ce café n’est plus disponible (déjà revendiqué ou introuvable).'
-    );
-  }
+  return objectPath;
+}
 
-  invalidatePlacesCache();
-  return normalizePlace(data as Record<string, unknown>);
+export type RequestPlaceClaimInput = {
+  placeId: string;
+  declaredRole: string;
+  proofPath: string;
+};
+
+export type RequestPlaceClaimResult =
+  | { ok: true; claimId: string }
+  | { ok: false; error: string };
+
+/**
+ * Demande de revendication par justificatif
+ * (approve_claim côté admin → place_members).
+ */
+export async function requestPlaceClaim(
+  input: RequestPlaceClaimInput
+): Promise<RequestPlaceClaimResult> {
+  if (!supabase) throw new Error('Supabase client not initialized');
+  const { data, error } = await supabase.rpc('request_claim', {
+    p_place_id: input.placeId,
+    p_declared_role: input.declaredRole,
+    p_proof_method: 'document',
+    p_proof_path: input.proofPath,
+  });
+  if (error) throw error;
+  const row = data as {
+    ok?: boolean;
+    claim_id?: string;
+    error?: string;
+  } | null;
+  if (!row?.ok || !row.claim_id) {
+    return { ok: false, error: row?.error ?? 'place_not_found' };
+  }
+  return { ok: true, claimId: String(row.claim_id) };
 }
 
 // Ré-exports pour le dashboard (API flash drops)

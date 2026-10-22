@@ -32,3 +32,18 @@ export function formatParisTimeHHMM(
 export function formatParisSnapshotLabel(date: Date = new Date()): string {
   return formatParisTimeHHMM(date);
 }
+
+/** « lun. 19 oct., 10:42 » (Europe/Paris) — suivi de revendication. */
+export function formatParisClaimSentAt(
+  input: Date | string,
+  locale = 'fr-FR'
+): string {
+  const date = typeof input === 'string' ? new Date(input) : input;
+  const dayPart = new Intl.DateTimeFormat(locale, {
+    weekday: 'short',
+    day: 'numeric',
+    month: 'short',
+    timeZone: PARIS,
+  }).format(date);
+  return `${dayPart}, ${formatParisTimeHHMM(date, locale)}`;
+}

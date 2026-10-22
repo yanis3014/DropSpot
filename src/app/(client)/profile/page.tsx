@@ -24,6 +24,7 @@ import {
 } from '@/lib/api/contributions';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { fetchIsPro } from '@/app/(pro)/dashboard-pro/lib/api/vendor';
+import { writeDropspotMode } from '@/lib/auth/dropspotMode';
 import { useProfile } from '@/lib/hooks/useProfile';
 import { badgeProgress, GRAIN_BADGES } from '@/lib/grains';
 import {
@@ -118,10 +119,7 @@ export default function ProfilePage() {
   const [isPro, setIsPro] = useState(false);
 
   useEffect(() => {
-    if (!isAuthenticated) {
-      setIsPro(false);
-      return;
-    }
+    if (!isAuthenticated) return;
     let cancelled = false;
     void fetchIsPro().then((value) => {
       if (!cancelled) setIsPro(value);
@@ -591,8 +589,12 @@ export default function ProfilePage() {
       </section>
 
       <div className="flex flex-col gap-2 pt-2">
-        {isPro ? (
-          <Link href="/dashboard-pro" className="no-underline">
+        {isAuthenticated && isPro ? (
+          <Link
+            href="/dashboard-pro"
+            className="no-underline"
+            onClick={() => writeDropspotMode('pro')}
+          >
             <Button variant="tonal" className="w-full">
               Espace pro
             </Button>

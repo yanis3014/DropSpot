@@ -103,6 +103,48 @@ describe('redirection selon le rôle', () => {
     ).toBe('/onboarding');
   });
 
+  it('pro + / → /dashboard-pro', () => {
+    expect(
+      destinationAfterAuth({ isPro: true, onboardingCompleted: true }, '/')
+    ).toBe('/dashboard-pro');
+    expect(
+      destinationAfterAuth({ isPro: true, onboardingCompleted: false })
+    ).toBe('/dashboard-pro');
+  });
+
+  it('pro + /place/abc → /place/abc', () => {
+    expect(
+      destinationAfterAuth(
+        { isPro: true, onboardingCompleted: true },
+        '/place/abc'
+      )
+    ).toBe('/place/abc');
+  });
+
+  it('pro + lien d’invitation → l’invitation', () => {
+    expect(
+      destinationAfterAuth(
+        { isPro: true, onboardingCompleted: false },
+        '/dashboard-pro/invitation/abc123'
+      )
+    ).toBe('/dashboard-pro/invitation/abc123');
+  });
+
+  it('non-pro + / sans onboarding → /onboarding', () => {
+    expect(
+      destinationAfterAuth({ isPro: false, onboardingCompleted: false }, '/')
+    ).toBe('/onboarding');
+  });
+
+  it('pro n’est jamais envoyé vers /onboarding client', () => {
+    expect(
+      destinationAfterAuth(
+        { isPro: true, onboardingCompleted: false },
+        '/onboarding'
+      )
+    ).toBe('/dashboard-pro');
+  });
+
   it('safeRedirectPath bloque les open redirects', () => {
     expect(safeRedirectPath('https://evil.com')).toBe('/');
     expect(safeRedirectPath('//evil.com')).toBe('/');

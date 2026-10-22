@@ -1,15 +1,18 @@
 "use client";
 
-import { Suspense, useState } from "react";
+import { Suspense, useId, useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   Crown,
+  DotsThreeOutline,
   GearSix,
   House,
   Lightning,
   ListChecks,
+  MapTrifold,
   QrCode,
+  SignOut,
   Storefront,
   UsersThree,
 } from "@phosphor-icons/react";
@@ -18,7 +21,12 @@ import { useAuth } from "@/lib/hooks/useAuth";
 import { useVendorProfile } from "@/app/(pro)/dashboard-pro/hooks/useVendorProfile";
 import { useVendorPlan } from "@/hooks/useVendorPlan";
 import { useActivePlace } from "@/app/(pro)/hooks/useActivePlace";
-import { filterProNavHref } from "@/lib/pro/navAccess";
+import {
+  filterProNavHref,
+  isMoreNavPath,
+  moreNavHrefsForRole,
+} from "@/lib/pro/navAccess";
+import { writeDropspotMode } from "@/lib/auth/dropspotMode";
 import PlanBadge from "@/components/pro/PlanBadge";
 import {
   CafeSelectTrigger,
@@ -52,6 +60,18 @@ const MOBILE_NAV: {
   { href: "/dashboard-pro/drops", label: "Drops", icon: Lightning },
 ];
 
+const MORE_NAV: {
+  href: string;
+  label: string;
+  icon: typeof House;
+}[] = [
+  { href: "/etablissement", label: "Établissement", icon: Storefront },
+  { href: "/specificites", label: "Spécificités", icon: ListChecks },
+  { href: "/equipe", label: "Équipe", icon: UsersThree },
+  { href: "/abonnement", label: "Abonnement", icon: Crown },
+  { href: "/reglages", label: "Réglages", icon: GearSix },
+];
+
 function isActivePath(pathname: string, href: string, exact?: boolean): boolean {
   if (exact) return pathname === href;
   return pathname === href || pathname.startsWith(`${href}/`);
@@ -59,8 +79,14 @@ function isActivePath(pathname: string, href: string, exact?: boolean): boolean 
 
 function ProShellInner({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const { isAuthenticated, loading: authLoading, displayName, avatarUrl } =
-    useAuth();
+  const router = useRouter();
+  const {
+    isAuthenticated,
+    loading: authLoading,
+    displayName,
+    avatarUrl,
+    signOut,
+  } = useAuth();
   const { profile } = useVendorProfile(isAuthenticated, authLoading);
   const { plan, hasPro: hasProSubscription } = useVendorPlan(
     isAuthenticated && !authLoading
@@ -77,6 +103,7 @@ function ProShellInner({ children }: { children: React.ReactNode }) {
   } = useActivePlace();
 
   const [switcherOpen, setSwitcherOpen] = useState(false);
+  const [moreOpen, setMoreOpen] = useState(false);
   const hideChrome =
     pathname.startsWith("/dashboard-pro/onboarding") ||
     pathname === "/valider" ||
@@ -92,6 +119,21 @@ function ProShellInner({ children }: { children: React.ReactNode }) {
     : "?";
 
   const navRole = activeMemberRole;
+  const moreActive = isMoreNavPath(pathname);
+  const moreItems = MORE_NAV.filter(({ href }) =>
+    moreNavHrefsForRole(navRole).includes(href)
+  );
+
+  const goToClientApp = () => {
+    writeDropspotMode("client");
+    setMoreOpen(false);
+    router.push("/map");
+  };
+
+  const handleSignOut = () => {
+    setMoreOpen(false);
+    void signOut();
+  };
 
   if (hideChrome) {
     return (
@@ -157,6 +199,25 @@ function ProShellInner({ children }: { children: React.ReactNode }) {
               </Link>
             )}
           </div>
+
+          <nav aria-label="Compte" className="flex flex-col gap-0.5">
+            <button
+              type="button"
+              onClick={goToClientApp}
+              className="flex h-[42px] items-center gap-3 rounded-xl px-3 text-left text-[15px] font-semibold text-ds-text2 transition-colors hover:bg-ds-surface2/70 hover:text-ds-text"
+            >
+              <MapTrifold size={20} weight="regular" aria-hidden />
+              Voir l&apos;app client
+            </button>
+            <button
+              type="button"
+              onClick={handleSignOut}
+              className="flex h-[42px] items-center gap-3 rounded-xl px-3 text-left text-[15px] font-semibold text-ds-text2 transition-colors hover:bg-ds-surface2/70 hover:text-ds-text"
+            >
+              <SignOut size={20} weight="regular" aria-hidden />
+              Se déconnecter
+            </button>
+          </nav>
 
           <div className="flex items-center gap-2.5 px-1.5 py-1">
             <span
@@ -224,6 +285,23 @@ function ProShellInner({ children }: { children: React.ReactNode }) {
               </Link>
             );
           })}
+          <button
+            type="button"
+            onClick={() => setMoreOpen(true)}
+            aria-expanded={moreOpen}
+            aria-haspopup="dialog"
+            className={cn(
+              "flex h-[50px] flex-1 flex-col items-center justify-center gap-1 text-xs font-semibold",
+              moreActive || moreOpen ? "text-ds-accent" : "text-ds-text2"
+            )}
+          >
+            <DotsThreeOutline
+              size={22}
+              weight={moreActive || moreOpen ? "fill" : "regular"}
+              aria-hidden
+            />
+            Plus
+          </button>
         </nav>
       </div>
 
@@ -247,6 +325,113 @@ function ProShellInner({ children }: { children: React.ReactNode }) {
         onSelect={setActivePlaceId}
         initialsFor={initialsFor}
       />
+
+      <ProMoreSheet
+        open={moreOpen}
+        onClose={() => setMoreOpen(false)}
+        items={moreItems}
+        pathname={pathname}
+        withCafe={withCafe}
+        onClientApp={goToClientApp}
+        onSignOut={handleSignOut}
+      />
+    </div>
+  );
+}
+
+function ProMoreSheet({
+  open,
+  onClose,
+  items,
+  pathname,
+  withCafe,
+  onClientApp,
+  onSignOut,
+}: {
+  open: boolean;
+  onClose: () => void;
+  items: { href: string; label: string; icon: typeof House }[];
+  pathname: string;
+  withCafe: (href: string) => string;
+  onClientApp: () => void;
+  onSignOut: () => void;
+}) {
+  const titleId = useId();
+  if (!open) return null;
+
+  return (
+    <div className="fixed inset-0 z-[60] lg:hidden">
+      <button
+        type="button"
+        className="absolute inset-0 bg-black/45"
+        aria-label="Fermer"
+        onClick={onClose}
+      />
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        className="absolute inset-x-0 bottom-0 flex flex-col gap-2.5 rounded-t-[28px] bg-ds-surface px-4 pb-[calc(2.5rem+env(safe-area-inset-bottom))] pt-2.5 shadow-lg"
+      >
+        <div
+          className="mx-auto h-1.5 w-10 rounded-full bg-ds-line"
+          aria-hidden
+        />
+        <div className="flex items-center justify-between px-1 py-1.5">
+          <h2
+            id={titleId}
+            className="font-display text-[22px] font-extrabold text-ds-text"
+          >
+            Plus
+          </h2>
+          <button
+            type="button"
+            onClick={onClose}
+            className="h-11 px-1 text-base font-bold text-ds-accent"
+          >
+            Fermer
+          </button>
+        </div>
+        <nav aria-label="Plus" className="flex flex-col gap-1">
+          {items.map(({ href, label, icon: Icon }) => {
+            const active = isActivePath(pathname, href);
+            return (
+              <Link
+                key={href}
+                href={withCafe(href)}
+                onClick={onClose}
+                className={cn(
+                  "flex min-h-[56px] items-center gap-3 rounded-2xl px-3.5 text-[16px] font-bold no-underline",
+                  active
+                    ? "bg-ds-accentsoft text-ds-text"
+                    : "text-ds-text"
+                )}
+              >
+                <Icon size={22} weight={active ? "fill" : "regular"} aria-hidden />
+                {label}
+              </Link>
+            );
+          })}
+        </nav>
+        <div className="mt-1 flex flex-col gap-1 border-t border-ds-line pt-2">
+          <button
+            type="button"
+            onClick={onClientApp}
+            className="flex min-h-[52px] items-center gap-3 rounded-2xl px-3.5 text-left text-[16px] font-bold text-ds-text"
+          >
+            <MapTrifold size={22} weight="regular" aria-hidden />
+            Voir l&apos;app client
+          </button>
+          <button
+            type="button"
+            onClick={onSignOut}
+            className="flex min-h-[52px] items-center gap-3 rounded-2xl px-3.5 text-left text-[16px] font-bold text-ds-text"
+          >
+            <SignOut size={22} weight="regular" aria-hidden />
+            Se déconnecter
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

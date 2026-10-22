@@ -16,6 +16,11 @@ function isProEntryPath(path: string): boolean {
   );
 }
 
+/** Vague landing paths — a pro should land on the dashboard instead. */
+function isVaguePreferredPath(path: string): boolean {
+  return path === '/' || path === '/map' || path === '/login';
+}
+
 /**
  * Destination post-auth selon is_pro et onboarding client.
  */
@@ -33,9 +38,25 @@ export function destinationAfterAuth(
     return preferred;
   }
 
+  if (opts.isPro) {
+    // Never send a pro to the client onboarding, or to a vague landing page.
+    if (
+      isVaguePreferredPath(preferred) ||
+      preferred === '/onboarding' ||
+      preferred.startsWith('/onboarding/')
+    ) {
+      return '/dashboard-pro';
+    }
+    if (isProEntryPath(preferred)) {
+      return preferred.startsWith('/dashboard-pro')
+        ? preferred
+        : '/dashboard-pro';
+    }
+    return preferred;
+  }
+
   if (isProEntryPath(preferred)) {
-    if (!opts.isPro) return '/dashboard-pro/onboarding';
-    return preferred.startsWith('/dashboard-pro') ? preferred : '/dashboard-pro';
+    return '/dashboard-pro/onboarding';
   }
 
   if (!opts.onboardingCompleted) {

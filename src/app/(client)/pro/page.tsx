@@ -22,14 +22,24 @@ export default function ProLandingPage() {
           d&apos;équipe.
         </p>
       </div>
-      <Link href="/dashboard-pro/onboarding" className="no-underline">
+      {/* No prefetch: signed out, the proxy answers with a redirect to /login
+          that the router would keep and replay after sign-in. */}
+      <Link
+        href="/dashboard-pro/onboarding"
+        prefetch={false}
+        className="no-underline"
+      >
         <Button variant="main" className="w-full">
           Revendiquer mon café
         </Button>
       </Link>
       <p className="text-center text-sm text-ds-text2">
         Déjà membre d&apos;un café ?{" "}
-        <Link href="/login?redirect=/dashboard-pro&espace=pro" className="font-bold text-ds-accent">
+        <Link
+          href="/login?redirect=/dashboard-pro&espace=pro"
+          prefetch={false}
+          className="font-bold text-ds-accent"
+        >
           Se connecter
         </Link>
       </p>

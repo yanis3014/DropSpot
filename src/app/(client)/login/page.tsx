@@ -22,6 +22,15 @@ import { cn } from '@/lib/cn';
 
 type AuthMode = 'login' | 'signup';
 
+/**
+ * Full page load after auth: the client router cache may still hold the
+ * proxy's "go to /login" answer for this destination (prefetched while signed
+ * out), which would send the user straight back here.
+ */
+function leaveLoginPage(dest: string) {
+  window.location.replace(dest);
+}
+
 export default function LoginPage() {
   return (
     <Suspense
@@ -46,7 +55,13 @@ function LoginPageContent() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  // `/auth/callback` sends failures back here as `?error=` (expired link,
+  // link opened in another browser…): show it instead of a silent form.
+  const [error, setError] = useState<string | null>(() =>
+    searchParams.get('error')
+      ? 'La connexion n\'a pas abouti. Réessaie depuis cet appareil.'
+      : null
+  );
 
   const preferredNext = useMemo(
     () => safeRedirectPath(searchParams.get('redirect')),
@@ -77,12 +92,12 @@ function LoginPageContent() {
         user.id,
         preferredNext
       );
-      if (!cancelled) router.replace(dest);
+      if (!cancelled) leaveLoginPage(dest);
     })();
     return () => {
       cancelled = true;
     };
-  }, [authLoading, isAuthenticated, user, preferredNext, router]);
+  }, [authLoading, isAuthenticated, user, preferredNext]);
 
   const clearFeedback = () => {
     setError(null);
@@ -147,7 +162,7 @@ function LoginPageContent() {
         userId,
         preferredNext
       );
-      router.replace(dest);
+      leaveLoginPage(dest);
     } catch (err) {
       console.error('Password login error:', err);
       setError(
@@ -186,7 +201,7 @@ function LoginPageContent() {
           userId,
           preferredNext
         );
-        router.replace(dest);
+        leaveLoginPage(dest);
         return;
       }
 

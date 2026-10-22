@@ -152,6 +152,54 @@ export async function uploadPlaceMedia(
   return normalizeMedia(data as Record<string, unknown>);
 }
 
+/** Persist venue photo order (`sort_order` = index). */
+export async function reorderPlaceMedia(
+  orderedIds: string[]
+): Promise<void> {
+  if (!supabase) throw new Error('Supabase client not initialized');
+  await requireUserId();
+
+  for (let i = 0; i < orderedIds.length; i++) {
+    const id = orderedIds[i];
+    if (!id) continue;
+    const { error } = await supabase
+      .from('place_media')
+      .update({ sort_order: i })
+      .eq('id', id);
+    if (error) {
+      console.error('reorderPlaceMedia:', error);
+      throw error;
+    }
+  }
+}
+
+/** French message for `enforce_place_media_pro` / upload failures. */
+export function placeMediaErrorMessage(err: unknown): string {
+  const message =
+    err instanceof Error
+      ? err.message
+      : typeof err === 'object' &&
+          err &&
+          'message' in err &&
+          typeof (err as { message: unknown }).message === 'string'
+        ? (err as { message: string }).message
+        : String(err ?? '');
+
+  if (/pro_required:\s*food and menu/i.test(message)) {
+    return 'La galerie food et menu est réservée à Pro.';
+  }
+  if (/pro_required:\s*free plan allows/i.test(message)) {
+    return `Le plan Gratuit permet jusqu’à ${FREE_VENUE_PHOTO_MAX} photos. Passe en Pro pour en ajouter.`;
+  }
+  if (/pro_required/i.test(message)) {
+    return `Le plan Gratuit permet jusqu’à ${FREE_VENUE_PHOTO_MAX} photos. Passe en Pro pour en ajouter.`;
+  }
+  if (/Maximum \d+ photos/i.test(message)) {
+    return message;
+  }
+  return 'Impossible d’enregistrer cette photo. Réessaie.';
+}
+
 export async function deletePlaceMedia(mediaId: string): Promise<void> {
   if (!supabase) throw new Error('Supabase client not initialized');
   await requireUserId();

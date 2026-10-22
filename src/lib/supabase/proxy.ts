@@ -78,7 +78,10 @@ export async function updateSession(request: NextRequest) {
   if (!user && isProtectedPath(pathname)) {
     const loginUrl = request.nextUrl.clone();
     loginUrl.pathname = '/login';
-    loginUrl.searchParams.set('redirect', pathname);
+    // Keep the query (`?cafe=`, invitation params…) so the user lands on the
+    // exact page after signing in.
+    loginUrl.search = '';
+    loginUrl.searchParams.set('redirect', `${pathname}${request.nextUrl.search}`);
     const redirectResponse = NextResponse.redirect(loginUrl);
     // Forward refreshed auth cookies onto the redirect response
     supabaseResponse.cookies.getAll().forEach((cookie) => {

@@ -259,6 +259,31 @@ export default function DropForm({
           </div>
         ) : null}
 
+        {/* Prix spécial : discount_value en € (obligatoire en base) */}
+        {state.kind === "special_price" ? (
+          <label className="flex flex-col gap-2 text-sm font-bold text-ds-text">
+            <span>Prix spécial</span>
+            <div className="flex items-center gap-2.5">
+              <input
+                type="number"
+                inputMode="decimal"
+                aria-label="Prix spécial en euros"
+                min={0.1}
+                step={0.1}
+                value={state.discountValue}
+                onChange={(e) =>
+                  setState((prev) => ({
+                    ...prev,
+                    discountValue: e.target.value,
+                  }))
+                }
+                className="h-11 w-[100px] rounded-xl border border-ds-line bg-ds-bg px-3 text-[15px] font-medium tabular-nums text-ds-text outline-none focus:border-ds-accent"
+              />
+              <span className="text-[15px] font-medium text-ds-text2">€</span>
+            </div>
+          </label>
+        ) : null}
+
         {/* Début / Fin en datetime-local (Europe/Paris) */}
         <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2">
           <label className="flex flex-col gap-2 text-sm font-bold text-ds-text">

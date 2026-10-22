@@ -99,6 +99,23 @@ describe('Validation des champs de DropForm', () => {
     ).toBe(false);
   });
 
+  it('exige un prix pour un prix spécial, sans valeur inventée', () => {
+    const base = {
+      ...buildDefaultDropFormState(new Date('2026-10-22T12:00:00.000Z')),
+      title: 'Flat white à prix doux',
+      kind: 'special_price' as const,
+    };
+
+    expect(
+      validateDropFormState({ ...base, discountValue: '' }, ctx).valid
+    ).toBe(false);
+
+    const ok = validateDropFormState({ ...base, discountValue: '2,5' }, ctx);
+    expect(ok.valid).toBe(true);
+    expect(ok.payload?.discount_value).toBe(2.5);
+    expect(ok.payload?.discount_unit).toBe('eur');
+  });
+
   it('impose entre 1 et 90 pour une réduction en %', () => {
     const base = {
       ...buildDefaultDropFormState(new Date('2026-10-22T12:00:00.000Z')),

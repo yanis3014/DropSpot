@@ -378,7 +378,10 @@ export function validateDropFormState(
     discountUnit = state.discountUnit;
   } else if (state.kind === 'special_price') {
     const parsed = Number(state.discountValue.replace(',', '.'));
-    discountValue = Number.isFinite(parsed) && parsed > 0 ? parsed : 3;
+    if (!Number.isFinite(parsed) || parsed <= 0) {
+      return { valid: false, error: 'Indique le prix spécial en euros.' };
+    }
+    discountValue = parsed;
     discountUnit = 'eur';
   }
 

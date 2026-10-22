@@ -99,7 +99,7 @@ function normalizeMemberRole(raw: unknown): PlaceMemberRole | null {
 }
 
 const PLACES_MEMBER_SELECT =
-  'id, name, image_url, lat, lng, latitude, longitude, category, description, address, city, has_plugs, has_vegan, laptop_policy, noise_level, wifi_speed, opening_hours, plugs_level, vendor_id, created_at';
+  'id, name, image_url, lat, lng, latitude, longitude, category, description, address, city, has_plugs, has_vegan, laptop_policy, noise_level, wifi_speed, opening_hours, plugs_level, vendor_id, verification_status, created_at';
 
 /** Cafés + rôle membre pour l'utilisateur connecté. */
 export async function listProPlaceMemberships(): Promise<PlaceMembershipRow[]> {
@@ -581,9 +581,9 @@ export async function claimVendorPlace(
 
 // Ré-exports pour le dashboard (API flash drops)
 export {
-  createFlashDrop,
+  insertFlashDrop,
+  updateFlashDrop,
   getVendorFlashDrops,
   countActiveVendorFlashDrops,
   type FlashDrop,
-  type CreateFlashDropInput,
 } from '@/app/(pro)/dashboard-pro/lib/api/flashDrops';

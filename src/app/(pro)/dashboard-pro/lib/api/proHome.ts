@@ -1,9 +1,10 @@
 import { supabase } from '@/lib/supabase/client';
 import {
-  createFlashDrop,
+  insertFlashDrop,
   normalizeFlashDrop,
   type FlashDrop,
 } from '@/app/(pro)/dashboard-pro/lib/api/flashDrops';
+import { DEFAULT_DROP_CONDITIONS } from '@/app/(pro)/dashboard-pro/lib/proDrops/dropForm';
 import { getVendorTodayStats } from '@/app/(pro)/dashboard-pro/lib/api/validate';
 import type { PlaceChecklistInput } from '@/app/(pro)/dashboard-pro/lib/proHome/checklist';
 
@@ -128,11 +129,30 @@ export async function duplicateFlashDrop(
       ? Math.round((end - start) / 60000)
       : 60;
 
-  return createFlashDrop({
+  const startsAt = new Date();
+  const endsAt = new Date(startsAt.getTime() + durationMinutes * 60_000);
+  const kind = drop.kind ?? 'offer';
+
+  return insertFlashDrop({
     place_id: drop.place_id,
+    vendor_id: drop.vendor_id,
     title: drop.title,
-    description: drop.description ?? undefined,
-    durationMinutes,
+    description: drop.description ?? null,
+    kind,
+    discount_value:
+      kind === 'discount' || kind === 'special_price'
+        ? (drop.discount_value ?? 20)
+        : null,
+    discount_unit:
+      kind === 'discount'
+        ? (drop.discount_unit ?? 'percent')
+        : kind === 'special_price'
+          ? 'eur'
+          : null,
+    conditions: drop.conditions ?? DEFAULT_DROP_CONDITIONS,
+    starts_at: startsAt.toISOString(),
+    ends_at: endsAt.toISOString(),
+    max_uses: drop.max_uses ?? null,
   });
 }
 

@@ -17,7 +17,9 @@ import {
   X,
 } from "@phosphor-icons/react";
 import ProEmptyState from "@/components/pro/ProEmptyState";
+import QuickDropSheet from "@/app/(pro)/dashboard-pro/components/QuickDropSheet";
 import { useActivePlace } from "@/app/(pro)/hooks/useActivePlace";
+import { useVendorPlan } from "@/hooks/useVendorPlan";
 import {
   addDropPlaces,
   cancelDropRedemption,
@@ -122,6 +124,7 @@ function CounterValidateInner({
   initials: string;
   withCafe: (href: string) => string;
 }) {
+  const { hasPro } = useVendorPlan();
   const [mode, setMode] = useState<Mode>("scanner");
   const [keyboardCode, setKeyboardCode] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -131,6 +134,7 @@ function CounterValidateInner({
     null
   );
   const [cameraHint, setCameraHint] = useState<string | null>(null);
+  const [quickDropOpen, setQuickDropOpen] = useState(false);
 
   const lastScanRef = useRef<{ code: string; at: number }>({ code: "", at: 0 });
   const hiddenInputRef = useRef<HTMLInputElement>(null);
@@ -505,14 +509,16 @@ function CounterValidateInner({
                   >
                     Scanner un autre code
                   </button>
-                  {verdict.kind === "ended" ? (
-                    <Link
-                      href={withCafe("/dashboard-pro/drops")}
-                      className="flex h-12 items-center justify-center gap-2 text-base font-semibold text-ds-text no-underline"
+                  {verdict.kind === "ended" &&
+                  (placeRole === "owner" || placeRole === "manager") ? (
+                    <button
+                      type="button"
+                      onClick={() => setQuickDropOpen(true)}
+                      className="flex h-12 items-center justify-center gap-2 text-base font-semibold text-ds-text"
                     >
                       <Lightning size={18} weight="bold" aria-hidden />
                       Créer un drop rapide
-                    </Link>
+                    </button>
                   ) : null}
                 </>
               ) : null}
@@ -576,6 +582,15 @@ function CounterValidateInner({
             <div className="h-10 w-10 animate-spin rounded-full border-b-2 border-white" />
           </div>
         ) : null}
+
+        <QuickDropSheet
+          open={quickDropOpen}
+          place={activePlace}
+          role={placeRole}
+          hasPro={hasPro}
+          onClose={() => setQuickDropOpen(false)}
+          onPublished={resetToScanner}
+        />
       </div>
     </div>
   );

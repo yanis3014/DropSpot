@@ -4,59 +4,100 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useMemo, useState } from "react";
 import { ArrowLeft } from "@phosphor-icons/react";
-import FlashDropForm from "@/app/(pro)/dashboard-pro/components/FlashDropForm";
-import { getFlashDropById } from "@/app/(pro)/dashboard-pro/lib/api/flashDrops";
+import DropForm from "@/app/(pro)/dashboard-pro/components/DropForm";
+import {
+  getFlashDropById,
+  type FlashDrop,
+} from "@/app/(pro)/dashboard-pro/lib/api/flashDrops";
+import {
+  buildDefaultDropFormState,
+  buildFormStateFromDrop,
+  buildFormStateFromExample,
+  formatCopiedFromBanner,
+} from "@/app/(pro)/dashboard-pro/lib/proDrops/dropForm";
 import { DROP_FORM_EXAMPLES } from "@/app/(pro)/dashboard-pro/lib/proDrops/examples";
 import { useActivePlace } from "@/app/(pro)/hooks/useActivePlace";
+import { useVendorPlan } from "@/hooks/useVendorPlan";
 
 function NewDropPageInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const depuisId = searchParams.get("depuis");
   const exempleId = searchParams.get("exemple");
-  const { places, activePlace, loading, withCafe } = useActivePlace();
+  const { activePlace, activeMemberRole, loading, withCafe } = useActivePlace();
+  const { hasPro } = useVendorPlan();
 
-  const examplePrefill = useMemo(() => {
-    const ex = DROP_FORM_EXAMPLES.find((e) => e.id === exempleId);
-    if (!ex) return null;
-    return { title: ex.title, description: ex.description ?? "" };
-  }, [exempleId]);
+  const exampleMatch = useMemo(
+    () => DROP_FORM_EXAMPLES.find((e) => e.id === exempleId) ?? null,
+    [exempleId]
+  );
 
-  const [depuisPrefill, setDepuisPrefill] = useState<{
-    id: string;
-    title: string;
-    description: string;
+  const [sourceDropState, setSourceDropState] = useState<{
+    requestedId: string;
+    drop: FlashDrop | null;
   } | null>(null);
 
   const depuisLoading = Boolean(
-    depuisId && !examplePrefill && depuisPrefill?.id !== depuisId
+    depuisId && !exampleMatch && sourceDropState?.requestedId !== depuisId
   );
 
   useEffect(() => {
-    if (examplePrefill || !depuisId) return;
+    if (exampleMatch || !depuisId) return;
     let cancelled = false;
-    void getFlashDropById(depuisId).then((drop) => {
-      if (cancelled || !drop) return;
-      setDepuisPrefill({
-        id: depuisId,
-        title: drop.title,
-        description: drop.description ?? "",
+    void getFlashDropById(depuisId)
+      .then((drop) => {
+        if (!cancelled) {
+          setSourceDropState({ requestedId: depuisId, drop });
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setSourceDropState({ requestedId: depuisId, drop: null });
+        }
       });
-    });
     return () => {
       cancelled = true;
     };
-  }, [depuisId, examplePrefill]);
+  }, [depuisId, exampleMatch]);
 
-  const prefillTitle =
-    examplePrefill?.title ??
-    (depuisPrefill?.id === depuisId ? depuisPrefill.title : "");
-  const prefillDescription =
-    examplePrefill?.description ??
-    (depuisPrefill?.id === depuisId ? depuisPrefill.description : "");
+  const sourceDrop =
+    sourceDropState?.requestedId === depuisId ? sourceDropState.drop : null;
+
+  const initialState = useMemo(() => {
+    if (exampleMatch) {
+      return buildFormStateFromExample(exampleMatch);
+    }
+    if (sourceDrop && sourceDrop.id === depuisId) {
+      return buildFormStateFromDrop(sourceDrop, { shiftToToday: true });
+    }
+    return buildDefaultDropFormState();
+  }, [exampleMatch, sourceDrop, depuisId]);
+
+  const copiedFromBanner = useMemo(() => {
+    if (sourceDrop && sourceDrop.id === depuisId) {
+      return formatCopiedFromBanner(sourceDrop);
+    }
+    return null;
+  }, [sourceDrop, depuisId]);
+
+  if (loading || depuisLoading) {
+    return (
+      <div className="flex flex-1 items-center justify-center py-20">
+        <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-ds-accent" />
+      </div>
+    );
+  }
+
+  if (!activePlace) {
+    return (
+      <p className="px-8 py-10 text-center text-sm text-ds-text2">
+        Aucun établissement accessible.
+      </p>
+    );
+  }
 
   return (
-    <div className="mx-auto flex w-full max-w-lg flex-col gap-4 px-4 py-6 lg:px-8">
+    <div className="mx-auto flex w-full max-w-[600px] flex-col gap-4 px-4 py-6 lg:px-8">
       <Link
         href={withCafe("/dashboard-pro/drops")}
         className="inline-flex items-center gap-2 text-sm font-bold text-ds-text no-underline"
@@ -64,28 +105,32 @@ function NewDropPageInner() {
         <ArrowLeft size={18} weight="bold" aria-hidden />
         Drops flash
       </Link>
-      <h1 className="font-display m-0 text-2xl font-extrabold text-ds-text">
-        {depuisId ? "Dupliquer un drop" : "Créer un drop"}
-      </h1>
-      {loading || depuisLoading ? (
-        <p className="text-sm text-ds-text2">Chargement…</p>
-      ) : places.length === 0 ? (
-        <p className="text-sm text-ds-text2">Aucun établissement.</p>
-      ) : (
-        <FlashDropForm
-          places={activePlace ? [activePlace] : places}
-          initialTitle={prefillTitle}
-          initialDescription={prefillDescription}
-          onCreated={() => router.push(withCafe("/dashboard-pro"))}
-        />
-      )}
+
+      <DropForm
+        key={`${activePlace.id}-${depuisId ?? ""}-${exempleId ?? ""}`}
+        place={activePlace}
+        mode="create"
+        initialState={initialState}
+        copiedFromBanner={copiedFromBanner}
+        role={activeMemberRole}
+        hasPro={hasPro}
+        onCancel={() => router.push(withCafe("/dashboard-pro/drops"))}
+        onSaved={() => router.push(withCafe("/dashboard-pro/drops"))}
+        onUnlockPro={() => router.push(withCafe("/abonnement"))}
+      />
     </div>
   );
 }
 
 export default function NewDropPage() {
   return (
-    <Suspense fallback={<p className="px-4 py-6 text-sm text-ds-text2">Chargement…</p>}>
+    <Suspense
+      fallback={
+        <div className="flex flex-1 items-center justify-center py-20">
+          <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-ds-accent" />
+        </div>
+      }
+    >
       <NewDropPageInner />
     </Suspense>
   );

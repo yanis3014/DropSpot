@@ -185,6 +185,20 @@ export async function cancelInvitation(
   return { ok: true };
 }
 
+/** Leave the active café (self). Refuses last owner. */
+export async function leavePlace(placeId: string): Promise<TeamRpcResult> {
+  if (!supabase) throw new Error('Supabase client not initialized');
+  const { data, error } = await supabase.rpc('leave_place', {
+    p_place_id: placeId,
+  });
+  if (error) throw error;
+  const row = data as { ok?: boolean; error?: string } | null;
+  if (!row?.ok) {
+    return { ok: false, error: row?.error ?? 'forbidden' };
+  }
+  return { ok: true };
+}
+
 export function invitationPublicUrl(token: string): string {
   if (typeof window === 'undefined') {
     return `/dashboard-pro/invitation/${token}`;

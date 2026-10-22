@@ -21,6 +21,22 @@ function isVaguePreferredPath(path: string): boolean {
   return path === '/' || path === '/map' || path === '/login';
 }
 
+function isOnboardingPath(path: string): boolean {
+  return (
+    path === '/onboarding' ||
+    path.startsWith('/onboarding?') ||
+    path.startsWith('/onboarding/')
+  );
+}
+
+/** Client onboarding, keeping the page the user was heading to (`?next=`). */
+export function clientOnboardingPath(preferred: string): string {
+  if (isVaguePreferredPath(preferred) || isOnboardingPath(preferred)) {
+    return '/onboarding';
+  }
+  return `/onboarding?next=${encodeURIComponent(preferred)}`;
+}
+
 /**
  * Destination post-auth selon is_pro et onboarding client.
  */
@@ -42,8 +58,7 @@ export function destinationAfterAuth(
     // Never send a pro to the client onboarding, or to a vague landing page.
     if (
       isVaguePreferredPath(preferred) ||
-      preferred === '/onboarding' ||
-      preferred.startsWith('/onboarding/')
+      isOnboardingPath(preferred)
     ) {
       return '/dashboard-pro';
     }
@@ -60,7 +75,7 @@ export function destinationAfterAuth(
   }
 
   if (!opts.onboardingCompleted) {
-    return '/onboarding';
+    return clientOnboardingPath(preferred);
   }
 
   return preferred;

@@ -16,7 +16,6 @@ import {
 } from '@phosphor-icons/react';
 import Button from '@/components/ui/Button';
 import EmptyState from '@/components/ui/EmptyState';
-import PreferencePills from '@/components/profile/PreferencePills';
 import ThemeSwitcher from '@/components/profile/ThemeSwitcher';
 import {
   getMyContributions,
@@ -31,7 +30,8 @@ import {
   getDropAlertsEnabled,
   setDropAlertsEnabled,
 } from '@/lib/dropAlerts';
-import { PreferenceId } from '@/lib/preferences';
+import { avatarColorHex, envieLabel } from '@/lib/onboarding';
+import { ENVIE_ICONS } from '@/components/onboarding/icons';
 import { useTheme } from '@/lib/theme';
 import { cn } from '@/lib/cn';
 
@@ -105,7 +105,6 @@ export default function ProfilePage() {
   const { preference } = useTheme();
 
   const [name, setName] = useState('');
-  const [prefs, setPrefs] = useState<PreferenceId[]>([]);
   const [profileSyncKey, setProfileSyncKey] = useState('');
   const [editingName, setEditingName] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -129,11 +128,10 @@ export default function ProfilePage() {
     };
   }, [isAuthenticated]);
 
-  const nextProfileKey = `${profile?.id ?? ''}|${profile?.updated_at ?? ''}|${profile?.full_name ?? ''}|${(profile?.preferences ?? []).join(',')}|${displayName ?? ''}`;
+  const nextProfileKey = `${profile?.id ?? ''}|${profile?.updated_at ?? ''}|${profile?.full_name ?? ''}|${displayName ?? ''}`;
   if (nextProfileKey !== profileSyncKey && (profile || displayName)) {
     setProfileSyncKey(nextProfileKey);
     setName(profile?.full_name ?? displayName ?? '');
-    setPrefs(profile?.preferences ?? []);
   }
 
   useEffect(() => {
@@ -186,12 +184,10 @@ export default function ProfilePage() {
     user?.created_at ?? profile?.onboarding_completed_at
   );
 
+  const avatarColor = avatarColorHex(profile?.onboarding_answers.avatarColor);
+  const envies = profile?.onboarding_answers.envies ?? [];
   const initialName = profile?.full_name ?? displayName ?? '';
-  const initialPrefs = profile?.preferences ?? [];
-  const dirty =
-    name.trim() !== initialName.trim() ||
-    prefs.length !== initialPrefs.length ||
-    prefs.some((p) => !initialPrefs.includes(p));
+  const dirty = name.trim() !== initialName.trim();
 
   const shownContribs = isAuthenticated ? contribs : [];
   const showContribLoading = isAuthenticated && contribsLoading;
@@ -227,11 +223,7 @@ export default function ProfilePage() {
     setSaving(true);
     setSaveError(null);
     try {
-      await save({
-        full_name: name.trim() || null,
-        preferences: prefs,
-        completeOnboarding: true,
-      });
+      await save({ full_name: name.trim() || null });
       setEditingName(false);
       setSaved(true);
       setTimeout(() => setSaved(false), 1500);
@@ -241,7 +233,7 @@ export default function ProfilePage() {
     } finally {
       setSaving(false);
     }
-  }, [name, prefs, save]);
+  }, [name, save]);
 
   if (authLoading || profileLoading) {
     return (
@@ -284,7 +276,11 @@ export default function ProfilePage() {
         ) : (
           <span
             aria-hidden
-            className="font-display flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-ds-accentsoft text-2xl font-extrabold text-ds-accenttext"
+            style={avatarColor ? { backgroundColor: avatarColor } : undefined}
+            className={cn(
+              'font-display flex h-14 w-14 shrink-0 items-center justify-center rounded-full text-2xl font-extrabold',
+              avatarColor ? 'text-white' : 'bg-ds-accentsoft text-ds-accenttext'
+            )}
           >
             {initialLetter(shownName)}
           </span>
@@ -324,6 +320,31 @@ export default function ProfilePage() {
           ) : null}
         </div>
       </div>
+
+      {dirty || saved ? (
+        <div className="flex flex-col gap-1.5 px-1">
+          {saveError ? (
+            <p className="text-sm text-ds-danger">{saveError}</p>
+          ) : null}
+          <Button
+            variant={saved ? 'tonal' : 'main'}
+            disabled={saving || name.trim().length === 0}
+            onClick={() => void handleSave()}
+            className="w-full"
+          >
+            {saved ? (
+              <>
+                <Check size={20} weight="bold" />
+                Enregistré
+              </>
+            ) : saving ? (
+              'Enregistrement…'
+            ) : (
+              'Enregistrer mon pseudo'
+            )}
+          </Button>
+        </div>
+      ) : null}
 
       {/* Grains + level */}
       <section className="flex flex-col gap-3.5 rounded-[22px] border border-ds-line bg-ds-surface p-[18px]">
@@ -554,38 +575,40 @@ export default function ProfilePage() {
       <section className="flex flex-col gap-2">
         <div className="flex items-baseline justify-between px-1">
           <h2 className="font-display text-[19px] font-bold text-ds-text">
-            Mes styles de café
+            Mes envies
           </h2>
-          <span className="text-xs text-ds-text2">
-            {prefs.length} sélectionné{prefs.length > 1 ? 's' : ''}
-          </span>
+          <Link
+            href="/onboarding?edit=1"
+            className="text-sm font-bold text-ds-accenttext no-underline hover:underline"
+          >
+            Modifier
+          </Link>
         </div>
-        <PreferencePills value={prefs} onChange={setPrefs} variant="pills" />
+        {envies.length > 0 ? (
+          <div className="flex flex-wrap gap-2">
+            {envies.map((id) => {
+              const EnvieIcon = ENVIE_ICONS[id];
+              return (
+                <span
+                  key={id}
+                  className="inline-flex h-9 items-center gap-1.5 rounded-[18px] bg-ds-accentsoft px-3.5 text-sm font-semibold text-ds-accenttext"
+                >
+                  <EnvieIcon size={16} aria-hidden />
+                  {envieLabel(id)}
+                </span>
+              );
+            })}
+          </div>
+        ) : (
+          <Link href="/onboarding?edit=1" className="no-underline">
+            <Button variant="tonal" className="w-full">
+              Choisir mes envies
+            </Button>
+          </Link>
+        )}
         <p className="px-1 text-xs text-ds-text2">
-          Le feed met en avant les spots et drops qui correspondent.
+          On s’en sert pour te proposer les cafés et les drops qui te ressemblent.
         </p>
-        {saveError ? (
-          <p className="px-1 text-sm text-ds-accent">{saveError}</p>
-        ) : null}
-        <Button
-          variant={saved ? 'tonal' : 'main'}
-          disabled={saving || (!dirty && !saved) || prefs.length === 0}
-          onClick={() => void handleSave()}
-          className="w-full"
-        >
-          {saved ? (
-            <>
-              <Check size={20} weight="bold" />
-              Enregistré
-            </>
-          ) : saving ? (
-            'Enregistrement…'
-          ) : prefs.length === 0 ? (
-            'Choisis au moins un style'
-          ) : (
-            'Enregistrer'
-          )}
-        </Button>
       </section>
 
       <div className="flex flex-col gap-2 pt-2">

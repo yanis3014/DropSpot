@@ -253,34 +253,38 @@ function ProShellInner({ children }: { children: React.ReactNode }) {
         {/* Mobile bottom nav */}
         <nav
           aria-label="Navigation comptoir"
-          className="fixed inset-x-0 bottom-0 z-50 flex h-[88px] items-start border-t border-ds-line bg-ds-surface px-4 pt-1.5 lg:hidden safe-pb"
+          className="fixed inset-x-0 bottom-0 z-50 flex items-stretch border-t border-ds-line bg-ds-surface px-2 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] lg:hidden"
         >
           {MOBILE_NAV.filter(({ href }) => filterProNavHref(href, navRole)).map(({ href, label, icon: Icon, exact, scan }) => {
             const active = isActivePath(pathname, href, exact);
-            if (scan) {
-              return (
-                <Link
-                  key={href}
-                  href={withCafe(href)}
-                  className="-mt-[30px] flex flex-1 flex-col items-center gap-1 text-xs font-bold text-ds-text no-underline"
-                >
-                  <span className="flex h-16 w-16 items-center justify-center rounded-full border-4 border-ds-bg bg-ds-accent text-ds-onaccent shadow-[0_6px_24px_rgba(58,34,18,0.14)]">
-                    <Icon size={26} weight="bold" aria-hidden />
-                  </span>
-                  {label}
-                </Link>
-              );
-            }
             return (
               <Link
                 key={href}
                 href={withCafe(href)}
+                aria-current={active ? "page" : undefined}
                 className={cn(
-                  "flex h-[50px] flex-1 flex-col items-center justify-center gap-1 text-xs font-semibold no-underline",
-                  active ? "text-ds-accent" : "text-ds-text2"
+                  "flex min-w-0 flex-1 flex-col items-center gap-1 text-xs no-underline",
+                  scan
+                    ? "font-bold text-ds-text"
+                    : active
+                      ? "font-semibold text-ds-accent"
+                      : "font-semibold text-ds-text2"
                 )}
               >
-                <Icon size={22} weight={active ? "fill" : "regular"} aria-hidden />
+                <span
+                  className={cn(
+                    "flex h-8 items-center justify-center rounded-full",
+                    scan
+                      ? "w-14 bg-ds-accent text-ds-onaccent shadow-[0_4px_14px_rgba(58,34,18,0.18)]"
+                      : "w-8"
+                  )}
+                >
+                  <Icon
+                    size={scan ? 20 : 22}
+                    weight={scan ? "bold" : active ? "fill" : "regular"}
+                    aria-hidden
+                  />
+                </span>
                 {label}
               </Link>
             );
@@ -291,15 +295,17 @@ function ProShellInner({ children }: { children: React.ReactNode }) {
             aria-expanded={moreOpen}
             aria-haspopup="dialog"
             className={cn(
-              "flex h-[50px] flex-1 flex-col items-center justify-center gap-1 text-xs font-semibold",
+              "flex min-w-0 flex-1 flex-col items-center gap-1 text-xs font-semibold",
               moreActive || moreOpen ? "text-ds-accent" : "text-ds-text2"
             )}
           >
-            <DotsThreeOutline
-              size={22}
-              weight={moreActive || moreOpen ? "fill" : "regular"}
-              aria-hidden
-            />
+            <span className="flex h-8 w-8 items-center justify-center">
+              <DotsThreeOutline
+                size={22}
+                weight={moreActive || moreOpen ? "fill" : "regular"}
+                aria-hidden
+              />
+            </span>
             Plus
           </button>
         </nav>

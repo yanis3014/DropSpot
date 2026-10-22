@@ -1,6 +1,28 @@
-// Grains are credited by the server only (check_in, claim_welcome_grains,
-// redeem_drop_code RPCs) and recorded in grains_transactions. This file only
-// holds the display rules for levels and badges.
+// Grains are credited by the server only and recorded in grains_transactions.
+// This file holds the display copy of the server constants and the level rules.
+// Levels use the Grains earned over time (lifetime), never the balance.
+
+/** Server constants (check_in, vote_place_spec, places_reward_suggestion…). */
+export const GRAINS_EARNING: { amount: number; label: string }[] = [
+  { amount: 10, label: 'Dire « Je suis ici » dans un café (une fois toutes les 3 h par café)' },
+  { amount: 5, label: 'Répondre Oui / Non sur une spécificité, sur place' },
+  { amount: 20, label: 'Être présent à un événement où tu t’es inscrit' },
+  { amount: 50, label: 'Un café que tu as ajouté rejoint Dropspot' },
+];
+
+/**
+ * Status that unlocks reserved places on limited drops (must stay in sync
+ * with is_priority_member() and drop_reserved_places() in the database).
+ */
+export const PRIORITY_LIFETIME = 100;
+export const PRIORITY_MIN_CAPACITY = 5;
+export const PRIORITY_SHARE = 0.2;
+
+/** Places kept for priority members on a limited drop. */
+export function reservedPlaces(capacity: number | null | undefined): number {
+  if (capacity == null || capacity < PRIORITY_MIN_CAPACITY) return 0;
+  return Math.ceil(capacity * PRIORITY_SHARE);
+}
 
 export type BadgeDef = {
   name: string;

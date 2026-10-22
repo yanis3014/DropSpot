@@ -130,7 +130,8 @@ export default function SuggestPlaceSheet({
             <CheckCircle size={44} weight="fill" className="text-ds-ok" />
             <p className="text-lg font-extrabold text-ds-text">Merci !</p>
             <p className="text-sm text-ds-text2">
-              {name.trim()} est maintenant sur la carte.
+              {name.trim()} est maintenant sur la carte. Si le café rejoint
+              Dropspot, tu gagnes 50 Grains.
             </p>
             <button
               type="button"
@@ -155,6 +156,9 @@ export default function SuggestPlaceSheet({
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="flex flex-col gap-3 px-5 pb-6">
+            <p className="m-0 text-sm text-ds-text2">
+              +50 Grains pour toi si le café rejoint Dropspot.
+            </p>
             <label className="flex flex-col gap-1.5">
               <span className="text-sm font-bold text-ds-text">Nom du café</span>
               <input

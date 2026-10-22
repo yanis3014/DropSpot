@@ -183,7 +183,7 @@ export function isOwnerOnlyPath(pathname: string): boolean {
   return OWNER_ONLY_PREFIXES.some((prefix) => pathMatches(pathname, prefix));
 }
 
-/** Routes listed in the mobile « Plus » sheet (filtered by role). */
+/** Routes that can appear in the mobile « Plus » sheet (filtered by role). */
 export const MORE_NAV_HREFS = [
   '/etablissement',
   '/specificites',
@@ -192,12 +192,30 @@ export const MORE_NAV_HREFS = [
   '/reglages',
 ] as const;
 
+/**
+ * Mobile bottom bar, left to right, without the trailing « Plus » tab.
+ * « Valider » stays in the middle: owner/manager get 2 tabs on each side
+ * (Plus included), staff get Aujourd'hui · Valider · Plus.
+ */
+export function mobileTabHrefsForRole(role: PlaceMemberRole | null): string[] {
+  if (filterProNavHref('/dashboard-pro/drops', role)) {
+    return ['/dashboard-pro', '/dashboard-pro/drops', '/valider', '/etablissement'];
+  }
+  return ['/dashboard-pro', '/valider'];
+}
+
 export function moreNavHrefsForRole(
   role: PlaceMemberRole | null
 ): string[] {
-  return MORE_NAV_HREFS.filter((href) => filterProNavHref(href, role));
+  const tabs = mobileTabHrefsForRole(role);
+  return MORE_NAV_HREFS.filter(
+    (href) => filterProNavHref(href, role) && !tabs.includes(href)
+  );
 }
 
-export function isMoreNavPath(pathname: string): boolean {
-  return MORE_NAV_HREFS.some((href) => pathMatches(pathname, href));
+export function isMoreNavPath(
+  pathname: string,
+  role: PlaceMemberRole | null
+): boolean {
+  return moreNavHrefsForRole(role).some((href) => pathMatches(pathname, href));
 }

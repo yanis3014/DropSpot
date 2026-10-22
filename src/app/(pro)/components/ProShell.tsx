@@ -5,13 +5,11 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
   Crown,
-  DotsThreeOutline,
   GearSix,
   House,
   Lightning,
   ListChecks,
   MapTrifold,
-  QrCode,
   SignOut,
   Storefront,
   UsersThree,
@@ -21,13 +19,10 @@ import { useAuth } from "@/lib/hooks/useAuth";
 import { useVendorProfile } from "@/app/(pro)/dashboard-pro/hooks/useVendorProfile";
 import { useVendorPlan } from "@/hooks/useVendorPlan";
 import { useActivePlace } from "@/app/(pro)/hooks/useActivePlace";
-import {
-  filterProNavHref,
-  isMoreNavPath,
-  moreNavHrefsForRole,
-} from "@/lib/pro/navAccess";
+import { filterProNavHref, moreNavHrefsForRole } from "@/lib/pro/navAccess";
 import { writeDropspotMode } from "@/lib/auth/dropspotMode";
 import PlanBadge from "@/components/pro/PlanBadge";
+import ProBottomNav from "@/app/(pro)/components/ProBottomNav";
 import {
   CafeSelectTrigger,
   ProCafeSwitcher,
@@ -46,18 +41,6 @@ const SIDE_NAV: {
   { href: "/equipe", label: "Équipe", icon: UsersThree },
   { href: "/abonnement", label: "Abonnement", icon: Crown },
   { href: "/reglages", label: "Réglages", icon: GearSix },
-];
-
-const MOBILE_NAV: {
-  href: string;
-  label: string;
-  icon: typeof House;
-  exact?: boolean;
-  scan?: boolean;
-}[] = [
-  { href: "/dashboard-pro", label: "Aujourd'hui", icon: House, exact: true },
-  { href: "/valider", label: "Valider", icon: QrCode, scan: true },
-  { href: "/dashboard-pro/drops", label: "Drops", icon: Lightning },
 ];
 
 const MORE_NAV: {
@@ -119,7 +102,6 @@ function ProShellInner({ children }: { children: React.ReactNode }) {
     : "?";
 
   const navRole = activeMemberRole;
-  const moreActive = isMoreNavPath(pathname);
   const moreItems = MORE_NAV.filter(({ href }) =>
     moreNavHrefsForRole(navRole).includes(href)
   );
@@ -250,59 +232,13 @@ function ProShellInner({ children }: { children: React.ReactNode }) {
           {children}
         </main>
 
-        {/* Mobile bottom nav */}
-        <nav
-          aria-label="Navigation comptoir"
-          className="fixed inset-x-0 bottom-0 z-50 flex h-[88px] items-start border-t border-ds-line bg-ds-surface px-4 pt-1.5 lg:hidden safe-pb"
-        >
-          {MOBILE_NAV.filter(({ href }) => filterProNavHref(href, navRole)).map(({ href, label, icon: Icon, exact, scan }) => {
-            const active = isActivePath(pathname, href, exact);
-            if (scan) {
-              return (
-                <Link
-                  key={href}
-                  href={withCafe(href)}
-                  className="-mt-[30px] flex flex-1 flex-col items-center gap-1 text-xs font-bold text-ds-text no-underline"
-                >
-                  <span className="flex h-16 w-16 items-center justify-center rounded-full border-4 border-ds-bg bg-ds-accent text-ds-onaccent shadow-[0_6px_24px_rgba(58,34,18,0.14)]">
-                    <Icon size={26} weight="bold" aria-hidden />
-                  </span>
-                  {label}
-                </Link>
-              );
-            }
-            return (
-              <Link
-                key={href}
-                href={withCafe(href)}
-                className={cn(
-                  "flex h-[50px] flex-1 flex-col items-center justify-center gap-1 text-xs font-semibold no-underline",
-                  active ? "text-ds-accent" : "text-ds-text2"
-                )}
-              >
-                <Icon size={22} weight={active ? "fill" : "regular"} aria-hidden />
-                {label}
-              </Link>
-            );
-          })}
-          <button
-            type="button"
-            onClick={() => setMoreOpen(true)}
-            aria-expanded={moreOpen}
-            aria-haspopup="dialog"
-            className={cn(
-              "flex h-[50px] flex-1 flex-col items-center justify-center gap-1 text-xs font-semibold",
-              moreActive || moreOpen ? "text-ds-accent" : "text-ds-text2"
-            )}
-          >
-            <DotsThreeOutline
-              size={22}
-              weight={moreActive || moreOpen ? "fill" : "regular"}
-              aria-hidden
-            />
-            Plus
-          </button>
-        </nav>
+        <ProBottomNav
+          role={navRole}
+          pathname={pathname}
+          withCafe={withCafe}
+          moreOpen={moreOpen}
+          onMore={() => setMoreOpen(true)}
+        />
       </div>
 
       <div className="hidden lg:block">

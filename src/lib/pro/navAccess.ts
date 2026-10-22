@@ -1,7 +1,6 @@
 import type { PlaceMemberRole } from '@/app/(pro)/dashboard-pro/lib/api/vendor';
 
 const OWNER_ONLY_PREFIXES = [
-  '/etablissement',
   '/specificites',
   '/equipe',
   '/abonnement',
@@ -9,7 +8,10 @@ const OWNER_ONLY_PREFIXES = [
   '/dashboard-pro/settings',
 ];
 
-const MANAGER_EXTRA_PREFIXES = ['/dashboard-pro/drops'];
+/** Établissement : lecture pour tous les rôles ; écriture owner (RLS). */
+const ETABLISSEMENT_PREFIX = '/etablissement';
+
+const MANAGER_EXTRA_PREFIXES = ['/dashboard-pro/drops', ETABLISSEMENT_PREFIX];
 
 function pathMatches(pathname: string, prefix: string): boolean {
   return pathname === prefix || pathname.startsWith(`${prefix}/`);
@@ -30,6 +32,10 @@ export function canAccessProPath(
   if (pathname === '/valider' || pathname.startsWith('/valider/')) return true;
   if (pathname.startsWith('/dashboard-pro/validate')) return true;
   if (pathname.startsWith('/dashboard-pro/invitation/')) return true;
+
+  if (pathMatches(pathname, ETABLISSEMENT_PREFIX)) {
+    return role === 'owner' || role === 'manager' || role === 'staff';
+  }
 
   if (role === 'staff') {
     return false;
@@ -54,6 +60,9 @@ export function filterProNavHref(
   if (path === '/dashboard-pro' || path === '/valider') return true;
   if (path === '/dashboard-pro/drops' || path.startsWith('/dashboard-pro/drops/')) {
     return role === 'owner' || role === 'manager';
+  }
+  if (path === ETABLISSEMENT_PREFIX || path.startsWith(`${ETABLISSEMENT_PREFIX}/`)) {
+    return role === 'owner' || role === 'manager' || role === 'staff';
   }
   if (role === 'staff') {
     return path === '/dashboard-pro' || path === '/valider';

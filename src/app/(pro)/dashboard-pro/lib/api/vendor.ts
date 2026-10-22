@@ -276,6 +276,9 @@ export async function countProPlaceMemberships(): Promise<number> {
 }
 
 export interface VendorPlacePatch {
+  name?: string;
+  address?: string | null;
+  city?: string | null;
   description?: string | null;
   image_url?: string | null;
   opening_hours?: string | null;
@@ -287,7 +290,10 @@ export interface VendorPlacePatch {
   plugs_level?: 'limited' | 'regular' | 'everywhere' | null;
 }
 
-/** Met à jour un spot appartenant au vendor connecté. */
+/**
+ * Met à jour la fiche d’un café.
+ * RLS : owner only (`has_place_role`). Pas de filtre `vendor_id` client.
+ */
 export async function updateVendorPlace(
   placeId: string,
   patch: VendorPlacePatch
@@ -299,6 +305,23 @@ export async function updateVendorPlace(
   if (!user) throw new Error('Not authenticated');
 
   const payload: Record<string, unknown> = { ...patch };
+  if ('name' in patch && typeof patch.name === 'string') {
+    payload.name = patch.name.trim();
+  }
+  if ('address' in patch) {
+    payload.address =
+      typeof patch.address === 'string' ? patch.address.trim() || null : null;
+  }
+  if ('city' in patch) {
+    payload.city =
+      typeof patch.city === 'string' ? patch.city.trim() || null : null;
+  }
+  if ('description' in patch) {
+    payload.description =
+      typeof patch.description === 'string'
+        ? patch.description.trim() || null
+        : null;
+  }
   if ('has_vegan' in patch) {
     payload.has_vegan = patch.has_vegan;
   }
@@ -318,9 +341,8 @@ export async function updateVendorPlace(
     .from('places')
     .update(payload)
     .eq('id', placeId)
-    .eq('vendor_id', user.id)
     .select(
-      'id, name, image_url, lat, lng, latitude, longitude, category, description, address, city, has_plugs, has_vegan, laptop_policy, noise_level, wifi_speed, opening_hours, plugs_level, vendor_id, created_at'
+      'id, name, image_url, lat, lng, latitude, longitude, category, description, address, city, has_plugs, has_vegan, laptop_policy, noise_level, wifi_speed, opening_hours, plugs_level, vendor_id, verification_status, created_at'
     )
     .single();
 

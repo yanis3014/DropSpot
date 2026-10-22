@@ -1,17 +1,22 @@
 import type { PlaceMemberRole } from '@/app/(pro)/dashboard-pro/lib/api/vendor';
 
 const OWNER_ONLY_PREFIXES = [
-  '/specificites',
   '/equipe',
   '/abonnement',
   '/reglages',
   '/dashboard-pro/settings',
 ];
 
-/** Établissement : lecture pour tous les rôles ; écriture owner (RLS). */
+/** Établissement + spécificités : lecture pour tous les rôles. */
 const ETABLISSEMENT_PREFIX = '/etablissement';
+const SPECIFICITES_PREFIX = '/specificites';
 
-const MANAGER_EXTRA_PREFIXES = ['/dashboard-pro/drops', ETABLISSEMENT_PREFIX];
+const READ_ALL_ROLES_PREFIXES = [ETABLISSEMENT_PREFIX, SPECIFICITES_PREFIX];
+
+const MANAGER_EXTRA_PREFIXES = [
+  '/dashboard-pro/drops',
+  ...READ_ALL_ROLES_PREFIXES,
+];
 
 function pathMatches(pathname: string, prefix: string): boolean {
   return pathname === prefix || pathname.startsWith(`${prefix}/`);
@@ -118,7 +123,7 @@ export function canAccessProPath(
   if (pathname.startsWith('/dashboard-pro/validate')) return true;
   if (pathname.startsWith('/dashboard-pro/invitation/')) return true;
 
-  if (pathMatches(pathname, ETABLISSEMENT_PREFIX)) {
+  if (READ_ALL_ROLES_PREFIXES.some((prefix) => pathMatches(pathname, prefix))) {
     return role === 'owner' || role === 'manager' || role === 'staff';
   }
 
@@ -146,18 +151,28 @@ export function filterProNavHref(
   if (path === '/dashboard-pro/drops' || path.startsWith('/dashboard-pro/drops/')) {
     return role === 'owner' || role === 'manager';
   }
-  if (path === ETABLISSEMENT_PREFIX || path.startsWith(`${ETABLISSEMENT_PREFIX}/`)) {
+  if (
+    READ_ALL_ROLES_PREFIXES.some(
+      (prefix) => path === prefix || path.startsWith(`${prefix}/`)
+    )
+  ) {
     return role === 'owner' || role === 'manager' || role === 'staff';
   }
   if (role === 'staff') {
-    return path === '/dashboard-pro' || path === '/valider';
+    return (
+      path === '/dashboard-pro' ||
+      path === '/valider' ||
+      path === SPECIFICITES_PREFIX
+    );
   }
   if (role === 'manager') {
     return (
       path === '/dashboard-pro' ||
       path === '/valider' ||
       path === '/dashboard-pro/drops' ||
-      path.startsWith('/dashboard-pro/drops/')
+      path.startsWith('/dashboard-pro/drops/') ||
+      path === ETABLISSEMENT_PREFIX ||
+      path === SPECIFICITES_PREFIX
     );
   }
   return true;

@@ -1,110 +1,138 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
-import {
-  Coffee,
-  Cookie,
-  Couch,
-  Info,
-  Plus,
-  UsersThree,
-  WifiHigh,
-} from '@phosphor-icons/react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Info, Plus, UsersThree } from '@phosphor-icons/react';
 import Button from '@/components/ui/Button';
 import Chip from '@/components/ui/Chip';
 import SpecRow from '@/components/pro/SpecRow';
 import ProEmptyState from '@/components/pro/ProEmptyState';
+import { SPEC_ICONS } from '@/components/places/specIcons';
 import { useActivePlace } from '@/app/(pro)/hooks/useActivePlace';
-import { listPlaceSpecAggregates } from '@/app/(pro)/dashboard-pro/lib/api/specificites';
+import { declareSpec, getPlaceDeclarations, getPlaceSpecs } from '@/lib/api/specs';
 import {
   CONSENSUS_THRESHOLD,
   filledPips,
   formatLastConfirmationHint,
+  proRowStatus,
   votesLabel,
-  type SpecCategoryAgg,
 } from '@/app/(pro)/dashboard-pro/lib/specificites/aggregate';
-import {
-  endorsementCategories,
-  type EndorsementCategory,
-} from '@/lib/api/endorsements';
+import { SPECS, sortSpecs, specLabel, type PlaceSpec, type SpecId } from '@/lib/specs';
 import { cn } from '@/lib/cn';
 
-type FilterId = 'all' | 'confirmed' | 'pending';
+type FilterId = 'all' | 'confirmed' | 'pending' | 'contested';
 
-const SOON = 'Bientôt disponible';
+type Declarations = Partial<Record<SpecId, boolean>>;
 
-const CATEGORY_ICONS: Record<EndorsementCategory, typeof WifiHigh> = {
-  wifi: WifiHigh,
-  coffee: Coffee,
-  comfort: Couch,
-  food: Cookie,
-};
-
-function categoryTitle(category: string): string {
-  const meta = endorsementCategories.find((c) => c.id === category);
-  return meta?.trophyLabel ?? category;
+function rowHint(spec: PlaceSpec, declared: boolean | undefined): string {
+  const parts: string[] = [];
+  if (declared === true) parts.push('Annoncé par ton café');
+  if (declared === false) parts.push('Tu as indiqué que non');
+  parts.push(
+    spec.last_vote_at
+      ? formatLastConfirmationHint(spec.last_vote_at)
+      : 'Pas encore de vote sur place'
+  );
+  return parts.join(' · ');
 }
 
-function categoryIcon(category: string) {
-  const id = category as EndorsementCategory;
-  const Icon = CATEGORY_ICONS[id] ?? Info;
-  return <Icon weight="bold" aria-hidden />;
+async function fetchTeamSpecs(
+  placeId: string
+): Promise<{ rows: PlaceSpec[]; declarations: Declarations }> {
+  const [rows, declarations] = await Promise.all([
+    getPlaceSpecs(placeId),
+    getPlaceDeclarations(placeId),
+  ]);
+  return { rows, declarations };
 }
 
 export default function SpecificitesClient() {
-  const { activePlace, loading: placeLoading } = useActivePlace();
-  const [rows, setRows] = useState<SpecCategoryAgg[]>([]);
+  const { activePlace, activeMemberRole, loading: placeLoading } = useActivePlace();
+  const [rows, setRows] = useState<PlaceSpec[]>([]);
+  const [declarations, setDeclarations] = useState<Declarations>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState<FilterId>('all');
   const [loadedPlaceId, setLoadedPlaceId] = useState<string | null>(null);
+  const [picking, setPicking] = useState(false);
+  const [busySpec, setBusySpec] = useState<SpecId | null>(null);
+  const canDeclare = activeMemberRole === 'owner' || activeMemberRole === 'manager';
+
+  const apply = useCallback(
+    (placeId: string, next: { rows: PlaceSpec[]; declarations: Declarations }) => {
+      setRows(sortSpecs(next.rows));
+      setDeclarations(next.declarations);
+      setLoadedPlaceId(placeId);
+    },
+    []
+  );
 
   useEffect(() => {
     if (!activePlace) return;
     const placeId = activePlace.id;
     let cancelled = false;
-
-    void (async () => {
-      try {
-        const next = await listPlaceSpecAggregates(placeId);
+    fetchTeamSpecs(placeId)
+      .then((next) => {
         if (cancelled) return;
-        setRows(next);
-        setLoadedPlaceId(placeId);
+        apply(placeId, next);
         setError(null);
-      } catch (err) {
+      })
+      .catch((err) => {
         console.error(err);
-        if (!cancelled) {
-          setError('Impossible de charger les spécificités.');
-        }
-      } finally {
+        if (!cancelled) setError('Impossible de charger les spécificités.');
+      })
+      .finally(() => {
         if (!cancelled) setLoading(false);
-      }
-    })();
-
+      });
     return () => {
       cancelled = true;
     };
-  }, [activePlace]);
+  }, [activePlace, apply]);
 
-  const counts = useMemo(() => {
-    const confirmed = rows.filter((r) => r.status === 'confirmed').length;
-    const pending = rows.filter((r) => r.status === 'pending').length;
-    return {
+  const handleDeclare = async (spec: SpecId, value: boolean | null) => {
+    if (!activePlace) return;
+    setBusySpec(spec);
+    setError(null);
+    try {
+      const result = await declareSpec(activePlace.id, spec, value);
+      if (!result.ok) {
+        setError(
+          result.error === 'forbidden'
+            ? 'Seuls le gérant et les responsables peuvent modifier les infos du café.'
+            : 'Impossible d’enregistrer. Réessaie.'
+        );
+        return;
+      }
+      setPicking(false);
+      apply(activePlace.id, await fetchTeamSpecs(activePlace.id));
+    } catch (err) {
+      console.error(err);
+      setError('Impossible d’enregistrer. Réessaie.');
+    } finally {
+      setBusySpec(null);
+    }
+  };
+
+  const counts = useMemo(
+    () => ({
       all: rows.length,
-      confirmed,
-      pending,
-    };
-  }, [rows]);
+      confirmed: rows.filter((r) => proRowStatus(r.status) === 'confirmed').length,
+      pending: rows.filter((r) => proRowStatus(r.status) === 'pending').length,
+      contested: rows.filter((r) => proRowStatus(r.status) === 'contested').length,
+    }),
+    [rows]
+  );
 
-  const visible = useMemo(() => {
-    if (filter === 'confirmed') {
-      return rows.filter((r) => r.status === 'confirmed');
-    }
-    if (filter === 'pending') {
-      return rows.filter((r) => r.status === 'pending');
-    }
-    return rows;
-  }, [rows, filter]);
+  const visible = useMemo(
+    () =>
+      filter === 'all' ? rows : rows.filter((r) => proRowStatus(r.status) === filter),
+    [rows, filter]
+  );
+
+  // Specs the café can still announce.
+  const proposable = useMemo(
+    () => SPECS.filter((s) => declarations[s.id] === undefined),
+    [declarations]
+  );
 
   if (!placeLoading && !activePlace) {
     return (
@@ -138,18 +166,20 @@ export default function SpecificitesClient() {
             Spécificités
           </h1>
           <p className="m-0 mt-0.5 text-sm text-ds-text2">
-            {activePlace.name} · ce que la communauté a confirmé
+            {activePlace.name} · ce que tu annonces, ce que les clients confirment
           </p>
         </div>
-        <Button
-          variant="main"
-          className="h-11 rounded-xl px-[18px] text-[15px]"
-          disabled
-          title={SOON}
-        >
-          <Plus className="h-5 w-5" weight="bold" aria-hidden />
-          Proposer une info
-        </Button>
+        {canDeclare ? (
+          <Button
+            variant="main"
+            className="h-11 rounded-xl px-[18px] text-[15px]"
+            disabled={proposable.length === 0}
+            onClick={() => setPicking((v) => !v)}
+          >
+            <Plus className="h-5 w-5" weight="bold" aria-hidden />
+            Annoncer une info
+          </Button>
+        ) : null}
       </header>
 
       <div className="flex min-h-0 flex-1 flex-col gap-4 px-4 py-5 sm:px-8 sm:py-6">
@@ -160,13 +190,28 @@ export default function SpecificitesClient() {
             aria-hidden
           />
           <p className="m-0 flex-1 text-[15px] leading-snug">
-            C&apos;est la communauté qui confirme. Tu peux proposer une info ou
-            contester une info fausse, mais pas valider toi-même.
+            Tu annonces ce que ton café propose. Les clients sur place répondent
+            Oui ou Non : une info est confirmée à partir de {CONSENSUS_THRESHOLD} oui,
+            contestée si les non l’emportent.
           </p>
-          <span className="shrink-0 text-[13px] font-semibold text-ds-text2">
-            Confirmée à partir de {CONSENSUS_THRESHOLD} clients
-          </span>
         </div>
+
+        {picking ? (
+          <div className="flex flex-col gap-2.5 rounded-[18px] border border-ds-line bg-ds-surface p-4">
+            <span className="text-sm font-bold">Ton café propose…</span>
+            <div className="flex flex-wrap gap-2">
+              {proposable.map((s) => (
+                <Chip
+                  key={s.id}
+                  disabled={busySpec !== null}
+                  onClick={() => void handleDeclare(s.id, true)}
+                >
+                  {s.label}
+                </Chip>
+              ))}
+            </div>
+          </div>
+        ) : null}
 
         {error ? (
           <p
@@ -193,15 +238,25 @@ export default function SpecificitesClient() {
             active={filter === 'pending'}
             onClick={() => setFilter('pending')}
           />
-          {/* Contestées : masqué — pas encore en base */}
+          {counts.contested > 0 ? (
+            <FilterChip
+              label={`Contestées · ${counts.contested}`}
+              active={filter === 'contested'}
+              onClick={() => setFilter('contested')}
+            />
+          ) : null}
         </div>
 
         {rows.length === 0 ? (
           <div className="flex flex-1 items-center justify-center rounded-[18px] border border-ds-line bg-ds-surface py-10">
             <ProEmptyState
               icon={<Info weight="bold" />}
-              title="Aucune info confirmée pour l'instant"
-              description="Les clients confirment sur place."
+              title="Aucune info pour l'instant"
+              description={
+                canDeclare
+                  ? 'Annonce ce que ton café propose : les clients confirmeront sur place.'
+                  : 'Les clients confirment sur place.'
+              }
             />
           </div>
         ) : visible.length === 0 ? (
@@ -215,29 +270,43 @@ export default function SpecificitesClient() {
             <div className="hidden grid-cols-[44px_minmax(0,1fr)_170px_170px_130px] gap-3.5 border-b border-ds-line px-[18px] py-2.5 text-[13px] font-bold text-ds-text2 lg:grid">
               <span />
               <span>Info</span>
-              <span>Confirmations</span>
+              <span>Votes sur place</span>
               <span>Statut</span>
               <span />
             </div>
             <ul className="m-0 list-none divide-y divide-ds-line p-0">
-              {visible.map((row) => (
-                <li key={row.category}>
-                  <SpecRow
-                    icon={categoryIcon(row.category)}
-                    title={categoryTitle(row.category)}
-                    hint={formatLastConfirmationHint(row.lastConfirmedAt)}
-                    filled={filledPips(row.voteCount)}
-                    total={CONSENSUS_THRESHOLD}
-                    votesLabel={votesLabel(row.voteCount)}
-                    status={row.status}
-                    actionDisabled
-                    actionTitle={SOON}
-                    actionLabel={
-                      row.status === 'confirmed' ? 'Contester' : 'Retirer'
-                    }
-                  />
-                </li>
-              ))}
+              {visible.map((row) => {
+                const Icon = SPEC_ICONS[row.spec];
+                const declared = declarations[row.spec];
+                const status = proRowStatus(row.status);
+                // Announced → can withdraw; confirmed by clients → can say it is wrong.
+                const action = !canDeclare
+                  ? null
+                  : declared !== undefined
+                    ? { label: 'Retirer', value: null }
+                    : status === 'confirmed'
+                      ? { label: 'Contester', value: false }
+                      : null;
+                return (
+                  <li key={row.spec}>
+                    <SpecRow
+                      icon={<Icon weight="bold" aria-hidden />}
+                      title={specLabel(row.spec)}
+                      hint={rowHint(row, declared)}
+                      filled={filledPips(row.yes_votes)}
+                      total={CONSENSUS_THRESHOLD}
+                      votesLabel={votesLabel(row)}
+                      status={status}
+                      actionLabel={action?.label}
+                      onAction={
+                        action && busySpec === null
+                          ? () => void handleDeclare(row.spec, action.value)
+                          : undefined
+                      }
+                    />
+                  </li>
+                );
+              })}
             </ul>
           </section>
         )}

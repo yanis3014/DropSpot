@@ -8,6 +8,8 @@ import { getPlaceById, Place } from '@/lib/api/places';
 import { getPlaceMedia, type PlaceMedia } from '@/lib/api/placeMedia';
 import { getPlaceVibe, type AggregatedVibe } from '@/lib/api/checkins';
 import { getPlaceDrops, type Drop } from '@/lib/api/drops';
+import { getPlaceSpecs } from '@/lib/api/specs';
+import type { PlaceSpec } from '@/lib/specs';
 import { getSavedPlaceIds, savePlace, unsavePlace } from '@/lib/api/saved';
 import { useAuth } from '@/lib/hooks/useAuth';
 
@@ -21,6 +23,7 @@ export default function PlacePage() {
   const [media, setMedia] = useState<PlaceMedia[]>([]);
   const [vibe, setVibe] = useState<AggregatedVibe | null>(null);
   const [drops, setDrops] = useState<Drop[]>([]);
+  const [specs, setSpecs] = useState<PlaceSpec[]>([]);
   const [savedIds, setSavedIds] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -38,11 +41,12 @@ export default function PlacePage() {
 
     (async () => {
       try {
-        const [fresh, placeVibe, placeMedia, placeDrops] = await Promise.all([
+        const [fresh, placeVibe, placeMedia, placeDrops, placeSpecs] = await Promise.all([
           getPlaceById(id),
           getPlaceVibe(id).catch(() => null),
           getPlaceMedia(id).catch(() => [] as PlaceMedia[]),
           getPlaceDrops(id).catch(() => [] as Drop[]),
+          getPlaceSpecs(id).catch(() => [] as PlaceSpec[]),
         ]);
         if (cancelled) return;
         if (!fresh) {
@@ -54,6 +58,7 @@ export default function PlacePage() {
           setMedia(placeMedia);
           setVibe(placeVibe);
           setDrops(placeDrops);
+          setSpecs(placeSpecs);
         }
       } catch (err) {
         console.error(err);
@@ -109,10 +114,16 @@ export default function PlacePage() {
     [isAuthenticated, savedIds]
   );
 
-  const refreshVibe = useCallback(async () => {
+  // After « Je suis ici »: live vibe and specificities changed.
+  const refreshPulse = useCallback(async () => {
     if (!id) return;
     try {
-      setVibe(await getPlaceVibe(id));
+      const [nextVibe, nextSpecs] = await Promise.all([
+        getPlaceVibe(id),
+        getPlaceSpecs(id),
+      ]);
+      setVibe(nextVibe);
+      setSpecs(nextSpecs);
     } catch (err) {
       console.error(err);
     }
@@ -150,11 +161,12 @@ export default function PlacePage() {
       place={place}
       media={media}
       vibe={vibe}
+      specs={specs}
       drops={drops}
       isAuthenticated={isAuthenticated}
       isSaved={savedIds.includes(place.id)}
       onToggleSave={handleToggleSave}
-      onCheckedIn={refreshVibe}
+      onCheckedIn={refreshPulse}
       backHref="/map"
     />
   );

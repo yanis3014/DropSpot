@@ -10,20 +10,20 @@ import {
   type CheckInResult,
 } from '@/lib/api/checkins';
 import { getCurrentPosition } from '@/lib/geo';
+import { getMySpecVotes, voteSpec } from '@/lib/api/specs';
+import { pickSpecQuestions, specQuestion, type PlaceSpecMap, type SpecId } from '@/lib/specs';
 import LoginModal from '@/components/auth/LoginModal';
 
 type RewardReason = Extract<CheckInResult, { ok: true }>['reason'];
 
 interface CheckInModalProps {
   place: { id: string; name: string; image_url?: string };
+  /** Café pulse, used to pick the two questions asked after the check-in. */
+  specs?: PlaceSpecMap;
   isAuthenticated: boolean;
   onClose: () => void;
+  /** Called on close after a check-in, answers included (refresh the café pulse). */
   onSubmitted?: (result: { grainsEarned: number; reason: RewardReason }) => void;
-  /**
-   * Called when the user taps Fermer after a successful check-in.
-   * If provided, this runs instead of a plain close — parent can open TrophyModal.
-   */
-  onSuccessDismiss?: (place: { id: string; name: string }) => void;
 }
 
 const wifiOptions: {
@@ -38,37 +38,41 @@ const wifiOptions: {
 function rewardCopy(reason: RewardReason, earned: number): string {
   if (earned > 0) return `+${earned} Grains 🌾`;
   if (reason === 'daily_cap')
-    return 'Vibe partagée (0 Grain : limite du jour atteinte)';
-  return 'Vibe mise à jour (0 Grain : déjà checké ici il y a moins de 3 h)';
+    return 'Merci ! (0 Grain : limite du jour atteinte)';
+  return 'Merci ! (0 Grain : déjà passé ici il y a moins de 3 h)';
 }
 
 function errorCopy(result: Extract<CheckInResult, { ok: false }>): string {
   switch (result.error) {
     case 'too_far':
       return result.distanceM != null
-        ? `Tu es à ${Math.round(result.distanceM)} m du café. Rapproche-toi à moins de 100 m pour checker.`
-        : 'Rapproche-toi à moins de 100 m du café pour checker.';
+        ? `Tu es à ${Math.round(result.distanceM)} m du café. Rapproche-toi à moins de 100 m.`
+        : 'Rapproche-toi à moins de 100 m du café.';
     case 'no_gps':
-      return 'Active ta localisation : le check-in se fait sur place.';
+      return 'Active ta localisation : ça se fait sur place.';
     case 'not_authenticated':
-      return 'Connecte-toi pour checker.';
+      return 'Connecte-toi d’abord.';
     default:
-      return "Oups, le check-in n'est pas parti. Réessaie.";
+      return "Oups, ça n'est pas parti. Réessaie.";
   }
 }
 
 export default function CheckInModal({
   place,
+  specs = {},
   isAuthenticated,
   onClose,
   onSubmitted,
-  onSuccessDismiss,
 }: CheckInModalProps) {
   const [visible, setVisible] = useState(false);
   const [crowd, setCrowd] = useState<CrowdLevel | null>(null);
   const [wifi, setWifi] = useState<WifiStatus | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  // Questions on the café specificities, asked one by one after the check-in.
+  const [questions, setQuestions] = useState<SpecId[]>([]);
+  const [questionIndex, setQuestionIndex] = useState(0);
+  const [answering, setAnswering] = useState(false);
   const [earned, setEarned] = useState(0);
   const [reason, setReason] = useState<RewardReason>('ok');
   const [error, setError] = useState<string | null>(null);
@@ -84,18 +88,30 @@ export default function CheckInModal({
   }, []);
 
   const handleClose = () => {
+    // Once the answers are in, the café page refreshes its pulse.
+    if (submitted) onSubmitted?.({ grainsEarned: earned, reason });
     setVisible(false);
     setTimeout(onClose, 250);
   };
 
-  /** Fermer after success — let parent intercept for TrophyModal. */
-  const handleSuccessFermer = () => {
-    setVisible(false);
-    setTimeout(() => {
-      onClose();
-      onSuccessDismiss?.({ id: place.id, name: place.name });
-    }, 250);
+  const handleAnswer = async (vote: boolean | null) => {
+    const spec = questions[questionIndex];
+    if (!spec || answering) return;
+    if (vote !== null) {
+      setAnswering(true);
+      try {
+        const result = await voteSpec(place.id, spec, vote);
+        if (result.ok) setEarned((e) => e + result.grainsAwarded);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setAnswering(false);
+      }
+    }
+    setQuestionIndex((i) => i + 1);
   };
+
+  const askingQuestions = submitted && questionIndex < questions.length;
 
   const handleSubmit = async () => {
     if (!crowd || !wifi || submitting) return;
@@ -118,16 +134,14 @@ export default function CheckInModal({
         setSubmitting(false);
         return;
       }
+      const alreadyVoted = await getMySpecVotes(place.id).catch(() => [] as SpecId[]);
+      setQuestions(pickSpecQuestions(specs, alreadyVoted));
       setEarned(result.grainsAwarded);
       setReason(result.reason);
       setSubmitted(true);
-      onSubmitted?.({
-        grainsEarned: result.grainsAwarded,
-        reason: result.reason,
-      });
       setSubmitting(false);
     } catch {
-      setError("Oups, le check-in n'est pas parti. Réessaie.");
+      setError("Oups, ça n'est pas parti. Réessaie.");
       setSubmitting(false);
     }
   };
@@ -169,7 +183,42 @@ export default function CheckInModal({
           </button>
         </div>
 
-        {submitted ? (
+        {askingQuestions ? (
+          <div className="flex flex-col items-center gap-5 px-6 pb-10 pt-6 w-full text-center">
+            <p className="text-[13px] font-semibold text-ds-text2">
+              Tu es sur place : aide les autres ({questionIndex + 1}/{questions.length})
+            </p>
+            <h2 className="text-xl font-extrabold text-ds-text">
+              {specQuestion(questions[questionIndex])}
+            </h2>
+            <div className="grid w-full grid-cols-2 gap-2.5">
+              <button
+                type="button"
+                disabled={answering}
+                onClick={() => void handleAnswer(true)}
+                className="rounded-2xl bg-ds-ok py-4 font-extrabold text-white active:scale-[0.98] disabled:opacity-50"
+              >
+                Oui
+              </button>
+              <button
+                type="button"
+                disabled={answering}
+                onClick={() => void handleAnswer(false)}
+                className="rounded-2xl border border-ds-line bg-ds-surface py-4 font-extrabold text-ds-text active:scale-[0.98] disabled:opacity-50"
+              >
+                Non
+              </button>
+            </div>
+            <button
+              type="button"
+              disabled={answering}
+              onClick={() => void handleAnswer(null)}
+              className="h-11 text-[15px] font-bold text-ds-text2"
+            >
+              Je ne sais pas
+            </button>
+          </div>
+        ) : submitted ? (
           <div className="flex flex-col items-center justify-center gap-4 px-6 py-12 w-full text-center">
             <div className="relative shrink-0">
               <span className="absolute inset-0 rounded-full bg-ds-ok/25 animate-ping" />
@@ -179,7 +228,7 @@ export default function CheckInModal({
             </div>
 
             <h2 className="text-xl font-extrabold text-ds-text shrink-0">
-              Check-in validé !
+              Merci, c’est noté !
             </h2>
 
             {/* Non-interactive reward / status pill — never a second CTA */}
@@ -195,12 +244,12 @@ export default function CheckInModal({
             </span>
 
             <p className="w-full text-sm leading-relaxed text-ds-text2 text-center px-1">
-              Ta vibe est partagée avec la communauté.
+              Ce que tu as partagé aide les autres à choisir leur café.
             </p>
 
             <button
               type="button"
-              onClick={handleSuccessFermer}
+              onClick={handleClose}
               className="mt-1 w-full max-w-xs bg-ds-pin text-white font-bold py-3.5 rounded-2xl shadow-lg hover:bg-ds-pin/90 active:scale-[0.98] transition-all"
             >
               Fermer
@@ -211,9 +260,9 @@ export default function CheckInModal({
             <div className="w-14 h-14 rounded-2xl bg-ds-accent/10 flex items-center justify-center mb-4">
               <LockKey size={28} weight="duotone" className="text-ds-accent" />
             </div>
-            <p className="font-bold text-ds-text mb-1">Connecte-toi pour checker</p>
+            <p className="font-bold text-ds-text mb-1">Connecte-toi pour dire que tu es ici</p>
             <p className="text-sm text-ds-text2 mb-6">
-              Partage la vibe du spot et gagne des Grains.
+              Partage l’ambiance du café et gagne des Grains.
             </p>
             <button
               onClick={() => setShowLogin(true)}
@@ -226,7 +275,7 @@ export default function CheckInModal({
           <>
             <div className="flex-1 overflow-y-auto px-5 pb-4 space-y-6">
               <p className="text-xs text-center text-ds-text2 bg-ds-surface2 rounded-xl px-3 py-2">
-                Le check-in se fait sur place : ta position est vérifiée à
+                Ça se fait sur place : ta position est vérifiée à
                 l&apos;envoi (moins de 100 m du café).
               </p>
 

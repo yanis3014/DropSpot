@@ -11,7 +11,6 @@ import {
   MapPin,
   PencilSimple,
   SignOut,
-  WifiHigh,
   Star,
 } from '@phosphor-icons/react';
 import Button from '@/components/ui/Button';
@@ -31,6 +30,7 @@ import { ENVIE_ICONS } from '@/components/onboarding/icons';
 import { useTheme } from '@/lib/theme';
 import { cn } from '@/lib/cn';
 import { EVENT_CATEGORY_ICONS } from '@/components/drops/DropCard';
+import { SPEC_ICONS } from '@/components/places/specIcons';
 import {
   formatStartLabel,
   getMyUpcomingEvents,
@@ -85,7 +85,11 @@ function locLabel(status: LocStatus): string {
 
 function ContributionIcon({ item }: { item: ContributionItem }) {
   if (item.kind === 'check_in') {
-    return <WifiHigh size={18} weight="regular" aria-hidden />;
+    return <MapPin size={18} weight="regular" aria-hidden />;
+  }
+  if (item.spec) {
+    const Icon = SPEC_ICONS[item.spec];
+    return <Icon size={18} weight="regular" aria-hidden />;
   }
   return <Star size={18} weight="regular" aria-hidden />;
 }

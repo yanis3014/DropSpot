@@ -30,7 +30,8 @@ import {
 } from "@/lib/geo";
 import { useAuth } from "@/lib/hooks/useAuth";
 import { usePlaceFilters } from "@/lib/hooks/usePlaceFilters";
-import { usePlacesOpenStatus } from "@/hooks/usePlacesOpenStatus";
+import { usePlacePulse } from "@/lib/hooks/usePlacePulse";
+import type { PlaceSpecMap } from "@/lib/specs";
 import {
   AMENITY_FILTER_IDS,
   type AmenityFilterId,
@@ -70,8 +71,8 @@ const FEATURE_LABELS: Record<CafeFeatureId, string> = {
   activites: "Activités",
 };
 
-function cafeFeatures(place: Place): CafeRowFeature[] {
-  return cafeFeatureIds(place).map((id) => ({
+function cafeFeatures(place: Place, specs: PlaceSpecMap): CafeRowFeature[] {
+  return cafeFeatureIds(place, specs).map((id) => ({
     icon: FEATURE_ICONS[id],
     label: FEATURE_LABELS[id],
   }));
@@ -144,11 +145,14 @@ export default function NearbyList() {
     };
   }, [isAuthenticated]);
 
+  const allPlaceIds = useMemo(() => places.map((p) => p.id), [places]);
+  const pulse = usePlacePulse(allPlaceIds);
+
   const ranked = useMemo(() => {
     const effectiveSavedIds = isAuthenticated ? savedIds : [];
     const rows: PlaceWithDistance[] = places
       .filter((p) => hasValidCoordinates(p))
-      .filter((p) => placeMatchesFilters(p, amenityFilters))
+      .filter((p) => placeMatchesFilters(p, amenityFilters, pulse))
       .filter((p) => !favoritesOnly || effectiveSavedIds.includes(p.id))
       .map((p) => ({
         ...p,
@@ -170,14 +174,14 @@ export default function NearbyList() {
   }, [
     places,
     amenityFilters,
+    pulse,
     favoritesOnly,
     isAuthenticated,
     savedIds,
     userCoords,
   ]);
 
-  const rankedIds = useMemo(() => ranked.map((p) => p.id), [ranked]);
-  const openStatusByPlace = usePlacesOpenStatus(rankedIds);
+  const openStatusByPlace = pulse.open ?? {};
 
   const within1km = useMemo(
     () =>
@@ -264,7 +268,7 @@ export default function NearbyList() {
                     ? formatDistance(place.distanceM)
                     : "—"
                 }
-                features={cafeFeatures(place)}
+                features={cafeFeatures(place, pulse.specs[place.id] ?? {})}
                 imageSrc={place.image_url}
                 href={`/place/${place.id}`}
                 className={cn("max-w-none")}

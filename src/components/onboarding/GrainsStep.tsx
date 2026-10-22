@@ -6,7 +6,7 @@ import StepLayout from './StepLayout';
 
 const NEXT_MISSIONS: { icon: Icon; text: string }[] = [
   { icon: BookmarkSimple, text: 'Enregistre ton premier café' },
-  { icon: MapPin, text: 'Fais ton premier check-in' },
+  { icon: MapPin, text: 'Dis « Je suis ici » dans un café' },
   { icon: CheckCircle, text: 'Confirme une info sur place' },
 ];
 

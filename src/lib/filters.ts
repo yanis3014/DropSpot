@@ -1,4 +1,54 @@
 import type { Place } from '@/lib/api/places';
+import type { AggregatedVibe } from '@/lib/api/checkins';
+import type { PlaceOpenStatusMap } from '@/lib/api/openingHours';
+import { isSpecPositive, type SpecId, type SpecsByPlace } from '@/lib/specs';
+
+/**
+ * « Le pouls du café » for filtering: consolidated specificities, live vibe
+ * (last 3 h) and opening status. When given, filters read it instead of
+ * guessing from the café columns and text.
+ */
+export interface PlacePulse {
+  specs: SpecsByPlace;
+  vibes?: Record<string, AggregatedVibe>;
+  open?: PlaceOpenStatusMap;
+}
+
+const FILTER_SPEC: Record<string, SpecId> = {
+  wifi: 'wifi',
+  'wi-fi': 'wifi',
+  remote: 'wifi',
+  plugs: 'plugs',
+  matcha: 'matcha',
+  terrace: 'terrace',
+  brunch: 'brunch',
+  bakery: 'brunch',
+  specialty: 'specialty',
+  coffee: 'specialty',
+  laptop: 'laptop',
+  event: 'events',
+  events: 'events',
+};
+
+function pulseMatchesFilter(place: Place, key: string, pulse: PlacePulse): boolean | null {
+  const specs = pulse.specs[place.id] ?? {};
+  const vibe = pulse.vibes?.[place.id];
+  if (key === 'calme' || key === 'quiet' || key === 'calm') {
+    // A café packed right now is not calm, whatever its reputation.
+    if (vibe?.crowd_level === 'full') return false;
+    return isSpecPositive(specs.calm) || vibe?.crowd_level === 'quiet';
+  }
+  if (key === 'open' || key === 'open_now' || key === 'ouvert') {
+    const row = pulse.open?.[place.id];
+    if (row?.ok && row.has_hours) return row.status !== 'closed';
+    // Unknown hours: not shown as open.
+    return place.opening_hours?.trim() ? isPlaceOpenNow(place) : false;
+  }
+  const spec = FILTER_SPEC[key];
+  if (!spec) return null;
+  if (spec === 'wifi' && vibe?.wifi_speed === 'good') return true;
+  return isSpecPositive(specs[spec]);
+}
 
 /** Canonical place categories used by the feed, map and preferences. */
 export type PlaceCategoryId =
@@ -176,10 +226,15 @@ function placeHaystack(place: Place): string {
 /** Home feed / map filter for places (category pills + map chips). */
 export function placeMatchesFilter(
   place: Place,
-  filter: string | null | undefined
+  filter: string | null | undefined,
+  pulse?: PlacePulse
 ): boolean {
   if (!filter || filter === 'all') return true;
   const key = normalizeKey(filter);
+  if (pulse) {
+    const fromPulse = pulseMatchesFilter(place, key, pulse);
+    if (fromPulse !== null) return fromPulse;
+  }
   const categories = place.categories ?? [];
 
   if (key === 'wifi' || key === 'wi-fi' || key === 'remote' || key === 'plugs') {
@@ -246,8 +301,9 @@ export function placeMatchesFilter(
 /** Place must match every active filter (AND). */
 export function placeMatchesFilters(
   place: Place,
-  filters: readonly string[]
+  filters: readonly string[],
+  pulse?: PlacePulse
 ): boolean {
   if (filters.length === 0) return true;
-  return filters.every((f) => placeMatchesFilter(place, f));
+  return filters.every((f) => placeMatchesFilter(place, f, pulse));
 }

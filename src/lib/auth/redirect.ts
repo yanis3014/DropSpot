@@ -45,29 +45,6 @@ export function destinationAfterAuth(
   return preferred;
 }
 
-/** @deprecated use destinationAfterAuth with isPro */
-export function isVendorRole(role: string | null | undefined): boolean {
-  return role === 'vendor' || role === 'owner';
-}
-
-/** @deprecated use destinationAfterAuth */
-export function destinationForProfile(
-  profile: {
-    role?: string | null;
-    onboarding_completed_at?: string | null;
-  } | null,
-  preferredNext?: string | null
-): string {
-  const isPro = isVendorRole(profile?.role);
-  return destinationAfterAuth(
-    {
-      isPro,
-      onboardingCompleted: Boolean(profile?.onboarding_completed_at),
-    },
-    preferredNext
-  );
-}
-
 /** Charge is_pro + profil et calcule la destination. */
 export async function resolvePostAuthDestination(
   supabase: SupabaseClient,

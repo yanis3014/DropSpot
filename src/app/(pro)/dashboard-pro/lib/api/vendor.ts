@@ -202,61 +202,6 @@ export async function updateVendorProfile(
   return normalizeVendor(data as Record<string, unknown>);
 }
 
-/**
- * Spots réellement gérés par le vendor (`places.vendor_id` = auth.uid()).
- * Pas de fallback sur tous les spots — compteur dashboard fidèle.
- */
-export async function getVendorPlaces(vendorId?: string): Promise<Place[]> {
-  if (!supabase) return [];
-
-  let uid = vendorId;
-  if (!uid) {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (!user) return [];
-    uid = user.id;
-  }
-
-  const { data, error } = await supabase
-    .from('places')
-    .select(
-      'id, name, image_url, lat, lng, latitude, longitude, category, description, address, city, has_plugs, has_vegan, laptop_policy, noise_level, wifi_speed, opening_hours, plugs_level, vendor_id, created_at'
-    )
-    .eq('vendor_id', uid)
-    .order('name', { ascending: true });
-
-  if (error) {
-    // colonnes absentes → retry minimal
-    if (error.code === '42703' || /opening_hours|plugs_level/.test(error.message ?? '')) {
-      const fallback = await supabase
-        .from('places')
-        .select(
-          'id, name, image_url, lat, lng, latitude, longitude, category, description, address, city, has_plugs, has_vegan, laptop_policy, noise_level, wifi_speed, vendor_id, created_at'
-        )
-        .eq('vendor_id', uid)
-        .order('name', { ascending: true });
-      if (fallback.error) {
-        console.error('Error fetching vendor places:', fallback.error);
-        throw fallback.error;
-      }
-      return ((fallback.data ?? []) as Record<string, unknown>[]).map(
-        normalizePlace
-      );
-    }
-    console.error('Error fetching vendor places:', error);
-    throw error;
-  }
-
-  return ((data ?? []) as Record<string, unknown>[]).map(normalizePlace);
-}
-
-/** Cafés où l'utilisateur est owner, manager ou staff (`place_members`). */
-export async function getProAccessiblePlaces(): Promise<Place[]> {
-  const rows = await listProPlaceMemberships();
-  return rows.map((row) => row.place);
-}
-
 /** Nombre d'établissements accessibles via place_members. */
 export async function countProPlaceMemberships(): Promise<number> {
   if (!supabase) return 0;
@@ -360,22 +305,6 @@ function invalidatePlacesCache() {
   void import('@/lib/cache/clientCache').then(({ invalidateCache }) => {
     invalidateCache('places:');
   });
-}
-
-/** Nombre de spots gérés (requête count légère). */
-export async function countVendorPlaces(vendorId: string): Promise<number> {
-  if (!supabase || !vendorId) return 0;
-
-  const { count, error } = await supabase
-    .from('places')
-    .select('id', { count: 'exact', head: true })
-    .eq('vendor_id', vendorId);
-
-  if (error) {
-    console.error('Error counting vendor places:', error);
-    return 0;
-  }
-  return count ?? 0;
 }
 
 const PLACE_SELECT =
@@ -588,12 +517,3 @@ export async function requestPlaceClaim(
   }
   return { ok: true, claimId: String(row.claim_id) };
 }
-
-// Ré-exports pour le dashboard (API flash drops)
-export {
-  insertFlashDrop,
-  updateFlashDrop,
-  getVendorFlashDrops,
-  countActiveVendorFlashDrops,
-  type FlashDrop,
-} from '@/app/(pro)/dashboard-pro/lib/api/flashDrops';

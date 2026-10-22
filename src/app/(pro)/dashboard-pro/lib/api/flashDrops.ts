@@ -125,59 +125,6 @@ export async function getRecentPlaceFlashDrops(
   return ((data ?? []) as RawFlashDrop[]).map(normalizeFlashDrop);
 }
 
-export function isFlashDropLive(drop: FlashDrop, now = Date.now()): boolean {
-  if (!drop.is_active) return false;
-  const end = new Date(drop.ends_at).getTime();
-  const start = new Date(drop.starts_at).getTime();
-  if (!Number.isFinite(end)) return false;
-  return (!Number.isFinite(start) || start <= now) && end > now;
-}
-
-/** Flash drops du vendor connecté (récents d'abord). */
-export async function getVendorFlashDrops(
-  vendorId: string,
-  limit = 20
-): Promise<FlashDrop[]> {
-  if (!supabase || !vendorId) return [];
-
-  const { data, error } = await supabase
-    .from('flash_drops')
-    .select(
-      'id, vendor_id, place_id, title, description, starts_at, ends_at, is_active, pin_code, current_uses, max_uses, grains_reward, created_at, places(name, image_url, address, city)'
-    )
-    .eq('vendor_id', vendorId)
-    .order('created_at', { ascending: false })
-    .limit(limit);
-
-  if (error) {
-    console.error('Error fetching vendor flash drops:', error);
-    throw error;
-  }
-
-  return ((data ?? []) as RawFlashDrop[]).map(normalizeFlashDrop);
-}
-
-/** Compte les flash drops encore actifs du vendor. */
-export async function countActiveVendorFlashDrops(
-  vendorId: string
-): Promise<number> {
-  if (!supabase || !vendorId) return 0;
-  const now = new Date().toISOString();
-
-  const { count, error } = await supabase
-    .from('flash_drops')
-    .select('id', { count: 'exact', head: true })
-    .eq('vendor_id', vendorId)
-    .eq('is_active', true)
-    .gt('ends_at', now);
-
-  if (error) {
-    console.error('Error counting active flash drops:', error);
-    return 0;
-  }
-  return count ?? 0;
-}
-
 /**
  * Insert dans `flash_drops` (colonnes de contenu + vendor_id du café actif).
  * N'envoie jamais grains_reward, current_uses, pin_code, is_active ni stopped_at.

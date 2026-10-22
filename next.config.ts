@@ -7,6 +7,21 @@ const nextConfig: NextConfig = {
     return [
       { source: '/gamification', destination: '/profile', permanent: true },
       { source: '/saved', destination: '/list?filters=favorites', permanent: false },
+      {
+        source: '/dashboard-pro/settings',
+        destination: '/etablissement',
+        permanent: true,
+      },
+      {
+        source: '/dashboard-pro/validate',
+        destination: '/valider',
+        permanent: true,
+      },
+      {
+        source: '/dashboard-pro/validate/:path*',
+        destination: '/valider',
+        permanent: true,
+      },
     ];
   },
   images: {

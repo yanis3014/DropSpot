@@ -58,12 +58,12 @@ begin
     )
   on conflict (id) do nothing;
 
-  -- Simulate handle_new_user for signup user (trigger may not fire in test txn)
-  insert into public.profiles (id, full_name, role, grains_balance, onboarding_completed_at, welcome_grains_claimed_at, preferences, onboarding_answers)
-  values (u_signup, 'Signup Vendor Meta', 'user', 0, null, null, '{}', '{}'::jsonb)
-  on conflict (id) do update set role = 'user';
-
+  -- on_auth_user_created (handle_new_user) created the profile from the
+  -- auth.users insert above, with role=vendor in the metadata.
   select role into v_role from public.profiles where id = u_signup;
+  if v_role is null then
+    raise exception 'FAIL: handle_new_user did not create the profile';
+  end if;
   if v_role is distinct from 'user' then
     raise exception 'FAIL: signup with vendor metadata must stay user, got %', v_role;
   end if;
@@ -230,9 +230,47 @@ begin
     raise exception 'FAIL: is_pro should be false after remove_member';
   end if;
 
+  -- The owner cannot read another user's profile under RLS: check as admin.
+  reset role;
   select role into v_role from public.profiles where id = u_invitee;
   if v_role is distinct from 'user' then
     raise exception 'FAIL: profiles.role should be user after remove, got %', v_role;
+  end if;
+
+  -- A pro (member of another café) cannot take an unclaimed café directly:
+  -- claims go through request_claim + approve_claim.
+  insert into public.places (id, name, lat, lng, vendor_id)
+  values ('88888888-8888-8888-8888-888888888888', 'Unclaimed test cafe', 43.7, 7.26, null);
+
+  perform set_config('request.jwt.claim.sub', u_owner::text, true);
+  perform set_config(
+    'request.jwt.claims',
+    json_build_object('sub', u_owner::text, 'role', 'authenticated')::text,
+    true
+  );
+  execute 'set local role authenticated';
+
+  if public.is_pro(u_owner) is not true then
+    raise exception 'FAIL: fixture owner should be pro';
+  end if;
+
+  begin
+    update public.places
+    set vendor_id = u_owner
+    where id = '88888888-8888-8888-8888-888888888888';
+  exception when others then
+    if sqlerrm like 'FAIL:%' then raise; end if;
+  end;
+
+  reset role;
+  if exists (
+    select 1 from public.places
+    where id = '88888888-8888-8888-8888-888888888888' and vendor_id is not null
+  ) or exists (
+    select 1 from public.place_members
+    where place_id = '88888888-8888-8888-8888-888888888888'
+  ) then
+    raise exception 'FAIL: a pro claimed an unclaimed cafe without verification';
   end if;
 
   raise notice 'pro_access: all assertions passed';

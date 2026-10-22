@@ -33,6 +33,7 @@ $$;
 create or replace function public.protect_profile_columns()
 returns trigger
 language plpgsql
+set search_path = public
 as $$
 begin
   if current_user not in ('authenticated', 'anon') then
@@ -127,6 +128,8 @@ begin
 end;
 $$;
 
+revoke all on function public.sync_profile_role_from_members() from public, anon, authenticated;
+
 drop trigger if exists place_members_sync_profile_role on public.place_members;
 create trigger place_members_sync_profile_role
   after insert or update or delete on public.place_members
@@ -146,45 +149,27 @@ where pr.role = 'vendor'
   and not exists (select 1 from public.place_members m where m.user_id = pr.id);
 
 -- ---------------------------------------------------------------------------
--- 5) RLS: drop profiles.role checks → membership / is_pro
+-- 5) RLS: drop the last policies that read profiles.role
 -- ---------------------------------------------------------------------------
+-- flash_drops: the current insert/update/delete policies come from
+-- 20261021210000_vendor_plans.sql (has_place_role + has_pro, verified place
+-- enforced by trigger). Only remove the legacy profiles.role versions.
 drop policy if exists "Vendors insert own flash drops" on public.flash_drops;
 drop policy if exists "Vendors update own flash drops" on public.flash_drops;
 
-drop policy if exists "Owners and managers insert flash drops" on public.flash_drops;
-create policy "Owners and managers insert flash drops"
-  on public.flash_drops for insert
-  with check (
-    public.has_place_role(place_id, array['owner', 'manager'])
-    and vendor_id = (
-      select p.vendor_id from public.places p where p.id = place_id
-    )
-  );
-
-drop policy if exists "Owners and managers update flash drops" on public.flash_drops;
-create policy "Owners and managers update flash drops"
-  on public.flash_drops for update
-  using (public.has_place_role(place_id, array['owner', 'manager']))
-  with check (
-    public.has_place_role(place_id, array['owner', 'manager'])
-    and vendor_id = (
-      select p.vendor_id from public.places p where p.id = place_id
-    )
-  );
-
+-- places insert: any signed-in user may create a café row they own; it starts
+-- 'pending' (places_default_verification_on_insert) so no drop is possible
+-- until an admin verifies it. Also removes the dashboard-made duplicate.
 drop policy if exists "Vendors insert own places" on public.places;
+drop policy if exists "Vendors can insert own places" on public.places;
+drop policy if exists "Authenticated insert own places" on public.places;
 create policy "Authenticated insert own places"
   on public.places for insert
   with check (auth.uid() = vendor_id);
 
+-- No direct claim of an unclaimed café: claims go through request_claim +
+-- approve_claim (20261021140000_place_claims.sql).
 drop policy if exists "Vendors claim unclaimed places" on public.places;
-create policy "Pro members claim unclaimed places"
-  on public.places for update
-  using (
-    vendor_id is null
-    and public.is_pro()
-  )
-  with check (auth.uid() = vendor_id);
 
 -- vendor_plans backfill from membership (not profiles.role)
 insert into public.vendor_plans (user_id, plan)

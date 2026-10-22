@@ -73,6 +73,27 @@ describe('redirection selon le rôle', () => {
     ).toBe('/dashboard-pro/onboarding');
   });
 
+  it('lien d’invitation conservé, même sans is_pro ni onboarding', () => {
+    expect(
+      destinationAfterAuth(
+        { isPro: false, onboardingCompleted: false },
+        '/dashboard-pro/invitation/abc123'
+      )
+    ).toBe('/dashboard-pro/invitation/abc123');
+  });
+
+  it('is_pro + lien profond pro conservé', () => {
+    expect(
+      destinationAfterAuth(
+        { isPro: true, onboardingCompleted: true },
+        '/dashboard-pro/drops'
+      )
+    ).toBe('/dashboard-pro/drops');
+    expect(
+      destinationAfterAuth({ isPro: true, onboardingCompleted: true }, '/pro')
+    ).toBe('/dashboard-pro');
+  });
+
   it('user onboardé → / (ou redirect préféré)', () => {
     expect(
       destinationForProfile({

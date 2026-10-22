@@ -28,20 +28,18 @@ export function destinationAfterAuth(
 ): string {
   const preferred = safeRedirectPath(preferredNext ?? null);
 
-  if (isProEntryPath(preferred)) {
-    return opts.isPro ? '/dashboard-pro' : '/dashboard-pro/onboarding';
+  // Invitation link: a client account must reach it to become pro.
+  if (preferred.startsWith('/dashboard-pro/invitation/')) {
+    return preferred;
   }
 
-  if (opts.isPro && preferred.startsWith('/dashboard-pro')) {
-    return preferred;
+  if (isProEntryPath(preferred)) {
+    if (!opts.isPro) return '/dashboard-pro/onboarding';
+    return preferred.startsWith('/dashboard-pro') ? preferred : '/dashboard-pro';
   }
 
   if (!opts.onboardingCompleted) {
     return '/onboarding';
-  }
-
-  if (preferred.startsWith('/dashboard-pro')) {
-    return opts.isPro ? preferred : '/dashboard-pro/onboarding';
   }
 
   return preferred;

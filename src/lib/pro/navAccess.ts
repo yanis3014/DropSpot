@@ -182,3 +182,22 @@ export function filterProNavHref(
 export function isOwnerOnlyPath(pathname: string): boolean {
   return OWNER_ONLY_PREFIXES.some((prefix) => pathMatches(pathname, prefix));
 }
+
+/** Routes listed in the mobile « Plus » sheet (filtered by role). */
+export const MORE_NAV_HREFS = [
+  '/etablissement',
+  '/specificites',
+  '/equipe',
+  '/abonnement',
+  '/reglages',
+] as const;
+
+export function moreNavHrefsForRole(
+  role: PlaceMemberRole | null
+): string[] {
+  return MORE_NAV_HREFS.filter((href) => filterProNavHref(href, role));
+}
+
+export function isMoreNavPath(pathname: string): boolean {
+  return MORE_NAV_HREFS.some((href) => pathMatches(pathname, href));
+}

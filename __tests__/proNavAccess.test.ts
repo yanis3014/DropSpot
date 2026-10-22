@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   canAccessProPath,
   filterProNavHref,
+  moreNavHrefsForRole,
 } from '@/lib/pro/navAccess';
 
 const SIDE_NAV = [
@@ -70,5 +71,14 @@ describe('canAccessProPath (deep-link → accueil si interdit)', () => {
   it('autorise valider et réglages à tous les rôles', () => {
     expect(canAccessProPath('/valider', 'staff')).toBe(true);
     expect(canAccessProPath('/reglages', 'staff')).toBe(true);
+  });
+});
+
+describe('feuille Plus', () => {
+  it('ne contient ni Équipe ni Abonnement pour un staff', () => {
+    const hrefs = moreNavHrefsForRole('staff');
+    expect(hrefs).toEqual(['/etablissement', '/specificites', '/reglages']);
+    expect(hrefs).not.toContain('/equipe');
+    expect(hrefs).not.toContain('/abonnement');
   });
 });

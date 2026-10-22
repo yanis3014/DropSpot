@@ -1,5 +1,5 @@
-import { redirect } from "next/navigation";
+import HomeRedirect from "@/app/(client)/HomeRedirect";
 
 export default function Home() {
-  redirect("/map");
+  return <HomeRedirect />;
 }

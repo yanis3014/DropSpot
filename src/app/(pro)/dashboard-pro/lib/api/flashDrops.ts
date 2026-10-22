@@ -1,5 +1,6 @@
 import { supabase } from '@/lib/supabase/client';
 import { invalidateCache } from '@/lib/cache/clientCache';
+import type { DropContentWritePayload } from '@/app/(pro)/dashboard-pro/lib/proDrops/dropForm';
 
 export type FlashDropKind =
   | 'discount'
@@ -33,16 +34,6 @@ export interface FlashDrop {
     address?: string;
     city?: string;
   } | null;
-}
-
-export interface CreateFlashDropInput {
-  title: string;
-  description?: string;
-  place_id: string;
-  /** Durée en minutes à partir de maintenant (défaut 60). */
-  durationMinutes?: number;
-  /** Pro only — enforced by DB trigger. */
-  isRecurring?: boolean;
 }
 
 type RawFlashDrop = Record<string, unknown>;
@@ -113,6 +104,27 @@ export async function getFlashDropById(
   return normalizeFlashDrop(data as RawFlashDrop);
 }
 
+/** Les N derniers drops d'un café (pour « Reprendre un drop »). */
+export async function getRecentPlaceFlashDrops(
+  placeId: string,
+  limit = 3
+): Promise<FlashDrop[]> {
+  if (!supabase || !placeId) return [];
+
+  const { data, error } = await supabase
+    .from('flash_drops')
+    .select(VENDOR_DROP_SELECT)
+    .eq('place_id', placeId)
+    .order('created_at', { ascending: false })
+    .limit(limit);
+
+  if (error) {
+    console.error('getRecentPlaceFlashDrops:', error);
+    return [];
+  }
+  return ((data ?? []) as RawFlashDrop[]).map(normalizeFlashDrop);
+}
+
 export function isFlashDropLive(drop: FlashDrop, now = Date.now()): boolean {
   if (!drop.is_active) return false;
   const end = new Date(drop.ends_at).getTime();
@@ -166,52 +178,79 @@ export async function countActiveVendorFlashDrops(
   return count ?? 0;
 }
 
-/** Insert réel dans `flash_drops` (vendor_id = user auth). */
-export async function createFlashDrop(
-  input: CreateFlashDropInput
+/**
+ * Insert dans `flash_drops` (colonnes de contenu + vendor_id du café actif).
+ * N'envoie jamais grains_reward, current_uses, pin_code, is_active ni stopped_at.
+ */
+export async function insertFlashDrop(
+  payload: DropContentWritePayload
 ): Promise<FlashDrop> {
   if (!supabase) throw new Error('Supabase client not initialized');
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) throw new Error('Not authenticated');
+  const row = {
+    place_id: payload.place_id,
+    vendor_id: payload.vendor_id,
+    title: payload.title,
+    description: payload.description,
+    kind: payload.kind,
+    discount_value: payload.discount_value,
+    discount_unit: payload.discount_unit,
+    conditions: payload.conditions,
+    starts_at: payload.starts_at,
+    ends_at: payload.ends_at,
+    max_uses: payload.max_uses,
+  };
 
-  const title = input.title.trim();
-  if (!title) throw new Error('Le titre est requis');
-  if (!input.place_id) throw new Error('Choisis un spot');
-
-  const durationMinutes = input.durationMinutes ?? 60;
-  const startsAt = new Date();
-  const endsAt = new Date(startsAt.getTime() + durationMinutes * 60 * 1000);
-
-  // pin_code + grains_reward are enforced server-side (trigger / defaults).
   const { data, error } = await supabase
     .from('flash_drops')
-    .insert({
-      vendor_id: user.id,
-      place_id: input.place_id,
-      title,
-      description: input.description?.trim() || null,
-      starts_at: startsAt.toISOString(),
-      ends_at: endsAt.toISOString(),
-      is_active: true,
-      current_uses: 0,
-      is_recurring: Boolean(input.isRecurring),
-    })
-    .select(
-      'id, vendor_id, place_id, title, description, starts_at, ends_at, is_active, pin_code, current_uses, max_uses, grains_reward, created_at, places(name, image_url, address, city)'
-    )
+    .insert(row)
+    .select(VENDOR_DROP_SELECT)
     .single();
 
   if (error) {
-    console.error('Error creating flash drop:', error);
     throw error;
   }
 
-  // Invalide le cache feed pour que l'accueil voie le flash immédiatement
   invalidateCache('drops:');
+  return normalizeFlashDrop(data as RawFlashDrop);
+}
 
+/**
+ * Update dans `flash_drops` (colonnes de contenu + vendor_id du café actif).
+ * N'envoie jamais grains_reward, current_uses, pin_code, is_active ni stopped_at.
+ */
+export async function updateFlashDrop(
+  dropId: string,
+  payload: DropContentWritePayload
+): Promise<FlashDrop> {
+  if (!supabase) throw new Error('Supabase client not initialized');
+
+  const row = {
+    place_id: payload.place_id,
+    vendor_id: payload.vendor_id,
+    title: payload.title,
+    description: payload.description,
+    kind: payload.kind,
+    discount_value: payload.discount_value,
+    discount_unit: payload.discount_unit,
+    conditions: payload.conditions,
+    starts_at: payload.starts_at,
+    ends_at: payload.ends_at,
+    max_uses: payload.max_uses,
+  };
+
+  const { data, error } = await supabase
+    .from('flash_drops')
+    .update(row)
+    .eq('id', dropId)
+    .select(VENDOR_DROP_SELECT)
+    .single();
+
+  if (error) {
+    throw error;
+  }
+
+  invalidateCache('drops:');
   return normalizeFlashDrop(data as RawFlashDrop);
 }
 

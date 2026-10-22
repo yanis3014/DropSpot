@@ -30,6 +30,7 @@ export interface Place {
   /** limited | regular | everywhere */
   plugs_level?: string | null;
   vendor_id?: string | null;
+  verification_status?: 'unclaimed' | 'pending' | 'verified' | string | null;
   created_at?: string;
   updated_at?: string;
 }
@@ -132,6 +133,10 @@ export function normalizePlace(row: RawPlace): Place {
     plugs_level: (row.plugs_level as string | null | undefined) ?? null,
     vendor_id:
       typeof row.vendor_id === 'string' ? row.vendor_id : null,
+    verification_status:
+      typeof row.verification_status === 'string'
+        ? row.verification_status
+        : null,
     created_at: (row.created_at as string | undefined) ?? undefined,
     updated_at: (row.updated_at as string | undefined) ?? undefined,
   };

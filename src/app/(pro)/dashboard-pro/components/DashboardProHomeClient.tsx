@@ -14,8 +14,10 @@ import DropCard from "@/components/pro/DropCard";
 import StatTile from "@/components/pro/StatTile";
 import ConfirmDialog from "@/components/pro/ConfirmDialog";
 import StatusTag from "@/components/pro/StatusTag";
+import QuickDropSheet from "@/app/(pro)/dashboard-pro/components/QuickDropSheet";
 import { useActivePlace } from "@/app/(pro)/hooks/useActivePlace";
 import { useVendorProfile } from "@/app/(pro)/dashboard-pro/hooks/useVendorProfile";
+import { useVendorPlan } from "@/hooks/useVendorPlan";
 import { useAuth } from "@/lib/hooks/useAuth";
 import {
   duplicateFlashDrop,
@@ -52,6 +54,8 @@ function firstName(full: string | null | undefined): string {
 
 type LoadedProps = {
   place: Place;
+  role: string | null;
+  hasPro: boolean;
   greeting: string;
   actorName: string | null;
   withCafe: (path: string) => string;
@@ -59,6 +63,8 @@ type LoadedProps = {
 
 function DashboardProHomeLoaded({
   place,
+  role,
+  hasPro,
   greeting,
   actorName,
   withCafe,
@@ -75,7 +81,13 @@ function DashboardProHomeLoaded({
   const [stopTarget, setStopTarget] = useState<FlashDrop | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
   const [stopError, setStopError] = useState<string | null>(null);
-  const isPendingVerification = meta?.verificationStatus === "pending";
+  const [quickDropOpen, setQuickDropOpen] = useState(false);
+  const isPendingVerification =
+    meta?.verificationStatus != null
+      ? meta.verificationStatus !== "verified"
+      : place.verification_status != null &&
+        place.verification_status !== "verified";
+  const canCreateDrop = role === "owner" || role === "manager";
   const checklistDone = meta ? countChecklistDone(meta.checklist) : 0;
 
   const checklistTasks = useMemo(() => {
@@ -255,26 +267,29 @@ function DashboardProHomeLoaded({
             </h1>
             <p className="m-0 mt-0.5 text-sm text-ds-text2">{dateParis}</p>
           </div>
-          <Link
-            href={withCafe("/dashboard-pro/drops/nouveau")}
-            className={cn(
-              "inline-flex h-11 items-center gap-2 rounded-xl px-4 text-sm font-bold no-underline",
-              isPendingVerification
-                ? "cursor-not-allowed bg-ds-surface2 text-ds-text2"
-                : "bg-ds-accent text-ds-onaccent"
-            )}
-            aria-disabled={isPendingVerification}
-            onClick={(e) => {
-              if (isPendingVerification) e.preventDefault();
-            }}
-          >
-            {isPendingVerification ? (
-              <Lock size={18} weight="bold" aria-hidden />
-            ) : (
-              <Lightning size={18} weight="bold" aria-hidden />
-            )}
-            Drop rapide
-          </Link>
+          {canCreateDrop ? (
+            <button
+              type="button"
+              disabled={isPendingVerification}
+              className={cn(
+                "inline-flex h-11 items-center gap-2 rounded-xl px-4 text-sm font-bold",
+                isPendingVerification
+                  ? "cursor-not-allowed bg-ds-surface2 text-ds-text2"
+                  : "bg-ds-accent text-ds-onaccent"
+              )}
+              aria-disabled={isPendingVerification}
+              onClick={() => {
+                if (!isPendingVerification) setQuickDropOpen(true);
+              }}
+            >
+              {isPendingVerification ? (
+                <Lock size={18} weight="bold" aria-hidden />
+              ) : (
+                <Lightning size={18} weight="bold" aria-hidden />
+              )}
+              Drop rapide
+            </button>
+          ) : null}
         </div>
         <div className="flex gap-2">
           <span className="rounded-full bg-ds-surface2 px-3 py-1.5 text-xs font-bold text-ds-text">
@@ -485,14 +500,28 @@ function DashboardProHomeLoaded({
         </div>
       ) : null}
 
+      <QuickDropSheet
+        open={quickDropOpen}
+        place={place}
+        role={role}
+        hasPro={hasPro}
+        onClose={() => setQuickDropOpen(false)}
+        onPublished={() => void refresh()}
+      />
     </div>
   );
 }
 
 export default function DashboardProHomeClient() {
-  const { activePlace, loading: placeLoading, withCafe } = useActivePlace();
+  const {
+    activePlace,
+    activeMemberRole,
+    loading: placeLoading,
+    withCafe,
+  } = useActivePlace();
   const { isAuthenticated, loading: authLoading } = useAuth();
   const { profile } = useVendorProfile(isAuthenticated, authLoading);
+  const { hasPro } = useVendorPlan(isAuthenticated && !authLoading);
 
   const greeting = firstName(profile?.full_name);
 
@@ -516,6 +545,8 @@ export default function DashboardProHomeClient() {
     <DashboardProHomeLoaded
       key={activePlace.id}
       place={activePlace}
+      role={activeMemberRole}
+      hasPro={hasPro}
       greeting={greeting}
       actorName={profile?.full_name ?? null}
       withCafe={withCafe}

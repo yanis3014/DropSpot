@@ -4,36 +4,48 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import VendorOnboardingWizard from "@/app/(pro)/dashboard-pro/components/VendorOnboardingWizard";
-import { useRequireVendor } from "@/app/(pro)/dashboard-pro/hooks/useRequireVendor";
-import { countVendorPlaces } from "@/app/(pro)/dashboard-pro/lib/api/vendor";
+import { useAuth } from "@/lib/hooks/useAuth";
+import { useVendorProfile } from "@/app/(pro)/dashboard-pro/hooks/useVendorProfile";
+import { countProPlaceMemberships } from "@/app/(pro)/dashboard-pro/lib/api/vendor";
 
 export default function DashboardProOnboardingPage() {
   const router = useRouter();
-  const { profile, loading, denied, displayName, signOut } = useRequireVendor();
+  const { isAuthenticated, loading: authLoading, displayName, signOut } =
+    useAuth();
+  const { isPro, loading: profileLoading } = useVendorProfile(
+    isAuthenticated,
+    authLoading
+  );
   const [checkingPlaces, setCheckingPlaces] = useState(true);
 
   useEffect(() => {
-    if (!profile) return;
+    if (authLoading) return;
+    if (!isAuthenticated) {
+      router.replace("/login?redirect=/dashboard-pro/onboarding&espace=pro");
+    }
+  }, [authLoading, isAuthenticated, router]);
+
+  useEffect(() => {
+    if (!isAuthenticated || profileLoading) return;
+    if (!isPro) {
+      setCheckingPlaces(false);
+      return;
+    }
     let cancelled = false;
-    (async () => {
-      setCheckingPlaces(true);
-      try {
-        const n = await countVendorPlaces(profile.id);
-        if (!cancelled && n > 0) {
-          router.replace("/dashboard-pro");
-        }
-      } catch (err) {
-        console.error(err);
-      } finally {
-        if (!cancelled) setCheckingPlaces(false);
+    void countProPlaceMemberships().then((n) => {
+      if (cancelled) return;
+      if (n > 0) {
+        router.replace("/dashboard-pro");
+      } else {
+        setCheckingPlaces(false);
       }
-    })();
+    });
     return () => {
       cancelled = true;
     };
-  }, [profile, router]);
+  }, [isAuthenticated, isPro, profileLoading, router]);
 
-  if (loading || (profile && checkingPlaces)) {
+  if (authLoading || profileLoading || checkingPlaces) {
     return (
       <div className="flex min-h-[50vh] flex-1 items-center justify-center">
         <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-ds-accent" />
@@ -41,22 +53,7 @@ export default function DashboardProOnboardingPage() {
     );
   }
 
-  if (denied) {
-    return (
-      <div className="px-5 pt-8">
-        <Link href="/" className="text-sm font-semibold text-ds-text2">
-          ← Retour
-        </Link>
-        <p className="mt-6 font-bold text-ds-text">Accès restaurateur requis</p>
-        <p className="mt-2 text-sm text-ds-text2">
-          Seuls les comptes <strong>vendor</strong> ou <strong>owner</strong>{" "}
-          peuvent configurer un établissement.
-        </p>
-      </div>
-    );
-  }
-
-  if (!profile) return null;
+  if (!isAuthenticated) return null;
 
   return (
     <div className="mx-auto w-full max-w-lg px-5 pb-10 pt-6">
@@ -70,8 +67,8 @@ export default function DashboardProOnboardingPage() {
           </h1>
           <p className="mt-0.5 truncate text-sm text-ds-text2">
             {displayName
-              ? `${displayName} · première connexion`
-              : "Première connexion restaurateur"}
+              ? `${displayName} · revendication ou première connexion`
+              : "Revendique ton établissement"}
           </p>
         </div>
         <button
@@ -83,6 +80,11 @@ export default function DashboardProOnboardingPage() {
         </button>
       </div>
       <VendorOnboardingWizard />
+      <p className="mt-8 text-center text-sm text-ds-text2">
+        <Link href="/map" className="font-semibold text-ds-accent">
+          Retour à l&apos;app client
+        </Link>
+      </p>
     </div>
   );
 }

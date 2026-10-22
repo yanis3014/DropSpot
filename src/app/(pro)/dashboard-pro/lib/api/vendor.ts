@@ -14,6 +14,13 @@ import {
 
 export type VendorRole = 'user' | 'vendor' | 'owner';
 
+export type PlaceMemberRole = 'owner' | 'manager' | 'staff';
+
+export interface PlaceMembershipRow {
+  place: Place;
+  role: PlaceMemberRole;
+}
+
 export interface VendorProfile {
   id: string;
   full_name: string | null;
@@ -73,6 +80,109 @@ export async function getVendorProfile(): Promise<VendorProfile | null> {
   }
 
   return data ? normalizeVendor(data as Record<string, unknown>) : null;
+}
+
+/** Accès B2B : au moins une ligne place_members (RPC is_pro). */
+export async function fetchIsPro(): Promise<boolean> {
+  if (!supabase) return false;
+  const { data, error } = await supabase.rpc('is_pro');
+  if (error) {
+    console.error('fetchIsPro:', error);
+    return false;
+  }
+  return Boolean(data);
+}
+
+function normalizeMemberRole(raw: unknown): PlaceMemberRole | null {
+  if (raw === 'owner' || raw === 'manager' || raw === 'staff') return raw;
+  return null;
+}
+
+const PLACES_MEMBER_SELECT =
+  'id, name, image_url, lat, lng, latitude, longitude, category, description, address, city, has_plugs, has_vegan, laptop_policy, noise_level, wifi_speed, opening_hours, plugs_level, vendor_id, created_at';
+
+/** Cafés + rôle membre pour l'utilisateur connecté. */
+export async function listProPlaceMemberships(): Promise<PlaceMembershipRow[]> {
+  if (!supabase) return [];
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return [];
+
+  const { data: members, error: memberError } = await supabase
+    .from('place_members')
+    .select('place_id, role')
+    .eq('user_id', user.id)
+    .in('role', ['owner', 'manager', 'staff']);
+
+  if (memberError) {
+    console.error('Error fetching place_members:', memberError);
+    throw memberError;
+  }
+
+  const roleByPlace = new Map<string, PlaceMemberRole>();
+  for (const row of members ?? []) {
+    const role = normalizeMemberRole(row.role);
+    if (typeof row.place_id === 'string' && role) {
+      roleByPlace.set(row.place_id, role);
+    }
+  }
+
+  const ids = [...roleByPlace.keys()];
+  if (ids.length === 0) return [];
+
+  const { data, error } = await supabase
+    .from('places')
+    .select(PLACES_MEMBER_SELECT)
+    .in('id', ids)
+    .order('name', { ascending: true });
+
+  if (error) {
+    console.error('Error fetching membership places:', error);
+    throw error;
+  }
+
+  return ((data ?? []) as Record<string, unknown>[])
+    .map((row) => {
+      const id = String(row.id);
+      const role = roleByPlace.get(id);
+      if (!role) return null;
+      return { place: normalizePlace(row), role };
+    })
+    .filter((row): row is PlaceMembershipRow => row !== null);
+}
+
+const INVITATION_ERROR_FR: Record<string, string> = {
+  not_authenticated: 'Connecte-toi pour accepter cette invitation.',
+  invalid_token: 'Lien d’invitation invalide.',
+  not_found: 'Invitation introuvable ou déjà utilisée.',
+  already_accepted: 'Cette invitation a déjà été acceptée.',
+  expired: 'Cette invitation a expiré. Demande-en une nouvelle au gérant.',
+  email_mismatch:
+    'Cette invitation est liée à une autre adresse email. Connecte-toi avec le compte invité.',
+  no_email: 'Ton compte n’a pas d’email : impossible d’accepter cette invitation.',
+};
+
+export async function acceptPlaceInvitation(token: string): Promise<{
+  ok: boolean;
+  placeId?: string;
+  error?: string;
+}> {
+  if (!supabase) return { ok: false, error: 'no_client' };
+  const { data, error } = await supabase.rpc('accept_invitation', {
+    p_token: token,
+  });
+  if (error) return { ok: false, error: error.message };
+  const row = data as { ok?: boolean; error?: string; place_id?: string } | null;
+  if (!row?.ok) {
+    const code = row?.error ?? 'unknown';
+    return {
+      ok: false,
+      error: INVITATION_ERROR_FR[code] ?? `Invitation refusée (${code}).`,
+    };
+  }
+  return { ok: true, placeId: row.place_id };
 }
 
 export async function updateVendorProfile(
@@ -147,51 +257,28 @@ export async function getVendorPlaces(vendorId?: string): Promise<Place[]> {
   return ((data ?? []) as Record<string, unknown>[]).map(normalizePlace);
 }
 
-const PLACES_MEMBER_SELECT =
-  'id, name, image_url, lat, lng, latitude, longitude, category, description, address, city, has_plugs, has_vegan, laptop_policy, noise_level, wifi_speed, opening_hours, plugs_level, vendor_id, created_at';
-
 /** Cafés où l'utilisateur est owner, manager ou staff (`place_members`). */
 export async function getProAccessiblePlaces(): Promise<Place[]> {
-  if (!supabase) return [];
+  const rows = await listProPlaceMemberships();
+  return rows.map((row) => row.place);
+}
 
+/** Nombre d'établissements accessibles via place_members. */
+export async function countProPlaceMemberships(): Promise<number> {
+  if (!supabase) return 0;
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return [];
-
-  const { data: members, error: memberError } = await supabase
+  if (!user) return 0;
+  const { count, error } = await supabase
     .from('place_members')
-    .select('place_id')
-    .eq('user_id', user.id)
-    .in('role', ['owner', 'manager', 'staff']);
-
-  if (memberError) {
-    console.error('Error fetching place_members:', memberError);
-    throw memberError;
-  }
-
-  const ids = [
-    ...new Set(
-      (members ?? [])
-        .map((row) => row.place_id)
-        .filter((id): id is string => typeof id === 'string' && id.length > 0)
-    ),
-  ];
-
-  if (ids.length === 0) return [];
-
-  const { data, error } = await supabase
-    .from('places')
-    .select(PLACES_MEMBER_SELECT)
-    .in('id', ids)
-    .order('name', { ascending: true });
-
+    .select('place_id', { count: 'exact', head: true })
+    .eq('user_id', user.id);
   if (error) {
-    console.error('Error fetching accessible places:', error);
-    throw error;
+    console.error('countProPlaceMemberships:', error);
+    return 0;
   }
-
-  return ((data ?? []) as Record<string, unknown>[]).map(normalizePlace);
+  return count ?? 0;
 }
 
 export interface VendorPlacePatch {
@@ -418,37 +505,78 @@ export async function createVendorPlace(
   return normalizePlace(data as Record<string, unknown>);
 }
 
-const CLAIM_ERRORS: Record<string, string> = {
-  place_not_unclaimed: 'Ce café est déjà revendiqué ou en cours de vérification.',
-  claim_already_open: 'Une demande est déjà en cours pour ce café.',
-  place_not_found: 'Café introuvable.',
-  not_authenticated: 'Connecte-toi pour revendiquer ce café.',
-};
+export interface ClaimVendorPlaceInput extends CreateVendorPlaceInput {
+  placeId: string;
+}
 
-/**
- * Demande à gérer un café existant (request_claim). Le café ne devient le tien
- * qu'après vérification par l'équipe DropSpot (appel au café).
- */
+/** Revendique un spot libre (vendor_id IS NULL) et met à jour la fiche. */
+/** Demande de revendication (approve_claim côté admin → place_members). */
 export async function requestPlaceClaim(placeId: string): Promise<void> {
   if (!supabase) throw new Error('Supabase client not initialized');
-
   const { data, error } = await supabase.rpc('request_claim', {
     p_place_id: placeId,
-    p_declared_role: 'gérant',
+    p_declared_role: 'owner',
     p_proof_method: 'phone',
+    p_proof_path: null,
   });
-
-  if (error) {
-    console.error('Error requesting place claim:', error);
-    throw error;
-  }
-
+  if (error) throw error;
   const row = data as { ok?: boolean; error?: string } | null;
   if (!row?.ok) {
+    throw new Error(row?.error ?? 'Revendication refusée');
+  }
+}
+
+export async function claimVendorPlace(
+  input: ClaimVendorPlaceInput
+): Promise<Place> {
+  if (!supabase) throw new Error('Supabase client not initialized');
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error('Not authenticated');
+
+  const plugs = normalizePlugsLevel(input.plugs_level);
+  const payload: Record<string, unknown> = {
+    vendor_id: user.id,
+    name: input.name.trim() || undefined,
+    address: input.address?.trim() || null,
+    city: input.city?.trim() || null,
+    description: input.description?.trim() || null,
+    wifi_speed: normalizeWifiSpeed(input.wifi_speed),
+    noise_level: normalizeNoiseLevel(input.noise_level),
+    plugs_level: plugs,
+    has_plugs: plugs ? plugs !== 'limited' : false,
+    has_vegan: Boolean(input.has_vegan),
+    opening_hours: input.opening_hours || null,
+  };
+  if (input.image_url) payload.image_url = input.image_url;
+  if (Number.isFinite(input.lat)) payload.lat = input.lat;
+  if (Number.isFinite(input.lng)) payload.lng = input.lng;
+
+  Object.keys(payload).forEach((k) => {
+    if (payload[k] === undefined) delete payload[k];
+  });
+
+  const { data, error } = await supabase
+    .from('places')
+    .update(payload)
+    .eq('id', input.placeId)
+    .is('vendor_id', null)
+    .select(PLACE_SELECT)
+    .maybeSingle();
+
+  if (error) {
+    console.error('Error claiming vendor place:', error);
+    throw error;
+  }
+  if (!data) {
     throw new Error(
-      CLAIM_ERRORS[row?.error ?? ''] ?? 'Impossible d’envoyer la demande.'
+      'Ce café n’est plus disponible (déjà revendiqué ou introuvable).'
     );
   }
+
+  invalidatePlacesCache();
+  return normalizePlace(data as Record<string, unknown>);
 }
 
 // Ré-exports pour le dashboard (API flash drops)

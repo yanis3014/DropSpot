@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { distanceMeters, formatDistance } from '@/lib/geo';
 import {
+  destinationAfterAuth,
   destinationForProfile,
   isVendorRole,
   safeRedirectPath,
@@ -54,17 +55,22 @@ describe('redirection selon le rôle', () => {
     expect(isVendorRole(null)).toBe(false);
   });
 
-  it('vendor → /dashboard-pro', () => {
+  it('is_pro + entrée pro → /dashboard-pro', () => {
     expect(
-      destinationForProfile({
-        role: 'vendor',
-        onboarding_completed_at: '2026-01-01',
-      })
+      destinationAfterAuth(
+        { isPro: true, onboardingCompleted: true },
+        '/dashboard-pro'
+      )
     ).toBe('/dashboard-pro');
   });
 
-  it('owner → /dashboard-pro', () => {
-    expect(destinationForProfile({ role: 'owner' })).toBe('/dashboard-pro');
+  it('sans is_pro + entrée pro → onboarding pro', () => {
+    expect(
+      destinationAfterAuth(
+        { isPro: false, onboardingCompleted: true },
+        '/dashboard-pro'
+      )
+    ).toBe('/dashboard-pro/onboarding');
   });
 
   it('user onboardé → / (ou redirect préféré)', () => {

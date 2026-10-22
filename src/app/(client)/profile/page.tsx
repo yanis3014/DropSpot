@@ -23,6 +23,7 @@ import {
   type ContributionItem,
 } from '@/lib/api/contributions';
 import { useAuth } from '@/lib/hooks/useAuth';
+import { fetchIsPro } from '@/app/(pro)/dashboard-pro/lib/api/vendor';
 import { useProfile } from '@/lib/hooks/useProfile';
 import { badgeProgress, GRAIN_BADGES } from '@/lib/grains';
 import {
@@ -114,6 +115,21 @@ export default function ProfilePage() {
   const [contribs, setContribs] = useState<ContributionItem[]>([]);
   const [contribsLoading, setContribsLoading] = useState(true);
   const [showAllContribs, setShowAllContribs] = useState(false);
+  const [isPro, setIsPro] = useState(false);
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      setIsPro(false);
+      return;
+    }
+    let cancelled = false;
+    void fetchIsPro().then((value) => {
+      if (!cancelled) setIsPro(value);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [isAuthenticated]);
 
   const nextProfileKey = `${profile?.id ?? ''}|${profile?.updated_at ?? ''}|${profile?.full_name ?? ''}|${(profile?.preferences ?? []).join(',')}|${displayName ?? ''}`;
   if (nextProfileKey !== profileSyncKey && (profile || displayName)) {
@@ -575,6 +591,13 @@ export default function ProfilePage() {
       </section>
 
       <div className="flex flex-col gap-2 pt-2">
+        {isPro ? (
+          <Link href="/dashboard-pro" className="no-underline">
+            <Button variant="tonal" className="w-full">
+              Espace pro
+            </Button>
+          </Link>
+        ) : null}
         <Button
           variant="outline"
           onClick={() => void signOut()}
@@ -583,6 +606,12 @@ export default function ProfilePage() {
           <SignOut size={20} weight="bold" />
           Se déconnecter
         </Button>
+        <Link
+          href="/pro"
+          className="py-1 text-center text-sm font-semibold text-ds-text2 underline decoration-ds-line underline-offset-2"
+        >
+          Je suis un café
+        </Link>
         <Link
           href="/map"
           className="py-2 text-center text-sm font-semibold text-ds-text2"

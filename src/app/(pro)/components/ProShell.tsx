@@ -16,7 +16,9 @@ import {
 import { cn } from "@/lib/cn";
 import { useAuth } from "@/lib/hooks/useAuth";
 import { useVendorProfile } from "@/app/(pro)/dashboard-pro/hooks/useVendorProfile";
+import { useVendorPlan } from "@/hooks/useVendorPlan";
 import { useActivePlace } from "@/app/(pro)/hooks/useActivePlace";
+import { filterProNavHref } from "@/lib/pro/navAccess";
 import {
   CafeSelectTrigger,
   ProCafeSwitcher,
@@ -59,9 +61,13 @@ function ProShellInner({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, loading: authLoading, displayName, avatarUrl } =
     useAuth();
   const { profile } = useVendorProfile(isAuthenticated, authLoading);
+  const { hasPro: hasProSubscription } = useVendorPlan(
+    isAuthenticated && !authLoading
+  );
   const {
     places,
     activePlace,
+    activeMemberRole,
     activeIndex,
     total,
     setActivePlaceId,
@@ -86,8 +92,7 @@ function ProShellInner({ children }: { children: React.ReactNode }) {
     ? initialsFor(activePlace.name)
     : "?";
 
-  // Plan badge: no subscription API yet — default free.
-  const isPro = false;
+  const navRole = activeMemberRole;
 
   if (hideChrome) {
     return (
@@ -118,7 +123,7 @@ function ProShellInner({ children }: { children: React.ReactNode }) {
         />
 
         <nav aria-label="Menu" className="flex flex-col gap-0.5">
-          {SIDE_NAV.map(({ href, label, icon: Icon, exact }) => {
+          {SIDE_NAV.filter(({ href }) => filterProNavHref(href, navRole)).map(({ href, label, icon: Icon, exact }) => {
             const active = isActivePath(pathname, href, exact);
             return (
               <Link
@@ -144,16 +149,16 @@ function ProShellInner({ children }: { children: React.ReactNode }) {
               <span
                 className={cn(
                   "inline-flex h-6 items-center rounded-xl px-2.5 text-[12px] font-extrabold uppercase tracking-[0.04em]",
-                  isPro
+                  hasProSubscription
                     ? "bg-ds-text text-ds-bg"
                     : "border-[1.5px] border-ds-line text-ds-text2"
                 )}
               >
-                {isPro ? "Pro" : "Gratuit"}
+                {hasProSubscription ? "Pro" : "Gratuit"}
               </span>
               <span className="text-[13px] text-ds-text2">Ton offre</span>
             </div>
-            {!isPro && (
+            {!hasProSubscription && (
               <Link
                 href={withCafe("/abonnement")}
                 className="text-sm font-bold text-ds-accent no-underline"
@@ -199,7 +204,7 @@ function ProShellInner({ children }: { children: React.ReactNode }) {
           aria-label="Navigation comptoir"
           className="fixed inset-x-0 bottom-0 z-50 flex h-[88px] items-start border-t border-ds-line bg-ds-surface px-4 pt-1.5 lg:hidden safe-pb"
         >
-          {MOBILE_NAV.map(({ href, label, icon: Icon, exact, scan }) => {
+          {MOBILE_NAV.filter(({ href }) => filterProNavHref(href, navRole)).map(({ href, label, icon: Icon, exact, scan }) => {
             const active = isActivePath(pathname, href, exact);
             if (scan) {
               return (

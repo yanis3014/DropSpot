@@ -5,12 +5,12 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { useVendorProfile } from '@/app/(pro)/dashboard-pro/hooks/useVendorProfile';
 
-/** Guard client : auth + rôle vendor/owner. */
+/** Guard client : auth + accès pro (is_pro). */
 export function useRequireVendor() {
   const router = useRouter();
   const { isAuthenticated, loading: authLoading, displayName, email, signOut } =
     useAuth();
-  const { profile, loading: profileLoading } = useVendorProfile(
+  const { profile, isPro, loading: profileLoading } = useVendorProfile(
     isAuthenticated,
     authLoading
   );
@@ -24,11 +24,13 @@ export function useRequireVendor() {
 
   return {
     profile,
+    isPro,
     loading: authLoading || profileLoading,
     isAuthenticated,
     displayName,
     email,
     signOut,
-    denied: isAuthenticated && !profileLoading && !profile,
+    /** True when authenticated but not a place member (is_pro false). */
+    denied: isAuthenticated && !profileLoading && !isPro,
   };
 }

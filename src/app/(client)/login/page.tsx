@@ -1,12 +1,12 @@
 'use client';
 
 import { FormEvent, Suspense, useEffect, useMemo, useState } from 'react';
+import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
   GoogleLogo,
   AppleLogo,
   Envelope,
-  Storefront,
   User,
 } from '@phosphor-icons/react';
 import { supabase } from '@/lib/supabase/client';
@@ -44,7 +44,6 @@ function LoginPageContent() {
   const [mode, setMode] = useState<AuthMode>('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [isProfessional, setIsProfessional] = useState(false);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -54,23 +53,20 @@ function LoginPageContent() {
     [searchParams]
   );
 
-  const selectedRole = (): 'vendor' | 'user' =>
-    mode === 'signup' && isProfessional ? 'vendor' : 'user';
+  const espacePro = useMemo(() => {
+    if (searchParams.get('espace') === 'pro') return true;
+    return preferredNext.startsWith('/dashboard-pro') || preferredNext === '/pro';
+  }, [preferredNext, searchParams]);
 
-  const buildAuthCallbackUrl = (intentVendor: boolean) => {
+  const buildAuthCallbackUrl = () => {
     const params = new URLSearchParams();
     params.set('next', preferredNext);
-    if (intentVendor) params.set('intent', 'vendor');
     return `${window.location.origin}/auth/callback?${params.toString()}`;
   };
 
-  const oauthOptions = () => {
-    const role = selectedRole();
-    return {
-      redirectTo: buildAuthCallbackUrl(role === 'vendor'),
-      data: { role },
-    };
-  };
+  const oauthOptions = () => ({
+    redirectTo: buildAuthCallbackUrl(),
+  });
 
   useEffect(() => {
     if (authLoading || !isAuthenticated || !user || !supabase) return;
@@ -174,23 +170,17 @@ function LoginPageContent() {
     try {
       setLoading(true);
       clearFeedback();
-      const role = isProfessional ? 'vendor' : 'user';
       const { data, error: signUpError } = await supabase.auth.signUp({
         email,
         password,
         options: {
-          data: { role },
-          emailRedirectTo: buildAuthCallbackUrl(isProfessional),
+          emailRedirectTo: buildAuthCallbackUrl(),
         },
       });
       if (signUpError) throw signUpError;
 
       const userId = data.user?.id;
       if (data.session && userId) {
-        await supabase.from('profiles').upsert(
-          { id: userId, role },
-          { onConflict: 'id' }
-        );
         const dest = await resolvePostAuthDestination(
           supabase,
           userId,
@@ -201,9 +191,7 @@ function LoginPageContent() {
       }
 
       setMessage(
-        isProfessional
-          ? 'Compte restaurateur créé ! Vérifie ton email pour confirmer, puis connecte-toi.'
-          : 'Compte créé ! Vérifie ton email pour confirmer, puis connecte-toi.'
+        'Compte créé ! Vérifie ton email pour confirmer, puis connecte-toi.'
       );
       setMode('login');
     } catch (err) {
@@ -225,8 +213,7 @@ function LoginPageContent() {
       const { error: otpError } = await supabase.auth.signInWithOtp({
         email,
         options: {
-          emailRedirectTo: buildAuthCallbackUrl(false),
-          data: { role: 'user' },
+          emailRedirectTo: buildAuthCallbackUrl(),
         },
       });
       if (otpError) throw otpError;
@@ -250,9 +237,13 @@ function LoginPageContent() {
             <Logo />
           </h1>
           <p className="mt-2 text-[15px] text-ds-text2">
-            {mode === 'login'
-              ? 'Connecte-toi à ton compte'
-              : 'Crée ton compte'}
+            {espacePro
+              ? mode === 'login'
+                ? 'Connecte-toi pour gérer ton café'
+                : 'Crée ton compte Dropspot'
+              : mode === 'login'
+                ? 'Connecte-toi à ton compte'
+                : 'Crée ton compte'}
           </p>
         </div>
 
@@ -304,26 +295,6 @@ function LoginPageContent() {
           </div>
         )}
 
-        {mode === 'signup' && (
-          <label className="mb-5 flex cursor-pointer items-start gap-3 rounded-[18px] border border-ds-line bg-ds-surface px-3.5 py-3.5">
-            <input
-              type="checkbox"
-              checked={isProfessional}
-              onChange={(e) => setIsProfessional(e.target.checked)}
-              className="mt-0.5 rounded border-ds-line text-ds-accent focus:ring-ds-accent/30"
-            />
-            <span className="min-w-0">
-              <span className="flex items-center gap-1.5 text-sm font-bold text-ds-text">
-                <Storefront size={16} weight="regular" className="text-ds-accent" />
-                Je suis un professionnel
-              </span>
-              <span className="mt-0.5 block text-xs leading-relaxed text-ds-text2">
-                Coche avant Google/Apple pour créer un compte Restaurateur
-              </span>
-            </span>
-          </label>
-        )}
-
         <div className="mb-5 flex flex-col gap-2.5">
           <Button
             variant="outline"
@@ -332,9 +303,7 @@ function LoginPageContent() {
             className="w-full"
           >
             <GoogleLogo size={20} weight="fill" aria-hidden />
-            {mode === 'signup' && isProfessional
-              ? "S'inscrire avec Google"
-              : 'Continuer avec Google'}
+            {mode === 'signup' ? "S'inscrire avec Google" : 'Continuer avec Google'}
           </Button>
           <button
             type="button"
@@ -343,9 +312,7 @@ function LoginPageContent() {
             className="inline-flex h-[52px] w-full items-center justify-center gap-2 rounded-[14px] bg-ds-pin px-5 text-base font-bold text-ds-onpin transition-opacity disabled:pointer-events-none disabled:opacity-50"
           >
             <AppleLogo size={20} weight="fill" aria-hidden />
-            {mode === 'signup' && isProfessional
-              ? "S'inscrire avec Apple"
-              : 'Continuer avec Apple'}
+            {mode === 'signup' ? "S'inscrire avec Apple" : 'Continuer avec Apple'}
           </button>
         </div>
 
@@ -396,9 +363,7 @@ function LoginPageContent() {
               ? 'Patiente…'
               : mode === 'login'
                 ? 'Se connecter'
-                : isProfessional
-                  ? 'Créer mon compte restaurateur'
-                  : 'Créer mon compte'}
+                : 'Créer mon compte'}
           </Button>
         </form>
 
@@ -433,7 +398,13 @@ function LoginPageContent() {
           <ThemeSwitcher />
         </div>
 
-        <div className="text-center">
+        <div className="flex flex-col gap-3 text-center">
+          <Link
+            href="/pro"
+            className="text-sm font-semibold text-ds-text2 underline decoration-ds-line underline-offset-2 hover:text-ds-text"
+          >
+            Je suis un café
+          </Link>
           <button
             type="button"
             onClick={() => router.push('/map')}

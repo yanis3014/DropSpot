@@ -199,6 +199,7 @@ export default function EtablissementClient() {
 
     const nextErrors: FieldErrors = {};
     if (!draft.name.trim()) nextErrors.name = 'Le nom est obligatoire.';
+    if (!draft.address.trim()) nextErrors.address = 'L’adresse est obligatoire.';
     if (draft.description.length > DESCRIPTION_MAX) {
       nextErrors.description = `Maximum ${DESCRIPTION_MAX} caractères.`;
     }
@@ -222,7 +223,7 @@ export default function EtablissementClient() {
     try {
       await updateVendorPlace(activePlace.id, {
         name: draft.name.trim(),
-        address: draft.address.trim() || null,
+        address: draft.address.trim(),
         description: draft.description.trim() || null,
       });
 
@@ -455,6 +456,11 @@ export default function EtablissementClient() {
                 onChange={(e) => updateDraft({ address: e.target.value })}
                 className="h-10 rounded-[10px] border border-ds-line bg-ds-bg px-3 text-[15px] font-medium outline-none disabled:opacity-70"
               />
+              {errors.address ? (
+                <span className="text-xs font-semibold text-ds-danger">
+                  {errors.address}
+                </span>
+              ) : null}
             </label>
             {/* phone / website / Instagram : absents de places — masqués */}
             <label className="flex flex-col gap-1.5 text-sm font-semibold">

@@ -116,22 +116,58 @@ export function specialHoursToDraft(
   }));
 }
 
+/** Ids of the current rows, so new rows are written before old ones go. */
+async function listRowIds(
+  table: 'place_opening_hours' | 'place_special_hours',
+  placeId: string
+): Promise<string[]> {
+  if (!supabase) throw new Error('Supabase client not initialized');
+  const { data, error } = await supabase
+    .from(table)
+    .select('id')
+    .eq('place_id', placeId);
+  if (error) throw error;
+  return ((data ?? []) as { id: string }[]).map((row) => String(row.id));
+}
+
+/**
+ * Replace rows for a place (owner RLS): insert the new rows first, then
+ * delete the previous ones, so a failed insert never leaves the café
+ * without hours.
+ */
+async function replaceRows(
+  table: 'place_opening_hours' | 'place_special_hours',
+  placeId: string,
+  inserts: Record<string, unknown>[]
+): Promise<void> {
+  if (!supabase) throw new Error('Supabase client not initialized');
+  const oldIds = await listRowIds(table, placeId);
+
+  if (inserts.length > 0) {
+    const { error: insError } = await supabase.from(table).insert(inserts);
+    if (insError) {
+      console.error(`${table} insert:`, insError);
+      throw insError;
+    }
+  }
+
+  if (oldIds.length > 0) {
+    const { error: delError } = await supabase
+      .from(table)
+      .delete()
+      .in('id', oldIds);
+    if (delError) {
+      console.error(`${table} delete:`, delError);
+      throw delError;
+    }
+  }
+}
+
 /** Replace weekly hours for a place (owner RLS). */
 export async function replacePlaceOpeningHours(
   placeId: string,
   hours: DayHoursDraft[]
 ): Promise<void> {
-  if (!supabase) throw new Error('Supabase client not initialized');
-
-  const { error: delError } = await supabase
-    .from('place_opening_hours')
-    .delete()
-    .eq('place_id', placeId);
-  if (delError) {
-    console.error('replacePlaceOpeningHours delete:', delError);
-    throw delError;
-  }
-
   const inserts: {
     place_id: string;
     weekday: number;
@@ -151,15 +187,7 @@ export async function replacePlaceOpeningHours(
     }
   }
 
-  if (inserts.length === 0) return;
-
-  const { error: insError } = await supabase
-    .from('place_opening_hours')
-    .insert(inserts);
-  if (insError) {
-    console.error('replacePlaceOpeningHours insert:', insError);
-    throw insError;
-  }
+  await replaceRows('place_opening_hours', placeId, inserts);
 }
 
 /** Replace special hours for a place (owner RLS). */
@@ -167,44 +195,15 @@ export async function replacePlaceSpecialHours(
   placeId: string,
   specials: SpecialHoursDraft[]
 ): Promise<void> {
-  if (!supabase) throw new Error('Supabase client not initialized');
+  // validateSpecial guarantees opens/closes when the day is not closed.
+  const inserts = specials.map((s) => ({
+    place_id: placeId,
+    on_date: s.onDate,
+    opens: s.closed || !s.opens ? null : normalizeTimeInput(s.opens),
+    closes: s.closed || !s.closes ? null : normalizeTimeInput(s.closes),
+    closed: s.closed,
+    label: s.label.trim() || null,
+  }));
 
-  const { error: delError } = await supabase
-    .from('place_special_hours')
-    .delete()
-    .eq('place_id', placeId);
-  if (delError) {
-    console.error('replacePlaceSpecialHours delete:', delError);
-    throw delError;
-  }
-
-  if (specials.length === 0) return;
-
-  const inserts = specials.map((s) =>
-    s.closed
-      ? {
-          place_id: placeId,
-          on_date: s.onDate,
-          opens: null,
-          closes: null,
-          closed: true,
-          label: s.label.trim() || null,
-        }
-      : {
-          place_id: placeId,
-          on_date: s.onDate,
-          opens: normalizeTimeInput(s.opens ?? '09:00'),
-          closes: normalizeTimeInput(s.closes ?? '18:00'),
-          closed: false,
-          label: s.label.trim() || null,
-        }
-  );
-
-  const { error: insError } = await supabase
-    .from('place_special_hours')
-    .insert(inserts);
-  if (insError) {
-    console.error('replacePlaceSpecialHours insert:', insError);
-    throw insError;
-  }
+  await replaceRows('place_special_hours', placeId, inserts);
 }

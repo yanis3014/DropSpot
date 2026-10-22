@@ -12,6 +12,7 @@ const CLAIM_ERROR_MESSAGES: Record<string, string> = {
   forbidden: 'Action non autorisée.',
   not_pending: 'Cette demande n’est plus en attente.',
   invalid_name: 'Le nom du café doit faire entre 2 et 80 caractères.',
+  invalid_address: 'Indique l’adresse du café (3 à 200 caractères).',
   invalid_coords: 'Adresse introuvable. Vérifie l’adresse et la ville.',
   rate_limited:
     'Tu as déjà suggéré 3 cafés aujourd’hui. Réessaie demain.',

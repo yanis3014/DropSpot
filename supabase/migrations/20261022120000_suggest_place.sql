@@ -40,10 +40,8 @@ as $$
 declare
   v_uid uuid := auth.uid();
   v_name text := btrim(coalesce(p_name, ''));
-  v_address text := nullif(btrim(coalesce(p_address, '')), '');
+  v_address text := btrim(coalesce(p_address, ''));
   v_city text := nullif(btrim(coalesce(p_city, '')), '');
-  v_lat double precision := p_lat;
-  v_lng double precision := p_lng;
   v_count integer;
   v_place_id uuid;
 begin
@@ -55,11 +53,19 @@ begin
     return json_build_object('ok', false, 'error', 'invalid_name');
   end if;
 
-  if v_lat is null or v_lng is null
-     or not (v_lat between -90 and 90)
-     or not (v_lng between -180 and 180) then
+  -- places.address is NOT NULL in production.
+  if char_length(v_address) < 3 or char_length(v_address) > 200 then
+    return json_build_object('ok', false, 'error', 'invalid_address');
+  end if;
+
+  if p_lat is null or p_lng is null
+     or not (p_lat between -90 and 90)
+     or not (p_lng between -180 and 180) then
     return json_build_object('ok', false, 'error', 'invalid_coords');
   end if;
+
+  -- Serialise concurrent suggestions from the same user for the rate limit.
+  perform pg_advisory_xact_lock(hashtext('suggest_place:' || v_uid::text));
 
   select count(*)::integer into v_count
   from public.places p
@@ -70,135 +76,19 @@ begin
     return json_build_object('ok', false, 'error', 'rate_limited');
   end if;
 
-  -- Same coord shape as createVendorPlace (lat/lng + PostGIS Point [lng, lat]).
-  -- vendor_id null → places_default_verification_on_insert sets 'unclaimed'.
+  -- vendor_id null: places_default_verification_on_insert sets 'unclaimed'.
   insert into public.places (
-    name,
-    address,
-    city,
-    lat,
-    lng,
-    location,
-    vendor_id,
-    suggested_by
+    name, address, city, lat, lng, latitude, longitude, location,
+    vendor_id, suggested_by
   )
   values (
-    v_name,
-    v_address,
-    v_city,
-    v_lat,
-    v_lng,
-    st_setsrid(st_makepoint(v_lng, v_lat), 4326),
-    null,
-    v_uid
+    v_name, v_address, v_city, p_lat, p_lng, p_lat, p_lng,
+    st_geogfromtext(format('SRID=4326;POINT(%s %s)', p_lng, p_lat)),
+    null, v_uid
   )
   returning id into v_place_id;
 
-  return json_build_object(
-    'ok', true,
-    'place_id', v_place_id
-  );
-exception
-  when undefined_column then
-    -- Schemas without PostGIS location: lat/lng only (same as SQL fixtures).
-    begin
-      insert into public.places (
-        name,
-        address,
-        city,
-        lat,
-        lng,
-        vendor_id,
-        suggested_by
-      )
-      values (
-        v_name,
-        v_address,
-        v_city,
-        v_lat,
-        v_lng,
-        null,
-        v_uid
-      )
-      returning id into v_place_id;
-
-      return json_build_object(
-        'ok', true,
-        'place_id', v_place_id
-      );
-    exception
-      when others then
-        return json_build_object(
-          'ok', false,
-          'error', 'insert_failed',
-          'detail', sqlerrm
-        );
-    end;
-  when others then
-    -- GeoJSON / geography cast variants (mirrors createVendorPlace retries).
-    begin
-      insert into public.places (
-        name,
-        address,
-        city,
-        lat,
-        lng,
-        location,
-        vendor_id,
-        suggested_by
-      )
-      values (
-        v_name,
-        v_address,
-        v_city,
-        v_lat,
-        v_lng,
-        st_setsrid(st_makepoint(v_lng, v_lat), 4326)::geography,
-        null,
-        v_uid
-      )
-      returning id into v_place_id;
-
-      return json_build_object(
-        'ok', true,
-        'place_id', v_place_id
-      );
-    exception
-      when others then
-        begin
-          insert into public.places (
-            name,
-            address,
-            city,
-            lat,
-            lng,
-            vendor_id,
-            suggested_by
-          )
-          values (
-            v_name,
-            v_address,
-            v_city,
-            v_lat,
-            v_lng,
-            null,
-            v_uid
-          )
-          returning id into v_place_id;
-
-          return json_build_object(
-            'ok', true,
-            'place_id', v_place_id
-          );
-        exception
-          when others then
-            return json_build_object(
-              'ok', false,
-              'error', 'insert_failed',
-              'detail', sqlerrm
-            );
-        end;
-    end;
+  return json_build_object('ok', true, 'place_id', v_place_id);
 end;
 $$;
 

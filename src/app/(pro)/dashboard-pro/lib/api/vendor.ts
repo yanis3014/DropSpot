@@ -1,12 +1,6 @@
 import { supabase } from '@/lib/supabase/client';
 import { normalizePlace, Place } from '@/lib/api/places';
 import {
-  geocodeAddress,
-  NICE_CENTER,
-  placeLocationPayload,
-  placeLocationWkt,
-} from '@/lib/geocode';
-import {
   normalizeNoiseLevel,
   normalizePlugsLevel,
   normalizeWifiSpeed,
@@ -537,131 +531,6 @@ export async function uploadClaimProof(
   return objectPath;
 }
 
-export interface CreateVendorPlaceInput {
-  name: string;
-  address?: string | null;
-  city?: string | null;
-  description?: string | null;
-  wifi_speed?: string | null;
-  noise_level?: string | null;
-  plugs_level?: 'limited' | 'regular' | 'everywhere' | null;
-  image_url?: string | null;
-  opening_hours?: string | null;
-  has_vegan?: boolean;
-  lat?: number;
-  lng?: number;
-  category?: string | null;
-}
-
-/** Crée un nouveau spot lié au vendor connecté. */
-export async function createVendorPlace(
-  input: CreateVendorPlaceInput
-): Promise<Place> {
-  if (!supabase) throw new Error('Supabase client not initialized');
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) throw new Error('Not authenticated');
-
-  const name = input.name.trim();
-  if (!name) throw new Error('Le nom de l’établissement est requis.');
-
-  // Canonicaliser les enums FR → EN (CHECK constraints Supabase)
-  const plugs = normalizePlugsLevel(input.plugs_level);
-  const wifi = normalizeWifiSpeed(input.wifi_speed);
-  const noise = normalizeNoiseLevel(input.noise_level);
-
-  // Coords fournies, sinon géocodage adresse → fallback centre Nice
-  let coords =
-    Number.isFinite(input.lat) && Number.isFinite(input.lng)
-      ? { lat: input.lat as number, lng: input.lng as number }
-      : await geocodeAddress(input.address ?? '', input.city);
-
-  if (!Number.isFinite(coords.lat) || !Number.isFinite(coords.lng)) {
-    coords = { ...NICE_CENTER };
-  }
-
-  const baseRow = {
-    name,
-    address: input.address?.trim() || null,
-    city: input.city?.trim() || null,
-    description: input.description?.trim() || null,
-    wifi_speed: wifi,
-    noise_level: noise,
-    plugs_level: plugs,
-    has_plugs: plugs ? plugs !== 'limited' : false,
-    // Aligné sur les lignes seed (`always`) — évite un CHECK sans NULL
-    laptop_policy: 'always',
-    has_vegan: Boolean(input.has_vegan),
-    image_url: input.image_url || null,
-    opening_hours: input.opening_hours || null,
-    category: input.category || 'Specialty',
-    vendor_id: user.id,
-  };
-
-  // Essai 1 : GeoJSON location + lat/lng + latitude/longitude
-  let { data, error } = await supabase
-    .from('places')
-    .insert({ ...baseRow, ...placeLocationPayload(coords) })
-    .select(PLACE_SELECT)
-    .single();
-
-  // Essai 2 : location en WKT (certains schémas PostGIS)
-  if (error && (error.code === '22P02' || /location|geo/i.test(error.message ?? ''))) {
-    const retry = await supabase
-      .from('places')
-      .insert({
-        ...baseRow,
-        lat: coords.lat,
-        lng: coords.lng,
-        latitude: coords.lat,
-        longitude: coords.lng,
-        location: placeLocationWkt(coords),
-      })
-      .select(PLACE_SELECT)
-      .single();
-    data = retry.data;
-    error = retry.error;
-  }
-
-  // Essai 3 : colonnes absentes → garder uniquement location (NOT NULL) + lat/lng
-  if (
-    error &&
-    (error.code === '42703' ||
-      /column .* does not exist/i.test(error.message ?? ''))
-  ) {
-    const retry = await supabase
-      .from('places')
-      .insert({
-        ...baseRow,
-        location: placeLocationWkt(coords),
-        lat: coords.lat,
-        lng: coords.lng,
-      })
-      .select(PLACE_SELECT)
-      .single();
-    data = retry.data;
-    error = retry.error;
-  }
-
-  if (error) {
-    console.error('Error creating vendor place:', error);
-    if (error.code === '23514') {
-      throw new Error(
-        `Contrainte base refusée sur places (${error.message}). Les équipements doivent être des enums DB (ex. ambient / average / everywhere), pas les libellés FR.`
-      );
-    }
-    throw error;
-  }
-
-  invalidatePlacesCache();
-  return normalizePlace(data as Record<string, unknown>);
-}
-
-export interface ClaimVendorPlaceInput extends CreateVendorPlaceInput {
-  placeId: string;
-}
-
 export type RequestPlaceClaimInput = {
   placeId: string;
   declaredRole: string;
@@ -696,59 +565,6 @@ export async function requestPlaceClaim(
     return { ok: false, error: row?.error ?? 'place_not_found' };
   }
   return { ok: true, claimId: String(row.claim_id) };
-}
-
-export async function claimVendorPlace(
-  input: ClaimVendorPlaceInput
-): Promise<Place> {
-  if (!supabase) throw new Error('Supabase client not initialized');
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) throw new Error('Not authenticated');
-
-  const plugs = normalizePlugsLevel(input.plugs_level);
-  const payload: Record<string, unknown> = {
-    vendor_id: user.id,
-    name: input.name.trim() || undefined,
-    address: input.address?.trim() || null,
-    city: input.city?.trim() || null,
-    description: input.description?.trim() || null,
-    wifi_speed: normalizeWifiSpeed(input.wifi_speed),
-    noise_level: normalizeNoiseLevel(input.noise_level),
-    plugs_level: plugs,
-    has_plugs: plugs ? plugs !== 'limited' : false,
-    has_vegan: Boolean(input.has_vegan),
-    opening_hours: input.opening_hours || null,
-  };
-  if (input.image_url) payload.image_url = input.image_url;
-  if (Number.isFinite(input.lat)) payload.lat = input.lat;
-  if (Number.isFinite(input.lng)) payload.lng = input.lng;
-
-  Object.keys(payload).forEach((k) => {
-    if (payload[k] === undefined) delete payload[k];
-  });
-
-  const { data, error } = await supabase
-    .from('places')
-    .update(payload)
-    .eq('id', input.placeId)
-    .is('vendor_id', null)
-    .select(PLACE_SELECT)
-    .maybeSingle();
-
-  if (error) {
-    console.error('Error claiming vendor place:', error);
-    throw error;
-  }
-  if (!data) {
-    throw new Error(
-      'Ce café n’est plus disponible (déjà revendiqué ou introuvable).'
-    );
-  }
-
-  invalidatePlacesCache();
-  return normalizePlace(data as Record<string, unknown>);
 }
 
 // Ré-exports pour le dashboard (API flash drops)

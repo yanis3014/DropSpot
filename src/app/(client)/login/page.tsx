@@ -50,7 +50,9 @@ function LoginPageContent() {
   const searchParams = useSearchParams();
   const { isAuthenticated, loading: authLoading, user } = useAuth();
 
-  const [mode, setMode] = useState<AuthMode>('login');
+  const [mode, setMode] = useState<AuthMode>(() =>
+    searchParams.get('mode') === 'signup' ? 'signup' : 'login'
+  );
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);

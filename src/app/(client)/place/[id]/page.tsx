@@ -6,7 +6,7 @@ import { Spinner } from '@phosphor-icons/react';
 import PlaceDetailView from '@/components/places/PlaceDetailView';
 import { getPlaceById, Place } from '@/lib/api/places';
 import { getPlaceMedia, type PlaceMedia } from '@/lib/api/placeMedia';
-import { getLatestVibes, CheckIn } from '@/lib/api/checkins';
+import { getPlaceVibe, type AggregatedVibe } from '@/lib/api/checkins';
 import { getSavedPlaceIds, savePlace, unsavePlace } from '@/lib/api/saved';
 import { useAuth } from '@/lib/hooks/useAuth';
 
@@ -18,7 +18,7 @@ export default function PlacePage() {
   const { isAuthenticated, loading: authLoading } = useAuth();
   const [place, setPlace] = useState<Place | null>(null);
   const [media, setMedia] = useState<PlaceMedia[]>([]);
-  const [vibe, setVibe] = useState<CheckIn | null>(null);
+  const [vibe, setVibe] = useState<AggregatedVibe | null>(null);
   const [savedIds, setSavedIds] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -36,9 +36,9 @@ export default function PlacePage() {
 
     (async () => {
       try {
-        const [fresh, vibes, placeMedia] = await Promise.all([
+        const [fresh, placeVibe, placeMedia] = await Promise.all([
           getPlaceById(id),
-          getLatestVibes().catch(() => ({} as Record<string, CheckIn>)),
+          getPlaceVibe(id).catch(() => null),
           getPlaceMedia(id).catch(() => [] as PlaceMedia[]),
         ]);
         if (cancelled) return;
@@ -49,7 +49,7 @@ export default function PlacePage() {
         } else {
           setPlace(fresh);
           setMedia(placeMedia);
-          setVibe(vibes[id] ?? null);
+          setVibe(placeVibe);
         }
       } catch (err) {
         console.error(err);
@@ -108,8 +108,7 @@ export default function PlacePage() {
   const refreshVibe = useCallback(async () => {
     if (!id) return;
     try {
-      const vibes = await getLatestVibes();
-      setVibe(vibes[id] ?? null);
+      setVibe(await getPlaceVibe(id));
     } catch (err) {
       console.error(err);
     }

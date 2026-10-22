@@ -26,10 +26,6 @@ import { fetchIsPro } from '@/app/(pro)/dashboard-pro/lib/api/vendor';
 import { writeDropspotMode } from '@/lib/auth/dropspotMode';
 import { useProfile } from '@/lib/hooks/useProfile';
 import { badgeProgress, GRAIN_BADGES } from '@/lib/grains';
-import {
-  getDropAlertsEnabled,
-  setDropAlertsEnabled,
-} from '@/lib/dropAlerts';
 import { avatarColorHex, envieLabel } from '@/lib/onboarding';
 import { ENVIE_ICONS } from '@/components/onboarding/icons';
 import { useTheme } from '@/lib/theme';
@@ -110,7 +106,6 @@ export default function ProfilePage() {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
-  const [dropAlerts, setDropAlerts] = useState(getDropAlertsEnabled);
   const [locStatus, setLocStatus] = useState<LocStatus>('unknown');
   const [contribs, setContribs] = useState<ContributionItem[]>([]);
   const [contribsLoading, setContribsLoading] = useState(true);
@@ -201,14 +196,6 @@ export default function ProfilePage() {
       : preference === 'dark'
         ? 'Sombre'
         : 'Système';
-
-  const toggleDropAlerts = useCallback(() => {
-    setDropAlerts((prev) => {
-      const next = !prev;
-      setDropAlertsEnabled(next);
-      return next;
-    });
-  }, []);
 
   const requestLocation = useCallback(() => {
     if (typeof navigator === 'undefined' || !navigator.geolocation) return;
@@ -389,9 +376,6 @@ export default function ProfilePage() {
           </span>
         </div>
 
-        <Button variant="off" disabled className="w-full">
-          Utiliser mes Grains
-        </Button>
       </section>
 
       {/* Badges (from gamification) */}
@@ -517,31 +501,7 @@ export default function ProfilePage() {
           Réglages
         </h2>
         <div className="overflow-hidden rounded-[22px] border border-ds-line bg-ds-surface">
-          <div className="flex min-h-14 items-center gap-3 px-3.5">
-            <span className="flex-1 text-[15px] font-semibold text-ds-text">
-              Alertes drops
-            </span>
-            <button
-              type="button"
-              role="switch"
-              aria-checked={dropAlerts}
-              aria-label="Alertes drops"
-              onClick={toggleDropAlerts}
-              className={cn(
-                'relative h-[31px] w-[51px] shrink-0 rounded-2xl transition-colors',
-                dropAlerts ? 'bg-ds-accent' : 'bg-ds-surface2'
-              )}
-            >
-              <span
-                className={cn(
-                  'absolute top-0.5 left-0.5 h-[27px] w-[27px] rounded-[14px] bg-white shadow transition-transform',
-                  dropAlerts && 'translate-x-5'
-                )}
-              />
-            </button>
-          </div>
-
-          <div className="border-t border-ds-line px-3.5 py-3">
+          <div className="px-3.5 py-3">
             <div className="mb-2.5 flex items-center gap-2">
               <span className="flex-1 text-[15px] font-semibold text-ds-text">
                 Thème

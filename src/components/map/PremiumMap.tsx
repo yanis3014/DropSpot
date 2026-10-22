@@ -583,7 +583,6 @@ export default function PremiumMap() {
         {selectedPlace && selectedMeta ? (
           <CafeRow
             name={selectedPlace.name}
-            rating="—"
             status={selectedMeta.status}
             statusDetail={selectedMeta.statusDetail}
             distance={selectedDistance}

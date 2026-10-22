@@ -3,34 +3,22 @@
 import { useEffect, useState } from 'react';
 import { X, MapPin, LockKey, CheckCircle } from '@phosphor-icons/react';
 import {
-  createCheckIn,
+  checkIn,
   crowdConfig,
-  getUserLastCheckInAtPlace,
   CrowdLevel,
   WifiStatus,
-  VIBE_WINDOW_MS,
+  type CheckInResult,
 } from '@/lib/api/checkins';
-import {
-  addGrains,
-  evaluateGrainsEligibility,
-  markGrainsEarned,
-  type GrainsAwardReason,
-} from '@/lib/grains';
-import { startCheckInSession } from '@/lib/checkinSession';
+import { getCurrentPosition } from '@/lib/geo';
 import LoginModal from '@/components/auth/LoginModal';
+
+type RewardReason = Extract<CheckInResult, { ok: true }>['reason'];
 
 interface CheckInModalProps {
   place: { id: string; name: string; image_url?: string };
   isAuthenticated: boolean;
-  /** Distance from user GPS to place; null if GPS unknown. */
-  distanceM?: number | null;
-  /** True when updating vibe on the currently active session place. */
-  isActiveSession?: boolean;
   onClose: () => void;
-  onSubmitted?: (result: {
-    grainsEarned: number;
-    reason: GrainsAwardReason;
-  }) => void;
+  onSubmitted?: (result: { grainsEarned: number; reason: RewardReason }) => void;
   /**
    * Called when the user taps Fermer after a successful check-in.
    * If provided, this runs instead of a plain close — parent can open TrophyModal.
@@ -47,18 +35,31 @@ const wifiOptions: {
   { value: 'good', label: 'Fusée', emoji: '🚀' },
 ];
 
-function rewardCopy(reason: GrainsAwardReason, earned: number): string {
+function rewardCopy(reason: RewardReason, earned: number): string {
   if (earned > 0) return `+${earned} Grains 🌾`;
-  if (reason === 'cooldown') return 'Vibe mise à jour (0 Grain — Délai de 3h)';
-  if (reason === 'too_far') return 'Vibe partagée (0 Grain — trop loin)';
-  return 'Vibe partagée (0 Grain — GPS requis)';
+  if (reason === 'daily_cap')
+    return 'Vibe partagée (0 Grain : limite du jour atteinte)';
+  return 'Vibe mise à jour (0 Grain : déjà checké ici il y a moins de 3 h)';
+}
+
+function errorCopy(result: Extract<CheckInResult, { ok: false }>): string {
+  switch (result.error) {
+    case 'too_far':
+      return result.distanceM != null
+        ? `Tu es à ${Math.round(result.distanceM)} m du café. Rapproche-toi à moins de 100 m pour checker.`
+        : 'Rapproche-toi à moins de 100 m du café pour checker.';
+    case 'no_gps':
+      return 'Active ta localisation : le check-in se fait sur place.';
+    case 'not_authenticated':
+      return 'Connecte-toi pour checker.';
+    default:
+      return "Oups, le check-in n'est pas parti. Réessaie.";
+  }
 }
 
 export default function CheckInModal({
   place,
   isAuthenticated,
-  distanceM = null,
-  isActiveSession = false,
   onClose,
   onSubmitted,
   onSuccessDismiss,
@@ -69,7 +70,7 @@ export default function CheckInModal({
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [earned, setEarned] = useState(0);
-  const [reason, setReason] = useState<GrainsAwardReason>('ok');
+  const [reason, setReason] = useState<RewardReason>('ok');
   const [error, setError] = useState<string | null>(null);
   const [showLogin, setShowLogin] = useState(false);
 
@@ -101,36 +102,29 @@ export default function CheckInModal({
     setSubmitting(true);
     setError(null);
     try {
-      const last = await getUserLastCheckInAtPlace(place.id);
-      const serverCooldownActive = !!(
-        last &&
-        Date.now() - new Date(last.created_at).getTime() < VIBE_WINDOW_MS
-      );
-
-      const award = evaluateGrainsEligibility({
+      // Presence is checked by the server from this position.
+      const geo = await getCurrentPosition({
+        enableHighAccuracy: true,
+        maximumAge: 30_000,
+      });
+      const result = await checkIn({
         placeId: place.id,
-        distanceM: distanceM ?? null,
-        serverCooldownActive,
+        crowd,
+        wifi,
+        coords: geo.ok ? geo.coords : null,
       });
-
-      await createCheckIn({
-        place_id: place.id,
-        crowd_level: crowd,
-        wifi_speed: wifi,
-      });
-
-      if (award.eligible && award.amount > 0) {
-        addGrains(award.amount);
-        markGrainsEarned(place.id);
+      if (!result.ok) {
+        setError(errorCopy(result));
+        setSubmitting(false);
+        return;
       }
-
-      // One physical place at a time — start / refresh the active session.
-      startCheckInSession(place.id, place.name);
-
-      setEarned(award.amount);
-      setReason(award.reason);
+      setEarned(result.grainsAwarded);
+      setReason(result.reason);
       setSubmitted(true);
-      onSubmitted?.({ grainsEarned: award.amount, reason: award.reason });
+      onSubmitted?.({
+        grainsEarned: result.grainsAwarded,
+        reason: result.reason,
+      });
       setSubmitting(false);
     } catch {
       setError("Oups, le check-in n'est pas parti. Réessaie.");
@@ -159,7 +153,7 @@ export default function CheckInModal({
         <div className="px-5 pb-3 flex items-start justify-between gap-3">
           <div className="min-w-0">
             <p className="text-[11px] font-semibold uppercase tracking-wider text-ds-text2 mb-0.5">
-              {isActiveSession ? 'Mettre à jour' : 'Quick vibe'}
+              Je suis ici
             </p>
             <p className="flex items-center gap-1.5 text-ds-text font-bold text-lg leading-tight">
               <MapPin size={18} weight="fill" className="text-ds-accent flex-shrink-0" />
@@ -231,17 +225,10 @@ export default function CheckInModal({
         ) : (
           <>
             <div className="flex-1 overflow-y-auto px-5 pb-4 space-y-6">
-              {distanceM != null && distanceM > 100 && (
-                <p className="text-xs text-center text-ds-text2 bg-ds-surface2 rounded-xl px-3 py-2">
-                  Tu es à {Math.round(distanceM)} m — la vibe sera partagée, mais
-                  sans Grains (présence &lt; 100 m requise).
-                </p>
-              )}
-              {distanceM == null && (
-                <p className="text-xs text-center text-ds-text2 bg-ds-surface2 rounded-xl px-3 py-2">
-                  GPS indisponible — vibe OK, Grains uniquement sur place.
-                </p>
-              )}
+              <p className="text-xs text-center text-ds-text2 bg-ds-surface2 rounded-xl px-3 py-2">
+                Le check-in se fait sur place : ta position est vérifiée à
+                l&apos;envoi (moins de 100 m du café).
+              </p>
 
               <div>
                 <p className="text-sm font-bold text-ds-text mb-3 text-center">
@@ -305,11 +292,7 @@ export default function CheckInModal({
                 disabled={!crowd || !wifi || submitting}
                 className="w-full bg-ds-ok text-white font-extrabold py-4 rounded-2xl shadow-lg shadow-ds-ok/25 hover:bg-ds-ok/90 active:scale-[0.98] transition-all disabled:opacity-40 disabled:pointer-events-none"
               >
-                {submitting
-                  ? 'Validation…'
-                  : isActiveSession
-                    ? 'Mettre à jour'
-                    : 'Valider'}
+                {submitting ? 'Validation…' : 'Valider'}
               </button>
             </div>
           </>

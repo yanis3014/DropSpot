@@ -53,192 +53,116 @@ export const wifiConfig: Record<
   slow: { label: 'Galère', emoji: '🐌' },
 };
 
-/** Live vibe window (also used for grains cooldown). */
+/** Live vibe window (same as the server check-in cooldown). */
 export const VIBE_WINDOW_MS = 3 * 60 * 60 * 1000;
 
-export async function createCheckIn(input: {
-  place_id: string;
-  crowd_level: CrowdLevel;
-  wifi_speed: WifiStatus;
-}): Promise<void> {
-  if (!supabase) throw new Error('Supabase client not initialized');
+export type CheckInError =
+  | 'not_authenticated'
+  | 'invalid_input'
+  | 'no_gps'
+  | 'not_found'
+  | 'too_far';
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) throw new Error('Not authenticated');
-
-  const { error } = await supabase.from('check_ins').insert({
-    place_id: input.place_id,
-    user_id: user.id,
-    crowd_level: input.crowd_level,
-    wifi_speed: input.wifi_speed,
-  });
-
-  if (error) {
-    console.error('Error creating check-in:', error);
-    throw error;
-  }
-}
+export type CheckInResult =
+  | {
+      ok: true;
+      grainsAwarded: number;
+      /** Why the reward is what it is (0 Grain on cooldown / daily cap). */
+      reason: 'ok' | 'cooldown' | 'daily_cap';
+    }
+  | { ok: false; error: CheckInError; distanceM?: number };
 
 /**
- * Most frequent value; on a tie, the value from the most recent item wins.
+ * Check-in through the `check_in` RPC: the server checks the distance,
+ * the 3 h cooldown and the daily cap, and credits the Grains.
  */
-function modeWithRecencyTiebreak<T extends string>(
-  items: { value: T; at: number }[]
-): T {
-  const counts = new Map<T, number>();
-  const latestAt = new Map<T, number>();
+export async function checkIn(input: {
+  placeId: string;
+  crowd: CrowdLevel;
+  wifi: WifiStatus;
+  coords: { lat: number; lng: number } | null;
+}): Promise<CheckInResult> {
+  if (!supabase) throw new Error('Supabase client not initialized');
 
-  for (const item of items) {
-    counts.set(item.value, (counts.get(item.value) ?? 0) + 1);
-    const prev = latestAt.get(item.value) ?? 0;
-    if (item.at > prev) latestAt.set(item.value, item.at);
-  }
+  const { data, error } = await supabase.rpc('check_in', {
+    p_place: input.placeId,
+    p_crowd: input.crowd,
+    p_wifi: input.wifi,
+    p_lat: input.coords?.lat ?? null,
+    p_lng: input.coords?.lng ?? null,
+  });
+  if (error) throw error;
 
-  let best: T = items[0].value;
-  let bestCount = -1;
-  let bestRecent = -1;
-
-  for (const [value, count] of counts) {
-    const recent = latestAt.get(value) ?? 0;
-    if (
-      count > bestCount ||
-      (count === bestCount && recent > bestRecent)
-    ) {
-      best = value;
-      bestCount = count;
-      bestRecent = recent;
-    }
-  }
-
-  return best;
-}
-
-function aggregateRows(rows: CheckIn[]): Record<string, AggregatedVibe> {
-  const byPlace = new Map<string, CheckIn[]>();
-  for (const row of rows) {
-    const list = byPlace.get(row.place_id) ?? [];
-    list.push(row);
-    byPlace.set(row.place_id, list);
-  }
-
-  const out: Record<string, AggregatedVibe> = {};
-  for (const [placeId, list] of byPlace) {
-    const crowdVotes = list.map((c) => ({
-      value: c.crowd_level,
-      at: new Date(c.created_at).getTime(),
-    }));
-    const wifiVotes = list.map((c) => ({
-      value: c.wifi_speed,
-      at: new Date(c.created_at).getTime(),
-    }));
-    const latest = list.reduce((a, b) =>
-      new Date(a.created_at).getTime() >= new Date(b.created_at).getTime() ? a : b
-    );
-
-    out[placeId] = {
-      place_id: placeId,
-      crowd_level: modeWithRecencyTiebreak(crowdVotes),
-      wifi_speed: modeWithRecencyTiebreak(wifiVotes),
-      contributors: list.length,
-      latest_at: latest.created_at,
+  const row = (data ?? {}) as {
+    ok?: boolean;
+    error?: string;
+    distance_m?: number;
+    grains_awarded?: number;
+    reason?: string;
+  };
+  if (!row.ok) {
+    return {
+      ok: false,
+      error: (row.error as CheckInError) ?? 'not_found',
+      distanceM:
+        typeof row.distance_m === 'number' ? row.distance_m : undefined,
     };
   }
-  return out;
+  const reason =
+    row.reason === 'cooldown' || row.reason === 'daily_cap' ? row.reason : 'ok';
+  return { ok: true, grainsAwarded: row.grains_awarded ?? 0, reason };
 }
 
-/** All place vibes aggregated from check-ins in the last 3 hours. */
-export async function getAggregatedVibes(): Promise<Record<string, AggregatedVibe>> {
+type VibeRow = {
+  place_id: string;
+  crowd_level: CrowdLevel | null;
+  wifi_speed: WifiStatus | null;
+  contributors: number;
+  latest_at: string;
+};
+
+/**
+ * Live vibes (last 3 h) from the `get_place_vibes` RPC, keyed by place.
+ * Check-ins themselves are private: the RPC never returns user ids.
+ */
+export async function getAggregatedVibes(
+  placeId?: string
+): Promise<Record<string, AggregatedVibe>> {
   try {
     if (!supabase) {
       console.warn('Supabase client not initialized');
       return {};
     }
-
-    const since = new Date(Date.now() - VIBE_WINDOW_MS).toISOString();
-    const { data, error } = await supabase
-      .from('check_ins')
-      .select('*')
-      .gte('created_at', since)
-      .order('created_at', { ascending: false });
-
+    const { data, error } = await supabase.rpc(
+      'get_place_vibes',
+      placeId ? { p_place: placeId } : {}
+    );
     if (error) {
-      console.error('Error fetching check-ins:', error);
+      console.error('Error fetching vibes:', error);
       return {};
     }
-
-    return aggregateRows((data ?? []) as CheckIn[]);
+    const out: Record<string, AggregatedVibe> = {};
+    for (const row of (data ?? []) as VibeRow[]) {
+      if (!row.crowd_level || !row.wifi_speed) continue;
+      out[row.place_id] = {
+        place_id: row.place_id,
+        crowd_level: row.crowd_level,
+        wifi_speed: row.wifi_speed,
+        contributors: row.contributors,
+        latest_at: row.latest_at,
+      };
+    }
+    return out;
   } catch (error) {
     console.error('Error in getAggregatedVibes:', error);
     return {};
   }
 }
 
-export async function getAggregatedVibe(
+/** Live vibe of one café, or null when nobody checked in for 3 h. */
+export async function getPlaceVibe(
   placeId: string
 ): Promise<AggregatedVibe | null> {
-  const all = await getAggregatedVibes();
+  const all = await getAggregatedVibes(placeId);
   return all[placeId] ?? null;
-}
-
-/**
- * Latest-style map for legacy callers (home / map).
- * Built from the 3h consensus so cards stay Waze-like.
- */
-export async function getLatestVibes(): Promise<Record<string, CheckIn>> {
-  const agg = await getAggregatedVibes();
-  const vibes: Record<string, CheckIn> = {};
-  for (const [placeId, v] of Object.entries(agg)) {
-    vibes[placeId] = {
-      id: `agg-${placeId}`,
-      place_id: placeId,
-      user_id: '',
-      crowd_level: v.crowd_level,
-      wifi_speed: v.wifi_speed,
-      created_at: v.latest_at,
-    };
-  }
-  return vibes;
-}
-
-/** Most recent check-in by the current user at a place (for cooldown). */
-export async function getUserLastCheckInAtPlace(
-  placeId: string
-): Promise<CheckIn | null> {
-  try {
-    if (!supabase) return null;
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (!user) return null;
-
-    const { data, error } = await supabase
-      .from('check_ins')
-      .select('*')
-      .eq('place_id', placeId)
-      .eq('user_id', user.id)
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .maybeSingle();
-
-    if (error) {
-      console.error('Error fetching last check-in:', error);
-      return null;
-    }
-    return (data as CheckIn | null) ?? null;
-  } catch (error) {
-    console.error('Error in getUserLastCheckInAtPlace:', error);
-    return null;
-  }
-}
-
-export function formatVibeSummary(vibe: AggregatedVibe): string {
-  const crowd = crowdConfig[vibe.crowd_level];
-  const n = vibe.contributors;
-  const who =
-    n <= 1
-      ? 'confirmé par 1 personne'
-      : `confirmé par ${n} personnes`;
-  return `${crowd.emoji} ${crowd.label} (${who})`;
 }

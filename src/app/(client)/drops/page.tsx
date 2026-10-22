@@ -6,7 +6,6 @@ import { usePathname, useRouter } from "next/navigation";
 import {
   ArrowClockwise,
   ArrowRight,
-  Bell,
   Clock,
   Lightning,
   QrCode,
@@ -25,6 +24,7 @@ import {
   getExploreDrops,
   Drop,
   formatCountdown,
+  formatStartLabel,
   getDropTiming,
 } from "@/lib/api/drops";
 import {
@@ -35,7 +35,6 @@ import {
 } from "@/lib/api/dropCodes";
 import { claimDropErrorMessage } from "@/lib/dropCodes/errors";
 import { formatDropCodeDisplay } from "@/lib/dropCodes/format";
-import { setDropAlertsEnabled } from "@/lib/dropAlerts";
 import { dropMatchesFilter, normalizeKey } from "@/lib/filters";
 import { openDirections } from "@/lib/utils/directions";
 import { cn } from "@/lib/cn";
@@ -164,7 +163,6 @@ export default function DropsPage() {
   const [selectedDrop, setSelectedDrop] = useState<Drop | null>(null);
   const [legacyClaimed, setLegacyClaimed] = useState<string[]>([]);
   const [showLogin, setShowLogin] = useState(false);
-  const [alertsJustEnabled, setAlertsJustEnabled] = useState(false);
   const [reloadKey, setReloadKey] = useState(0);
   const [claimBusy, setClaimBusy] = useState(false);
   const [claimError, setClaimError] = useState<string | null>(null);
@@ -309,11 +307,6 @@ export default function DropsPage() {
     setReloadKey((k) => k + 1);
   };
 
-  const handleEnableAlerts = () => {
-    setDropAlertsEnabled(true);
-    setAlertsJustEnabled(true);
-  };
-
   return (
     <div className="flex flex-1 flex-col bg-ds-bg pb-28 text-ds-text">
       <div className="flex items-center justify-between px-5 pb-1 pt-8">
@@ -331,7 +324,7 @@ export default function DropsPage() {
         ) : null}
       </div>
       <p className="m-0 px-5 pb-3.5 text-[15px] text-ds-text2">
-        Offres éphémères à moins de 1 km
+        Événements et offres des cafés, en ce moment et à venir
       </p>
 
       {!online ? (
@@ -492,19 +485,16 @@ export default function DropsPage() {
           <EmptyState
             icon={<Lightning weight="regular" />}
             title={"Aucun drop pour l'instant"}
-            description={"On te prévient dès qu'une offre tombe près de toi."}
-            actionLabel={
-              alertsJustEnabled ? "Alertes activées" : "Activer les alertes"
-            }
-            actionIcon={<Bell size={20} weight="regular" />}
-            onAction={handleEnableAlerts}
-            actionProps={alertsJustEnabled ? { disabled: true } : undefined}
+            description={"Les cafés publient ici leurs événements et leurs offres. Repasse bientôt !"}
+            actionLabel="Voir la carte"
+            onAction={() => router.push("/map")}
             className="px-4 pt-[12rem]"
           />
         ) : (
           filtered.map((drop) => {
+            const upcoming = getDropTiming(drop, now) === "upcoming";
             const remaining = msRemaining(drop.end_time, now);
-            const urgent = remaining > 0 && remaining < URGENT_MS;
+            const urgent = !upcoming && remaining > 0 && remaining < URGENT_MS;
             const isPrimary = drop.id === mostUrgentId;
             const cafe = drop.places?.name ?? "Café";
             const stock = stockLabel(drop);
@@ -526,7 +516,9 @@ export default function DropsPage() {
                       )}
                     >
                       <Clock size={16} weight="regular" aria-hidden />
-                      {formatRemainingLabel(drop.end_time, now)}
+                      {upcoming
+                        ? formatStartLabel(drop.start_time, now)
+                        : formatRemainingLabel(drop.end_time, now)}
                     </span>
                   ) : (
                     <span />

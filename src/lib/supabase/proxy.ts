@@ -7,7 +7,6 @@ import { NextResponse, type NextRequest } from 'next/server';
  * restent ouvertes : les envies se choisissent avant le compte.
  */
 const PROTECTED_PREFIXES = [
-  '/check-in',
   '/profile',
   '/dashboard-pro',
   '/etablissement',

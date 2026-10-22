@@ -2,8 +2,6 @@ import { describe, expect, it } from 'vitest';
 import { distanceMeters, formatDistance } from '@/lib/geo';
 import {
   destinationAfterAuth,
-  destinationForProfile,
-  isVendorRole,
   safeRedirectPath,
 } from '@/lib/auth/redirect';
 
@@ -48,13 +46,6 @@ describe('formatDistance', () => {
 });
 
 describe('redirection selon le rôle', () => {
-  it('isVendorRole reconnaît vendor et owner', () => {
-    expect(isVendorRole('vendor')).toBe(true);
-    expect(isVendorRole('owner')).toBe(true);
-    expect(isVendorRole('user')).toBe(false);
-    expect(isVendorRole(null)).toBe(false);
-  });
-
   it('is_pro + entrée pro → /dashboard-pro', () => {
     expect(
       destinationAfterAuth(
@@ -96,22 +87,20 @@ describe('redirection selon le rôle', () => {
 
   it('user onboardé → / (ou redirect préféré)', () => {
     expect(
-      destinationForProfile({
-        role: 'user',
-        onboarding_completed_at: '2026-01-01',
-      })
+      destinationAfterAuth({ isPro: false, onboardingCompleted: true })
     ).toBe('/');
-
     expect(
-      destinationForProfile(
-        { role: 'user', onboarding_completed_at: '2026-01-01' },
+      destinationAfterAuth(
+        { isPro: false, onboardingCompleted: true },
         '/check-in'
       )
     ).toBe('/check-in');
   });
 
   it('user sans onboarding → /onboarding', () => {
-    expect(destinationForProfile({ role: 'user' })).toBe('/onboarding');
+    expect(
+      destinationAfterAuth({ isPro: false, onboardingCompleted: false })
+    ).toBe('/onboarding');
   });
 
   it('safeRedirectPath bloque les open redirects', () => {

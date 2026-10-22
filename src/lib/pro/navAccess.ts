@@ -1,10 +1,6 @@
 import type { PlaceMemberRole } from '@/app/(pro)/dashboard-pro/lib/api/vendor';
 
-const OWNER_ONLY_PREFIXES = [
-  '/equipe',
-  '/abonnement',
-  '/dashboard-pro/settings',
-];
+const OWNER_ONLY_PREFIXES = ['/equipe', '/abonnement'];
 
 /** Établissement, spécificités, réglages : tous les rôles. */
 const ETABLISSEMENT_PREFIX = '/etablissement';
@@ -124,7 +120,6 @@ export function canAccessProPath(
     return true;
   }
   if (pathname === '/valider' || pathname.startsWith('/valider/')) return true;
-  if (pathname.startsWith('/dashboard-pro/validate')) return true;
   if (pathname.startsWith('/dashboard-pro/invitation/')) return true;
 
   if (READ_ALL_ROLES_PREFIXES.some((prefix) => pathMatches(pathname, prefix))) {

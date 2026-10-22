@@ -21,6 +21,9 @@ export interface SpecRowProps {
   status: SpecRowStatus;
   actionLabel?: string;
   onAction?: () => void;
+  /** Disabled CTA (e.g. « Bientôt disponible »). */
+  actionDisabled?: boolean;
+  actionTitle?: string;
   className?: string;
 }
 
@@ -56,6 +59,8 @@ export default function SpecRow({
   status,
   actionLabel,
   onAction,
+  actionDisabled = false,
+  actionTitle,
   className,
 }: SpecRowProps) {
   const ui = STATUS_UI[status];
@@ -72,6 +77,7 @@ export default function SpecRow({
   const label = actionLabel ?? defaultAction;
   const actionVariant =
     status === "confirmed" ? "outline" : ("ghost" as const);
+  const showAction = Boolean(onAction) || actionDisabled;
 
   return (
     <div
@@ -112,8 +118,13 @@ export default function SpecRow({
       </div>
 
       <div className="flex justify-start sm:col-start-2 sm:justify-end lg:col-start-auto">
-        {onAction ? (
-          <ProButtonSm variant={actionVariant} onClick={onAction}>
+        {showAction ? (
+          <ProButtonSm
+            variant={actionVariant}
+            disabled={actionDisabled}
+            title={actionTitle}
+            onClick={actionDisabled ? undefined : onAction}
+          >
             {label}
           </ProButtonSm>
         ) : null}

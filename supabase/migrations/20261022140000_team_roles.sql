@@ -74,6 +74,10 @@ begin
     return json_build_object('ok', false, 'error', 'invalid_role');
   end if;
 
+  -- Serialise team changes on this café so two concurrent demotions
+  -- cannot both pass the last-owner check.
+  perform 1 from public.places where id = p_place_id for update;
+
   select m.role into v_current
   from public.place_members m
   where m.place_id = p_place_id
@@ -138,6 +142,8 @@ begin
   if v_actor is null then
     return json_build_object('ok', false, 'error', 'not_authenticated');
   end if;
+
+  perform 1 from public.places where id = p_place_id for update;
 
   select m.role into v_role
   from public.place_members m

@@ -1,5 +1,5 @@
 /** Support contact for pro onboarding / claim disputes. */
-export const CONTACT_EMAIL = 'bonjour@dropspot.app';
+export const CONTACT_EMAIL = 'colombusapp2026@gmail.com';
 
 /**
  * Public Pro price label. Keep null until pricing is public —

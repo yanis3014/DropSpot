@@ -21,3 +21,12 @@ export function writeDropspotMode(mode: DropspotMode): void {
     // Private mode / quota — ignore.
   }
 }
+
+export function clearDropspotMode(): void {
+  if (typeof window === 'undefined') return;
+  try {
+    localStorage.removeItem(DROPSPOT_MODE_KEY);
+  } catch {
+    // Private mode — ignore.
+  }
+}

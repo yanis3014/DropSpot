@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import type { User } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase/client';
+import { clearDropspotMode } from '@/lib/auth/dropspotMode';
 
 /**
  * Client-side auth state, kept in sync with the Supabase session cookie.
@@ -67,6 +68,7 @@ export function useAuth() {
       console.error('signOut error:', err);
     } finally {
       setUser(null);
+      clearDropspotMode();
       router.push('/login');
       router.refresh();
     }

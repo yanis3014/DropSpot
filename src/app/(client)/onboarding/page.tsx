@@ -294,7 +294,7 @@ function OnboardingFlow({
         preferences: answersToPreferenceIds(answers),
         onboarding_answers: answers,
       });
-      router.replace('/profile');
+      router.replace('/profile/envies');
     } catch (err) {
       console.error('Onboarding edit save error:', err);
       setError("Impossible d'enregistrer tes envies. Réessaie.");
@@ -349,7 +349,7 @@ function OnboardingFlow({
                   ? () => router.replace('/bienvenue')
                   : () => setStep('welcome')
                 : mode === 'edit'
-                  ? () => router.replace('/profile')
+                  ? () => router.replace('/profile/envies')
                   : undefined
         }
         onSkip={step === 'envies' && mode === 'guest' ? skipAsGuest : undefined}

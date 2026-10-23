@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { requireAdmin } from "@/lib/admin/requireAdmin";
 import { fetchAdminOverview } from "@/lib/admin/overview";
+import PlaceRow, { type AdminPlaceRow } from "@/app/admin/(console)/cafes/PlaceRow";
 
 export const metadata = {
   title: "À traiter · Admin DropSpot",
@@ -40,7 +41,7 @@ function placeName(places: PendingClaim["places"]): string {
 export default async function AdminTodoPage() {
   const { supabase } = await requireAdmin("/admin");
 
-  const [overview, { data: claims, error }] = await Promise.all([
+  const [overview, { data: claims, error }, { data: suggested }] = await Promise.all([
     fetchAdminOverview(supabase),
     supabase
       .from("place_claims")
@@ -48,11 +49,17 @@ export default async function AdminTodoPage() {
       .eq("status", "pending")
       .order("created_at", { ascending: true })
       .limit(20),
+    supabase.rpc("admin_list_places", { p_query: null, p_filter: "to_review", p_limit: 20 }),
   ]);
+  const toReview = (suggested ?? []) as AdminPlaceRow[];
 
   const pending = (claims ?? []) as PendingClaim[];
   const tiles = [
-    { value: overview.pending_claims, label: "en attente", alert: overview.pending_claims > 0 },
+    {
+      value: overview.pending_claims + overview.places_to_review,
+      label: "en attente",
+      alert: overview.pending_claims + overview.places_to_review > 0,
+    },
     { value: overview.places_total, label: "cafés en base" },
     { value: overview.places_verified, label: "cafés vérifiés" },
     { value: overview.pros_active, label: "comptes Pro actifs" },
@@ -125,8 +132,25 @@ export default async function AdminTodoPage() {
         )}
       </section>
 
+      <section className="overflow-hidden rounded-2xl border border-ds-line bg-ds-surface">
+        <h2 className="border-b border-ds-line px-4 py-3 text-[13px] font-bold text-ds-text">
+          Cafés suggérés par les clients
+        </h2>
+        {toReview.length === 0 ? (
+          <p className="px-4 py-6 text-sm text-ds-text2">
+            Aucun café suggéré à valider.
+          </p>
+        ) : (
+          <ul>
+            {toReview.map((place) => (
+              <PlaceRow key={place.id} place={place} />
+            ))}
+          </ul>
+        )}
+      </section>
+
       <p className="text-[13px] text-ds-text2">
-        Bientôt dans cette liste : cafés suggérés par les clients, passages Pro et signalements.
+        Les passages Pro se font dans Abonnements Pro. Les signalements des clients arriveront ici plus tard.
       </p>
     </div>
   );

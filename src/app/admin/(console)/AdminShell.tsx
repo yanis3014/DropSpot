@@ -47,9 +47,11 @@ function CountPill({ value }: { value?: number }) {
 /** Admin console chrome: ink sidebar on desktop, top bar + tabs on phone. */
 export default function AdminShell({
   pendingClaims,
+  placesToReview,
   children,
 }: {
   pendingClaims: number;
+  placesToReview: number;
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
@@ -69,14 +71,14 @@ export default function AdminShell({
   }, []);
 
   const main: NavItem[] = [
-    { href: "/admin", label: "À traiter", icon: Tray, exact: true, count: pendingClaims },
+    { href: "/admin", label: "À traiter", icon: Tray, exact: true, count: pendingClaims + placesToReview },
     { href: "/admin/revendications", label: "Revendications", icon: SealCheck, count: pendingClaims },
-    { href: "/admin/cafes", label: "Cafés", icon: Storefront, soon: true },
-    { href: "/admin/utilisateurs", label: "Utilisateurs", icon: UsersThree, soon: true },
-    { href: "/admin/abonnements", label: "Abonnements Pro", icon: Crown, soon: true },
+    { href: "/admin/cafes", label: "Cafés", icon: Storefront, count: placesToReview },
+    { href: "/admin/utilisateurs", label: "Utilisateurs", icon: UsersThree },
+    { href: "/admin/abonnements", label: "Abonnements Pro", icon: Crown },
   ];
   const follow: NavItem[] = [
-    { href: "/admin/journal", label: "Journal", icon: ClockCounterClockwise, soon: true },
+    { href: "/admin/journal", label: "Journal", icon: ClockCounterClockwise },
   ];
 
   const goToClientApp = () => {
@@ -291,7 +293,7 @@ function AdminMoreSheet({
           </button>
         </div>
         <ul className="flex flex-col gap-0.5">
-          {items.map(({ href, label, icon: Icon, soon }) => (
+          {items.map(({ href, label, icon: Icon, soon, count }) => (
             <li key={href}>
               {soon ? (
                 <span className="flex h-11 items-center gap-3 px-3 text-[15px] font-semibold text-ds-onadmin/45">
@@ -307,6 +309,7 @@ function AdminMoreSheet({
                 >
                   <Icon size={20} aria-hidden />
                   {label}
+                  <CountPill value={count} />
                 </Link>
               )}
             </li>

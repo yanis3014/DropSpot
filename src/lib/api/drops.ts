@@ -44,8 +44,9 @@ export function flashDropToDrop(fd: FlashDrop): Drop {
     id: fd.id,
     title: fd.title,
     description: fd.description ?? undefined,
-    drop_type: 'promo',
-    raw_drop_type: 'flash',
+    // `activity` drops are events (run, DJ set, workshop…), the rest are offers.
+    drop_type: fd.kind === 'activity' ? 'event' : 'promo',
+    raw_drop_type: fd.kind ?? 'offer',
     start_time: fd.starts_at,
     end_time: fd.ends_at,
     place_id: fd.place_id,
@@ -200,9 +201,11 @@ export async function getExploreDrops(): Promise<Drop[]> {
         supabase
           .from('flash_drops')
           .select(
-            'id, vendor_id, place_id, title, description, starts_at, ends_at, is_active, created_at, places(name, image_url, address, city)'
+            'id, vendor_id, place_id, title, description, starts_at, ends_at, is_active, created_at, kind, stopped_at, places(name, image_url, address, city)'
           )
           .gte('ends_at', since)
+          .eq('is_active', true)
+          .is('stopped_at', null)
           .order('starts_at', { ascending: false }),
       ]);
 
@@ -243,6 +246,34 @@ export function getDropTiming(drop: Drop, now: number = Date.now()): DropTiming 
   if (now < start) return 'upcoming';
   if (now <= end) return 'live';
   return 'ended';
+}
+
+function hourLabel(date: Date): string {
+  const h = date.getHours();
+  const m = date.getMinutes();
+  return m === 0 ? `${h} h` : `${h} h ${String(m).padStart(2, '0')}`;
+}
+
+/**
+ * Start of an upcoming drop in the user's time zone:
+ * « Aujourd'hui · 18 h 30 », « Demain · 9 h », « Sam. 26 oct. · 9 h ».
+ */
+export function formatStartLabel(isoString: string, now: number = Date.now()): string {
+  const start = new Date(isoString);
+  if (!Number.isFinite(start.getTime())) return '';
+  const today = new Date(now);
+  today.setHours(0, 0, 0, 0);
+  const startDay = new Date(start);
+  startDay.setHours(0, 0, 0, 0);
+  const days = Math.round((startDay.getTime() - today.getTime()) / 86_400_000);
+  if (days === 0) return `Aujourd'hui · ${hourLabel(start)}`;
+  if (days === 1) return `Demain · ${hourLabel(start)}`;
+  const day = start.toLocaleDateString('fr-FR', {
+    weekday: 'short',
+    day: 'numeric',
+    month: 'short',
+  });
+  return `${day.charAt(0).toUpperCase()}${day.slice(1)} · ${hourLabel(start)}`;
 }
 
 export function formatTime(isoString: string): string {

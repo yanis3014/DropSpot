@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useMemo, useState, type ReactNode } from "react";
-import Link from "next/link";
 import {
   CalendarBlank,
   Check,
@@ -9,8 +8,9 @@ import {
   Heart,
   Leaf,
   MagnifyingGlass,
-  MapTrifold,
   Moon,
+  Plus,
+  Storefront,
   WifiHigh,
 } from "@phosphor-icons/react";
 import { getPlaces, type Place } from "@/lib/api/places";
@@ -33,11 +33,11 @@ import { usePlaceFilters } from "@/lib/hooks/usePlaceFilters";
 import { usePlacesOpenStatus } from "@/hooks/usePlacesOpenStatus";
 import {
   AMENITY_FILTER_IDS,
-  filtersQueryString,
   type AmenityFilterId,
   type PlaceFilterId,
 } from "@/lib/mapFilters";
 import CafeRow, { type CafeRowFeature } from "@/components/ui/CafeRow";
+import SuggestPlaceSheet from "@/components/list/SuggestPlaceSheet";
 import Chip from "@/components/ui/Chip";
 import EmptyState from "@/components/ui/EmptyState";
 import { cn } from "@/lib/cn";
@@ -89,6 +89,7 @@ export default function NearbyList() {
   const [savedIds, setSavedIds] = useState<string[]>([]);
   const [userCoords, setUserCoords] = useState<LatLng | null>(null);
   const [loading, setLoading] = useState(() => !peekCache("places:full"));
+  const [showSuggest, setShowSuggest] = useState(false);
 
   const amenityFilters = useMemo(
     () =>
@@ -98,7 +99,6 @@ export default function NearbyList() {
     [filters]
   );
   const favoritesOnly = filters.includes("favorites");
-  const mapHref = `/map${filtersQueryString(filters)}`;
 
   useEffect(() => {
     let cancelled = false;
@@ -199,13 +199,6 @@ export default function NearbyList() {
         <h1 className="font-display text-[34px] font-extrabold leading-tight text-ds-text">
           À proximité
         </h1>
-        <Link
-          href={mapHref}
-          className="inline-flex h-11 items-center gap-1.5 px-1 text-[15px] font-bold text-ds-accent no-underline"
-        >
-          <MapTrifold size={20} weight="regular" aria-hidden />
-          Carte
-        </Link>
       </div>
 
       <div className="flex gap-2 overflow-x-auto scrollbar-hide px-4 pb-1 pt-3.5">
@@ -231,11 +224,8 @@ export default function NearbyList() {
         <div className="w-2 shrink-0" aria-hidden />
       </div>
 
-      <div className="flex items-center justify-between px-5 pb-2 pt-2.5">
+      <div className="flex items-center px-5 pb-2 pt-2.5">
         <span className="text-sm text-ds-text2">{counterLabel}</span>
-        <span className="inline-flex h-11 items-center gap-1.5 text-[15px] font-bold text-ds-text">
-          Distance
-        </span>
       </div>
 
       <div className="flex flex-col gap-2.5 px-4">
@@ -267,7 +257,6 @@ export default function NearbyList() {
               <CafeRow
                 key={place.id}
                 name={place.name}
-                rating="—"
                 status={meta.status}
                 statusDetail={meta.statusDetail}
                 distance={
@@ -283,7 +272,32 @@ export default function NearbyList() {
             );
           })
         )}
+
+        <button
+          type="button"
+          onClick={() => setShowSuggest(true)}
+          className="mt-2 flex w-full items-center justify-between gap-3 rounded-[20px] border-2 border-dashed border-ds-line p-4 text-left active:scale-[0.99]"
+        >
+          <span className="flex min-w-0 items-center gap-3">
+            <Storefront size={22} weight="regular" className="flex-none text-ds-text2" aria-hidden />
+            <span className="min-w-0">
+              <span className="block text-[15px] font-bold text-ds-text">Un café manque ?</span>
+              <span className="block text-sm text-ds-text2">Ajoute-le à la carte</span>
+            </span>
+          </span>
+          <Plus size={20} weight="bold" className="flex-none text-ds-accent" aria-hidden />
+        </button>
       </div>
+
+      {showSuggest ? (
+        <SuggestPlaceSheet
+          isAuthenticated={isAuthenticated}
+          onClose={() => setShowSuggest(false)}
+          onSuggested={() => {
+            void getPlaces({ withCoordinatesOnly: true }).then(setPlaces);
+          }}
+        />
+      ) : null}
     </main>
   );
 }

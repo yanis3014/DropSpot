@@ -31,7 +31,7 @@ import CheckInModal from '@/components/spots/CheckInModal';
 import TrophyModal from '@/components/places/TrophyModal';
 import TrophyBadge from '@/components/places/TrophyBadge';
 import { Place } from '@/lib/api/places';
-import { CheckIn, crowdConfig } from '@/lib/api/checkins';
+import { crowdConfig, type AggregatedVibe } from '@/lib/api/checkins';
 import { getPlaceTopTrophy, type PlaceTrophy } from '@/lib/api/endorsements';
 import {
   markTrophyPromptShown,
@@ -54,7 +54,7 @@ import {
 export interface PlaceDetailViewProps {
   place: Place;
   media?: PlaceMedia[];
-  vibe?: CheckIn | null;
+  vibe?: AggregatedVibe | null;
   isAuthenticated: boolean;
   isSaved: boolean;
   onToggleSave: (placeId: string) => void | Promise<void>;
@@ -393,7 +393,7 @@ export default function PlaceDetailView({
             </div>
             <span className="text-[11px] font-medium opacity-80">
               Wi-Fi {vibe.wifi_speed === 'good' ? '🚀' : '🐌'} ·{' '}
-              {timeAgo(vibe.created_at)}
+              {timeAgo(vibe.latest_at)}
             </span>
           </div>
         )}

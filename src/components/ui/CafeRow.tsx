@@ -15,7 +15,8 @@ export interface CafeRowFeature {
 
 export interface CafeRowProps {
   name: string;
-  rating: number | string;
+  /** Optional score; nothing is shown when absent. */
+  rating?: number | string | null;
   status: CafeOpenStatus;
   distance: string;
   /** Extra line detail, e.g. "ferme à 19 h". */
@@ -94,15 +95,17 @@ export default function CafeRow({
           <span className="font-display truncate text-[17px] font-bold text-ds-text">
             {name}
           </span>
-          <span className="inline-flex flex-none items-center gap-0.5 text-sm font-bold text-ds-text">
-            <Star
-              size={15}
-              weight="regular"
-              className="text-ds-accent"
-              aria-hidden
-            />
-            {formatRating(rating)}
-          </span>
+          {rating != null && rating !== "" ? (
+            <span className="inline-flex flex-none items-center gap-0.5 text-sm font-bold text-ds-text">
+              <Star
+                size={15}
+                weight="regular"
+                className="text-ds-accent"
+                aria-hidden
+              />
+              {formatRating(rating)}
+            </span>
+          ) : null}
         </div>
 
         <div className="text-sm text-ds-text2">

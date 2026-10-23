@@ -2,6 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 
 export type AdminOverview = {
   pending_claims: number;
+  places_to_review: number;
   places_total: number;
   places_verified: number;
   pros_active: number;
@@ -9,6 +10,7 @@ export type AdminOverview = {
 
 const EMPTY: AdminOverview = {
   pending_claims: 0,
+  places_to_review: 0,
   places_total: 0,
   places_verified: 0,
   pros_active: 0,
@@ -26,6 +28,7 @@ export async function fetchAdminOverview(
   const raw = data as Partial<Record<keyof AdminOverview, unknown>>;
   return {
     pending_claims: Number(raw.pending_claims) || 0,
+    places_to_review: Number(raw.places_to_review) || 0,
     places_total: Number(raw.places_total) || 0,
     places_verified: Number(raw.places_verified) || 0,
     pros_active: Number(raw.pros_active) || 0,

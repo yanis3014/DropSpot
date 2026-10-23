@@ -13,7 +13,10 @@ export default async function AdminConsoleLayout({
 
   return (
     <div className="flex min-h-full w-full flex-col bg-ds-bg">
-      <AdminShell pendingClaims={overview.pending_claims}>{children}</AdminShell>
+      <AdminShell
+        pendingClaims={overview.pending_claims}
+        placesToReview={overview.places_to_review}
+      >{children}</AdminShell>
     </div>
   );
 }

@@ -24,6 +24,10 @@
   --pin: #2a1d16;
   --onpin: #ffffff;
   --map: #ece5da;
+  --admin: #1f2a3a;
+  --onadmin: #eef2f7;
+  --adminsoft: #e4e9f0;
+  --admintext: #2c4565;
   --shadow: 0 6px 24px rgba(58, 34, 18, 0.14);
   --background: var(--bg);
   --foreground: var(--text);
@@ -49,6 +53,10 @@
   --pin: #f4ede6;
   --onpin: #1b120d;
   --map: #1c1713;
+  --admin: #0d131c;
+  --onadmin: #dfe7f1;
+  --adminsoft: #1b2533;
+  --admintext: #a9c3e4;
   --shadow: 0 6px 24px rgba(0, 0, 0, 0.45);
   --background: var(--bg);
   --foreground: var(--text);
@@ -57,6 +65,10 @@
 
 @theme inline {
   --color-ds-bg: var(--bg);
+  --color-ds-admin: var(--admin);
+  --color-ds-onadmin: var(--onadmin);
+  --color-ds-adminsoft: var(--adminsoft);
+  --color-ds-admintext: var(--admintext);
   --color-ds-surface: var(--surface);
   --color-ds-surface2: var(--surface2);
   --color-ds-line: var(--line);

@@ -1,6 +1,6 @@
 import ClaimReviewPanel, {
   type PendingClaimRow,
-} from "@/app/admin/revendications/ClaimReviewPanel";
+} from "@/app/admin/(console)/revendications/ClaimReviewPanel";
 import { requireAdmin } from "@/lib/admin/requireAdmin";
 
 export const metadata = {
@@ -19,7 +19,7 @@ type ClaimQueryRow = {
 };
 
 export default async function AdminRevendicationsPage() {
-  const { supabase } = await requireAdmin();
+  const { supabase } = await requireAdmin("/admin/revendications");
 
   const { data: rows, error } = await supabase
     .from("place_claims")

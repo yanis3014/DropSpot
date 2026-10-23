@@ -10,6 +10,7 @@ import {
   GearSix,
   Heart,
   PencilSimple,
+  ShieldCheck,
 } from '@phosphor-icons/react';
 import Button from '@/components/ui/Button';
 import ProfileRow from '@/components/profile/ProfileRow';
@@ -19,7 +20,8 @@ import {
 } from '@/lib/api/contributions';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { fetchIsPro } from '@/app/(pro)/dashboard-pro/lib/api/vendor';
-import { writeDropspotMode } from '@/lib/auth/dropspotMode';
+import { clearDropspotMode, writeDropspotMode } from '@/lib/auth/dropspotMode';
+import { fetchIsAdminMember } from '@/lib/admin/isAdminMember';
 import { useProfile } from '@/lib/hooks/useProfile';
 import { badgeProgress } from '@/lib/grains';
 import { getMyGrains, type MyGrains } from '@/lib/api/grains';
@@ -80,6 +82,7 @@ export default function ProfilePage() {
 
   // null = not loaded yet, so neither pro nor client links flash.
   const [isPro, setIsPro] = useState<boolean | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [myEvents, setMyEvents] = useState<Drop[] | null>(null);
   const [lastContrib, setLastContrib] = useState<
     ContributionItem | null | undefined
@@ -91,6 +94,9 @@ export default function ProfilePage() {
     let cancelled = false;
     void fetchIsPro().then((value) => {
       if (!cancelled) setIsPro(value);
+    });
+    void fetchIsAdminMember().then((value) => {
+      if (!cancelled) setIsAdmin(value);
     });
     getMyUpcomingEvents()
       .then((rows) => {
@@ -281,6 +287,20 @@ export default function ProfilePage() {
             Espace pro
           </Button>
         </Link>
+      ) : null}
+
+      {isAdmin ? (
+        // Full load: /admin checks the 6-digit code on the server.
+        <a
+          href="/admin"
+          className="no-underline"
+          onClick={() => clearDropspotMode()}
+        >
+          <Button variant="outline" className="w-full">
+            <ShieldCheck size={20} weight="bold" />
+            Administration
+          </Button>
+        </a>
       ) : null}
 
       <div className="flex flex-col items-center gap-1 pt-1">

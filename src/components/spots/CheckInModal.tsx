@@ -35,7 +35,8 @@ const wifiOptions: {
   { value: 'good', label: 'Fusée', emoji: '🚀' },
 ];
 
-function rewardCopy(reason: RewardReason, earned: number): string {
+function rewardCopy(reason: RewardReason, earned: number, eventGrains: number): string {
+  if (eventGrains > 0) return `+${earned} Grains 🌾 dont ${eventGrains} pour l’événement`;
   if (earned > 0) return `+${earned} Grains 🌾`;
   if (reason === 'daily_cap')
     return 'Merci ! (0 Grain : limite du jour atteinte)';
@@ -74,6 +75,7 @@ export default function CheckInModal({
   const [questionIndex, setQuestionIndex] = useState(0);
   const [answering, setAnswering] = useState(false);
   const [earned, setEarned] = useState(0);
+  const [eventGrains, setEventGrains] = useState(0);
   const [reason, setReason] = useState<RewardReason>('ok');
   const [error, setError] = useState<string | null>(null);
   const [showLogin, setShowLogin] = useState(false);
@@ -137,6 +139,7 @@ export default function CheckInModal({
       const alreadyVoted = await getMySpecVotes(place.id).catch(() => [] as SpecId[]);
       setQuestions(pickSpecQuestions(specs, alreadyVoted));
       setEarned(result.grainsAwarded);
+      setEventGrains(result.eventGrains);
       setReason(result.reason);
       setSubmitted(true);
       setSubmitting(false);
@@ -240,7 +243,7 @@ export default function CheckInModal({
                   : 'bg-ds-surface text-ds-text border border-ds-text2/15'
               }`}
             >
-              {rewardCopy(reason, earned)}
+              {rewardCopy(reason, earned, eventGrains)}
             </span>
 
             <p className="w-full text-sm leading-relaxed text-ds-text2 text-center px-1">

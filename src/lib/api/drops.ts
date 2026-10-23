@@ -258,6 +258,8 @@ export function participationErrorMessage(code: string): string {
   switch (code) {
     case 'full':
       return 'C’est complet.';
+    case 'priority_only':
+      return 'Les dernières places sont réservées aux membres Explorateur (100 Grains gagnés). Elles s’ouvrent à tous la veille.';
     case 'ended':
       return 'Cet événement est terminé.';
     case 'not_authenticated':

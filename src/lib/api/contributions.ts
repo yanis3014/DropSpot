@@ -1,7 +1,13 @@
 import { supabase } from '@/lib/supabase/client';
-import { isSpecId, specLabel, type SpecId } from '@/lib/specs';
 
-export type ContributionKind = 'check_in' | 'spec_vote';
+export type ContributionKind =
+  | 'welcome'
+  | 'check_in'
+  | 'spec_vote'
+  | 'event_presence'
+  | 'place_suggested'
+  | 'flash_drop'
+  | 'other';
 
 export type ContributionItem = {
   id: string;
@@ -9,24 +15,45 @@ export type ContributionItem = {
   title: string;
   placeName: string;
   createdAt: string;
-  gain: number | null;
-  spec?: SpecId;
+  /** Grains credited (negative for a reversal). */
+  gain: number;
 };
 
-type PlaceNameJoin =
-  | { name: string | null }
-  | { name: string | null }[]
-  | null;
+const TITLES: Record<ContributionKind, string> = {
+  welcome: 'Bienvenue sur Dropspot',
+  check_in: 'Je suis ici',
+  spec_vote: 'Info confirmée sur place',
+  event_presence: 'Présent à un événement',
+  place_suggested: 'Ton café a rejoint Dropspot',
+  flash_drop: 'Code utilisé',
+  other: 'Ajustement',
+};
 
-function placeName(places: PlaceNameJoin): string {
-  const row = Array.isArray(places) ? places[0] : places;
-  return row?.name?.trim() || 'Spot inconnu';
+const KNOWN = new Set<string>(Object.keys(TITLES));
+
+type LedgerRow = {
+  id: string;
+  amount: number;
+  reason: string;
+  ref_id: string | null;
+  created_at: string;
+};
+
+async function placeNamesById(ids: string[]): Promise<Record<string, string>> {
+  const out: Record<string, string> = {};
+  if (!supabase || ids.length === 0) return out;
+  const { data } = await supabase.from('places').select('id, name').in('id', ids);
+  for (const row of (data ?? []) as { id: string; name: string | null }[]) {
+    out[row.id] = row.name?.trim() || 'Café';
+  }
+  return out;
 }
 
-/** Recent « Je suis ici » and Yes / No answers by the signed-in user. */
-export async function getMyContributions(
-  limit = 20
-): Promise<ContributionItem[]> {
+/**
+ * What earned Grains, from the ledger (grains_transactions, own rows only),
+ * with the café of each line.
+ */
+export async function getMyContributions(limit = 20): Promise<ContributionItem[]> {
   try {
     if (!supabase) return [];
     const {
@@ -34,74 +61,70 @@ export async function getMyContributions(
     } = await supabase.auth.getUser();
     if (!user) return [];
 
-    const [checkInsRes, votesRes] = await Promise.all([
-      supabase
-        .from('check_ins')
-        .select('id, created_at, crowd_level, wifi_speed, places(name)')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false })
-        .limit(limit),
-      supabase
-        .from('place_spec_votes')
-        .select('place_id, spec, vote, updated_at, places(name)')
-        .eq('user_id', user.id)
-        .order('updated_at', { ascending: false })
-        .limit(limit),
+    const { data, error } = await supabase
+      .from('grains_transactions')
+      .select('id, amount, reason, ref_id, created_at')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
+      .limit(limit);
+    if (error) {
+      console.error('Error fetching contributions:', error);
+      return [];
+    }
+    const rows = (data ?? []) as LedgerRow[];
+
+    // ref_id points to a check-in, a café, an event or a drop code.
+    const refs = (reason: string) =>
+      rows.filter((r) => r.reason === reason && r.ref_id).map((r) => r.ref_id as string);
+    const [checkIns, events, codes] = await Promise.all([
+      refs('check_in').length
+        ? supabase.from('check_ins').select('id, place_id').in('id', refs('check_in'))
+        : Promise.resolve({ data: [] }),
+      refs('event_presence').length
+        ? supabase.from('flash_drops').select('id, place_id').in('id', refs('event_presence'))
+        : Promise.resolve({ data: [] }),
+      refs('flash_drop').length
+        ? supabase
+            .from('drop_codes')
+            .select('id, flash_drops(place_id)')
+            .in('id', refs('flash_drop'))
+        : Promise.resolve({ data: [] }),
     ]);
 
-    if (checkInsRes.error) {
-      console.error('Error fetching check-in contributions:', checkInsRes.error);
+    const placeOfRef: Record<string, string> = {};
+    for (const r of (checkIns.data ?? []) as { id: string; place_id: string }[]) {
+      placeOfRef[r.id] = r.place_id;
     }
-    if (votesRes.error) {
-      console.error('Error fetching vote contributions:', votesRes.error);
+    for (const r of (events.data ?? []) as { id: string; place_id: string }[]) {
+      placeOfRef[r.id] = r.place_id;
+    }
+    for (const r of (codes.data ?? []) as {
+      id: string;
+      flash_drops: { place_id: string } | { place_id: string }[] | null;
+    }[]) {
+      const fd = Array.isArray(r.flash_drops) ? r.flash_drops[0] : r.flash_drops;
+      if (fd) placeOfRef[r.id] = fd.place_id;
+    }
+    for (const r of rows) {
+      if ((r.reason === 'spec_vote' || r.reason === 'place_suggested') && r.ref_id) {
+        placeOfRef[r.ref_id] = r.ref_id;
+      }
     }
 
-    const checkIns: ContributionItem[] = (
-      (checkInsRes.data ?? []) as {
-        id: string;
-        created_at: string;
-        wifi_speed: string;
-        places: PlaceNameJoin;
-      }[]
-    ).map((row) => ({
-      id: `check_in:${row.id}`,
-      kind: 'check_in' as const,
-      title: 'Ambiance partagée',
-      placeName: placeName(row.places),
-      createdAt: row.created_at,
-      // Grains are only awarded with proximity + cooldown — unknown from check_ins alone
-      gain: null,
-    }));
+    const names = await placeNamesById([...new Set(Object.values(placeOfRef))]);
 
-    const votes: ContributionItem[] = (
-      (votesRes.data ?? []) as {
-        place_id: string;
-        spec: string;
-        vote: boolean;
-        updated_at: string;
-        places: PlaceNameJoin;
-      }[]
-    )
-      .filter((row) => isSpecId(row.spec))
-      .map((row) => {
-        const spec = row.spec as SpecId;
-        return {
-          id: `spec_vote:${row.place_id}:${spec}`,
-          kind: 'spec_vote' as const,
-          title: `${specLabel(spec)} : ${row.vote ? 'oui' : 'non'}`,
-          placeName: placeName(row.places),
-          createdAt: row.updated_at,
-          gain: null,
-          spec,
-        };
-      });
-
-    return [...checkIns, ...votes]
-      .sort(
-        (a, b) =>
-          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-      )
-      .slice(0, limit);
+    return rows.map((r) => {
+      const kind = (KNOWN.has(r.reason) ? r.reason : 'other') as ContributionKind;
+      const placeId = r.ref_id ? placeOfRef[r.ref_id] : undefined;
+      return {
+        id: r.id,
+        kind,
+        title: r.amount < 0 ? 'Grains repris' : TITLES[kind],
+        placeName: placeId ? (names[placeId] ?? 'Café') : 'Dropspot',
+        createdAt: r.created_at,
+        gain: r.amount,
+      };
+    });
   } catch (error) {
     console.error('Error in getMyContributions:', error);
     return [];

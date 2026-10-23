@@ -121,8 +121,17 @@ begin
   );
   execute 'set local role authenticated';
 
+  -- max_uses = 1 and A holds the only code: no more codes for B.
   v_claim_b := public.claim_drop(drop_a);
-  v_code_b := (v_claim_b ->> 'code')::char(6);
+  if coalesce(v_claim_b ->> 'error', '') is distinct from 'sold_out' then
+    raise exception 'FAIL: claim beyond places expected sold_out, got %', v_claim_b;
+  end if;
+  reset role;
+  -- A code issued before the places were reduced (written as the table owner).
+  v_code_b := public.generate_drop_code_value();
+  insert into public.drop_codes (flash_drop_id, user_id, code, status)
+  values (drop_a, client_b, v_code_b, 'issued');
+  execute 'set local role authenticated';
 
   -- (0) A signed-in client who is not on the café team cannot redeem
   v_redeem := public.redeem_drop_code(place_a, public.format_drop_code(v_code_a));
@@ -184,8 +193,9 @@ begin
 
   reset role;
   select grains_balance into v_balance from public.profiles where id = client_a;
-  if v_balance is distinct from 10 then
-    raise exception 'FAIL: client A grains expected 10, got %', v_balance;
+  -- A used promo code no longer earns Grains (moved to event presence).
+  if v_balance is distinct from 0 then
+    raise exception 'FAIL: client A grains expected 0, got %', v_balance;
   end if;
 
   -- (5) add_drop_places never caps an unlimited drop; stop_drop ends it for clients too

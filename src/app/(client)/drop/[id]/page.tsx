@@ -22,6 +22,7 @@ import {
   formatHourRange,
   formatRemainingLabel,
   participantsLabel,
+  reservedHint,
 } from "@/components/drops/DropCard";
 import { useAuth } from "@/lib/hooks/useAuth";
 import { useDropParticipation } from "@/lib/hooks/useDropParticipation";
@@ -278,6 +279,11 @@ export default function DropPage() {
             <p className="m-0 flex items-center gap-2 text-[15px] font-semibold">
               <UsersThree size={18} weight="bold" className="text-ds-text2" aria-hidden />
               {participantsLabel(drop, participants)}
+            </p>
+          ) : null}
+          {!ended && reservedHint(drop, now) ? (
+            <p className="m-0 text-[13px] font-medium text-ds-text2">
+              {reservedHint(drop, now)}
             </p>
           ) : null}
         </div>

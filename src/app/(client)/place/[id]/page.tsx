@@ -9,6 +9,7 @@ import { getPlaceMedia, type PlaceMedia } from '@/lib/api/placeMedia';
 import { getPlaceVibe, type AggregatedVibe } from '@/lib/api/checkins';
 import { getPlaceDrops, type Drop } from '@/lib/api/drops';
 import { getPlaceSpecs } from '@/lib/api/specs';
+import { getPlaceRanks, type PlaceRank } from '@/lib/api/rankings';
 import type { PlaceSpec } from '@/lib/specs';
 import { getSavedPlaceIds, savePlace, unsavePlace } from '@/lib/api/saved';
 import { useAuth } from '@/lib/hooks/useAuth';
@@ -24,6 +25,7 @@ export default function PlacePage() {
   const [vibe, setVibe] = useState<AggregatedVibe | null>(null);
   const [drops, setDrops] = useState<Drop[]>([]);
   const [specs, setSpecs] = useState<PlaceSpec[]>([]);
+  const [ranks, setRanks] = useState<PlaceRank[]>([]);
   const [savedIds, setSavedIds] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -41,12 +43,13 @@ export default function PlacePage() {
 
     (async () => {
       try {
-        const [fresh, placeVibe, placeMedia, placeDrops, placeSpecs] = await Promise.all([
+        const [fresh, placeVibe, placeMedia, placeDrops, placeSpecs, placeRanks] = await Promise.all([
           getPlaceById(id),
           getPlaceVibe(id).catch(() => null),
           getPlaceMedia(id).catch(() => [] as PlaceMedia[]),
           getPlaceDrops(id).catch(() => [] as Drop[]),
           getPlaceSpecs(id).catch(() => [] as PlaceSpec[]),
+          getPlaceRanks(id).catch(() => [] as PlaceRank[]),
         ]);
         if (cancelled) return;
         if (!fresh) {
@@ -59,6 +62,7 @@ export default function PlacePage() {
           setVibe(placeVibe);
           setDrops(placeDrops);
           setSpecs(placeSpecs);
+          setRanks(placeRanks);
         }
       } catch (err) {
         console.error(err);
@@ -163,6 +167,7 @@ export default function PlacePage() {
       vibe={vibe}
       specs={specs}
       drops={drops}
+      ranks={ranks}
       isAuthenticated={isAuthenticated}
       isSaved={savedIds.includes(place.id)}
       onToggleSave={handleToggleSave}

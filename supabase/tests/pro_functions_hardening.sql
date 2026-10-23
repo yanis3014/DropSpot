@@ -13,7 +13,8 @@ begin
   from pg_proc p
   where p.pronamespace = 'public'::regnamespace
     and p.prosecdef
-    and p.proname not in ('place_open_status', 'places_open_status', 'get_place_vibes', 'drop_participants', 'get_place_specs')
+    and p.proname not in ('place_open_status', 'places_open_status', 'get_place_vibes', 'drop_participants', 'get_place_specs',
+                           'get_spec_rankings', 'get_place_ranks')
     and has_function_privilege('anon', p.oid, 'execute');
   if v_fn is not null then
     raise exception 'FAIL: anon can execute SECURITY DEFINER functions: %', v_fn;

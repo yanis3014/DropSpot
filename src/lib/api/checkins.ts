@@ -66,8 +66,11 @@ export type CheckInError =
 export type CheckInResult =
   | {
       ok: true;
+      /** Total credited, event presence included. */
       grainsAwarded: number;
-      /** Why the reward is what it is (0 Grain on cooldown / daily cap). */
+      /** Part of it for being at an event the user joined. */
+      eventGrains: number;
+      /** Why the visit reward is what it is (0 Grain on cooldown / daily cap). */
       reason: 'ok' | 'cooldown' | 'daily_cap';
     }
   | { ok: false; error: CheckInError; distanceM?: number };
@@ -98,6 +101,7 @@ export async function checkIn(input: {
     error?: string;
     distance_m?: number;
     grains_awarded?: number;
+    event_grains?: number;
     reason?: string;
   };
   if (!row.ok) {
@@ -110,7 +114,12 @@ export async function checkIn(input: {
   }
   const reason =
     row.reason === 'cooldown' || row.reason === 'daily_cap' ? row.reason : 'ok';
-  return { ok: true, grainsAwarded: row.grains_awarded ?? 0, reason };
+  return {
+    ok: true,
+    grainsAwarded: row.grains_awarded ?? 0,
+    eventGrains: row.event_grains ?? 0,
+    reason,
+  };
 }
 
 type VibeRow = {

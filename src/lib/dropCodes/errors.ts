@@ -5,6 +5,8 @@ const CLAIM_ERROR_FR: Record<string, string> = {
   drop_not_found: 'Ce drop est introuvable.',
   place_not_verified: 'Ce café n’est pas encore vérifié.',
   sold_out: 'Plus de places pour ce drop.',
+  priority_only:
+    'Les derniers codes sont réservés aux membres Explorateur (100 Grains gagnés) pendant les 30 premières minutes.',
   drop_ended: 'Ce drop est terminé.',
   drop_stopped: 'Ce drop a été arrêté par le café.',
   drop_not_live: 'Ce drop n’est plus disponible.',

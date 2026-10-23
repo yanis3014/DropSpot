@@ -19,6 +19,7 @@ import {
   Images,
   Clock,
   Tag,
+  Trophy,
 } from '@phosphor-icons/react';
 import { EVENT_CATEGORY_ICONS } from '@/components/drops/DropCard';
 import {
@@ -33,6 +34,8 @@ import CheckInModal from '@/components/spots/CheckInModal';
 import CafePulse from '@/components/places/CafePulse';
 import { specMap } from '@/lib/api/specs';
 import type { PlaceSpec } from '@/lib/specs';
+import type { PlaceRank } from '@/lib/api/rankings';
+import { rankChipLabel } from '@/lib/placeRanking';
 import { Place } from '@/lib/api/places';
 import type { AggregatedVibe } from '@/lib/api/checkins';
 import { formatAddress, openDirections } from '@/lib/utils/directions';
@@ -52,6 +55,8 @@ export interface PlaceDetailViewProps {
   specs?: PlaceSpec[];
   /** Next events and offers of this café. */
   drops?: Drop[];
+  /** Ranks in the « Top de Nice », best first. */
+  ranks?: PlaceRank[];
   isAuthenticated: boolean;
   isSaved: boolean;
   onToggleSave: (placeId: string) => void | Promise<void>;
@@ -84,6 +89,7 @@ export default function PlaceDetailView({
   vibe,
   specs = [],
   drops = [],
+  ranks = [],
   isAuthenticated,
   isSaved,
   onToggleSave,
@@ -91,6 +97,11 @@ export default function PlaceDetailView({
   backHref = '/map',
 }: PlaceDetailViewProps) {
   const router = useRouter();
+  const topRanks = ranks
+    .filter((r) => r.rank <= 10)
+    .map((r) => ({ spec: r.spec, label: rankChipLabel(r.spec, r.rank) }))
+    .filter((r): r is { spec: PlaceRank['spec']; label: string } => r.label !== null)
+    .slice(0, 2);
   const [showCheckIn, setShowCheckIn] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const [slideIndex, setSlideIndex] = useState(0);
@@ -331,6 +342,21 @@ export default function PlaceDetailView({
             </button>
           </div>
         </div>
+
+        {topRanks.length > 0 ? (
+          <div className="flex flex-wrap gap-2 -mb-2">
+            {topRanks.map((r) => (
+              <Link
+                key={r.spec}
+                href="/top"
+                className="inline-flex h-9 items-center gap-1.5 rounded-full bg-ds-accentsoft px-3.5 text-sm font-bold text-ds-accenttext no-underline"
+              >
+                <Trophy size={16} weight="fill" aria-hidden />
+                {r.label}
+              </Link>
+            ))}
+          </div>
+        ) : null}
 
         <CafePulse
           vibe={vibe}

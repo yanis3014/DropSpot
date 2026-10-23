@@ -16,6 +16,7 @@ import {
 } from "@phosphor-icons/react";
 import Button from "@/components/ui/Button";
 import { cn } from "@/lib/cn";
+import { reservedPlaces } from "@/lib/grains";
 import {
   EVENT_CATEGORY_LABELS,
   formatStartLabel,
@@ -77,6 +78,20 @@ export function participantsLabel(drop: Drop, participants: number): string {
   const left = Math.max(0, drop.capacity - participants);
   if (left === 0) return "Complet";
   return `${going} · ${left} place${left > 1 ? "s" : ""} restante${left > 1 ? "s" : ""}`;
+}
+
+/**
+ * « Dont 2 places réservées aux Explorateurs » while reserved places are held
+ * (until the day before an event, 30 min after an offer starts).
+ */
+export function reservedHint(drop: Drop, now: number): string | null {
+  const reserved = reservedPlaces(drop.capacity);
+  if (reserved === 0) return null;
+  const start = new Date(drop.start_time).getTime();
+  const releaseAt =
+    drop.family === "event" ? start - 24 * 3_600_000 : start + 30 * 60_000;
+  if (now >= releaseAt) return null;
+  return `Dont ${reserved} place${reserved > 1 ? "s" : ""} réservée${reserved > 1 ? "s" : ""} aux Explorateurs`;
 }
 
 function offerStockLabel(drop: Drop): string | null {
@@ -186,6 +201,11 @@ export default function DropCard({
           <UsersThree size={16} weight="bold" aria-hidden />
           {participantsLabel(drop, participants)}
         </p>
+        {reservedHint(drop, now) && !joined ? (
+          <p className="-mt-2 m-0 text-[13px] font-medium text-ds-text2">
+            {reservedHint(drop, now)}
+          </p>
+        ) : null}
 
         {onToggleJoin ? (
           <Button

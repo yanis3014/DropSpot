@@ -12,6 +12,11 @@ import {
   PencilSimple,
   SignOut,
   Star,
+  CalendarCheck,
+  CheckCircle,
+  Gift,
+  Storefront,
+  Ticket,
 } from '@phosphor-icons/react';
 import Button from '@/components/ui/Button';
 import EmptyState from '@/components/ui/EmptyState';
@@ -24,13 +29,18 @@ import { useAuth } from '@/lib/hooks/useAuth';
 import { fetchIsPro } from '@/app/(pro)/dashboard-pro/lib/api/vendor';
 import { writeDropspotMode } from '@/lib/auth/dropspotMode';
 import { useProfile } from '@/lib/hooks/useProfile';
-import { badgeProgress, GRAIN_BADGES } from '@/lib/grains';
+import {
+  badgeProgress,
+  GRAIN_BADGES,
+  GRAINS_EARNING,
+  PRIORITY_LIFETIME,
+} from '@/lib/grains';
+import { getMyGrains, type MyGrains } from '@/lib/api/grains';
 import { avatarColorHex, envieLabel } from '@/lib/onboarding';
 import { ENVIE_ICONS } from '@/components/onboarding/icons';
 import { useTheme } from '@/lib/theme';
 import { cn } from '@/lib/cn';
 import { EVENT_CATEGORY_ICONS } from '@/components/drops/DropCard';
-import { SPEC_ICONS } from '@/components/places/specIcons';
 import {
   formatStartLabel,
   getMyUpcomingEvents,
@@ -84,14 +94,21 @@ function locLabel(status: LocStatus): string {
 }
 
 function ContributionIcon({ item }: { item: ContributionItem }) {
-  if (item.kind === 'check_in') {
-    return <MapPin size={18} weight="regular" aria-hidden />;
-  }
-  if (item.spec) {
-    const Icon = SPEC_ICONS[item.spec];
-    return <Icon size={18} weight="regular" aria-hidden />;
-  }
-  return <Star size={18} weight="regular" aria-hidden />;
+  const Icon =
+    item.kind === 'check_in'
+      ? MapPin
+      : item.kind === 'spec_vote'
+        ? CheckCircle
+        : item.kind === 'event_presence'
+          ? CalendarCheck
+          : item.kind === 'place_suggested'
+            ? Storefront
+            : item.kind === 'welcome'
+              ? Gift
+              : item.kind === 'flash_drop'
+                ? Ticket
+                : Star;
+  return <Icon size={18} weight="regular" aria-hidden />;
 }
 
 export default function ProfilePage() {
@@ -123,6 +140,7 @@ export default function ProfilePage() {
   const [showAllContribs, setShowAllContribs] = useState(false);
   const [isPro, setIsPro] = useState(false);
   const [myEvents, setMyEvents] = useState<Drop[]>([]);
+  const [myGrains, setMyGrains] = useState<MyGrains | null>(null);
 
   useEffect(() => {
     if (!isAuthenticated) return;
@@ -162,6 +180,9 @@ export default function ProfilePage() {
       setContribs(rows);
       setContribsLoading(false);
     });
+    getMyGrains().then((next) => {
+      if (!cancelled) setMyGrains(next);
+    });
     return () => {
       cancelled = true;
     };
@@ -196,8 +217,10 @@ export default function ProfilePage() {
     };
   }, []);
 
-  const grains = profile?.grains_balance ?? 0;
-  const progress = useMemo(() => badgeProgress(grains), [grains]);
+  const grains = myGrains?.balance ?? profile?.grains_balance ?? 0;
+  // Levels follow the Grains earned over time, so spending never loses one.
+  const lifetime = myGrains?.lifetime ?? grains;
+  const progress = useMemo(() => badgeProgress(lifetime), [lifetime]);
   const avatar = profile?.avatar_url ?? avatarUrl;
   const shownName = name.trim() || displayName || 'Explorateur';
   const memberSince = formatMemberSince(
@@ -385,8 +408,8 @@ export default function ProfilePage() {
             role="img"
             aria-label={
               progress.next
-                ? `${grains} sur ${progress.next.threshold} Grains`
-                : `${grains} Grains — niveau max`
+                ? `${lifetime} sur ${progress.next.threshold} Grains gagnés`
+                : `${lifetime} Grains gagnés — niveau max`
             }
           >
             <div
@@ -396,10 +419,39 @@ export default function ProfilePage() {
           </div>
           <span className="text-sm text-ds-text2">
             {progress.next
-              ? `Encore ${progress.remaining} Grain${progress.remaining > 1 ? 's' : ''} pour devenir ${progress.next.name}`
+              ? `Encore ${progress.remaining} Grain${progress.remaining > 1 ? 's' : ''} à gagner pour devenir ${progress.next.name}`
               : 'Niveau max atteint — légende locale !'}
           </span>
         </div>
+
+        <p
+          className={cn(
+            'm-0 rounded-xl px-3 py-2.5 text-[13px] font-semibold leading-snug',
+            myGrains?.priority
+              ? 'bg-ds-ok/10 text-ds-ok'
+              : 'bg-ds-surface2 text-ds-text2'
+          )}
+        >
+          {myGrains?.priority
+            ? 'Accès prioritaire actif : des places te sont réservées sur les drops limités.'
+            : `À ${PRIORITY_LIFETIME} Grains gagnés, des places te sont réservées sur les drops limités.`}
+        </p>
+
+        <details className="group">
+          <summary className="cursor-pointer list-none text-sm font-bold text-ds-accent">
+            Comment gagner des Grains
+          </summary>
+          <ul className="m-0 mt-2 flex list-none flex-col gap-1.5 p-0">
+            {GRAINS_EARNING.map((row) => (
+              <li key={row.label} className="flex gap-2.5 text-[13px] text-ds-text2">
+                <span className="w-9 shrink-0 font-bold tabular-nums text-ds-accenttext">
+                  +{row.amount}
+                </span>
+                {row.label}
+              </li>
+            ))}
+          </ul>
+        </details>
 
       </section>
 
@@ -442,7 +494,7 @@ export default function ProfilePage() {
         </h2>
         <div className="grid grid-cols-2 gap-2.5">
           {GRAIN_BADGES.map((badge) => {
-            const unlocked = grains >= badge.threshold;
+            const unlocked = lifetime >= badge.threshold;
             return (
               <div
                 key={badge.name}
@@ -480,7 +532,7 @@ export default function ProfilePage() {
                 <p className="mt-0.5 text-[11px] text-ds-text2">
                   {badge.threshold === 0
                     ? 'Débloqué'
-                    : `${badge.threshold} Grains`}
+                    : `${badge.threshold} Grains gagnés`}
                 </p>
               </div>
             );
@@ -514,7 +566,7 @@ export default function ProfilePage() {
             <EmptyState
               icon={<MapPin weight="regular" />}
               title="Aucune contribution"
-              description="Check-in près d’un café pour gagner des Grains et apparaître ici."
+              description="Dis « Je suis ici » dans un café pour gagner tes premiers Grains."
               actionLabel="Voir la carte"
               onAction={() => router.push('/map')}
             />
@@ -541,11 +593,14 @@ export default function ProfilePage() {
                     {item.createdAt ? ` · ${formatWhen(item.createdAt)}` : ''}
                   </p>
                 </div>
-                {item.gain != null ? (
-                  <span className="shrink-0 text-[15px] font-bold text-ds-accenttext">
-                    +{item.gain}
-                  </span>
-                ) : null}
+                <span
+                  className={cn(
+                    'shrink-0 text-[15px] font-bold tabular-nums',
+                    item.gain < 0 ? 'text-ds-text2' : 'text-ds-accenttext'
+                  )}
+                >
+                  {item.gain > 0 ? `+${item.gain}` : item.gain}
+                </span>
               </div>
             ))}
           </div>

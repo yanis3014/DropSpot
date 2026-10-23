@@ -11,8 +11,10 @@ import {
   Moon,
   Plus,
   Storefront,
+  Trophy,
   WifiHigh,
 } from "@phosphor-icons/react";
+import Link from "next/link";
 import { getPlaces, type Place } from "@/lib/api/places";
 import { getSavedPlaceIds } from "@/lib/api/saved";
 import { peekCache } from "@/lib/cache/clientCache";
@@ -31,7 +33,17 @@ import {
 import { useAuth } from "@/lib/hooks/useAuth";
 import { usePlaceFilters } from "@/lib/hooks/usePlaceFilters";
 import { usePlacePulse } from "@/lib/hooks/usePlacePulse";
-import type { PlaceSpecMap } from "@/lib/specs";
+import { getMyProfile } from "@/lib/api/profiles";
+import type { OnboardingAnswers } from "@/lib/onboarding";
+import { readLocalOnboarding } from "@/lib/onboardingStorage";
+import {
+  FILTER_SPECS,
+  PLACE_SORTS,
+  sortPlaces,
+  specsForAnswers,
+  type PlaceSortId,
+} from "@/lib/placeRanking";
+import type { PlaceSpecMap, SpecId } from "@/lib/specs";
 import {
   AMENITY_FILTER_IDS,
   type AmenityFilterId,
@@ -91,6 +103,8 @@ export default function NearbyList() {
   const [userCoords, setUserCoords] = useState<LatLng | null>(null);
   const [loading, setLoading] = useState(() => !peekCache("places:full"));
   const [showSuggest, setShowSuggest] = useState(false);
+  const [answers, setAnswers] = useState<OnboardingAnswers | null>(null);
+  const [sortChoice, setSortChoice] = useState<PlaceSortId | null>(null);
 
   const amenityFilters = useMemo(
     () =>
@@ -145,6 +159,42 @@ export default function NearbyList() {
     };
   }, [isAuthenticated]);
 
+  // Envies and must-haves drive « Pour toi » (profile, or the guest copy).
+  useEffect(() => {
+    let cancelled = false;
+    const load: Promise<OnboardingAnswers | null> = isAuthenticated
+      ? getMyProfile().then((p) => p?.onboarding_answers ?? null)
+      : Promise.resolve().then(() => readLocalOnboarding()?.answers ?? null);
+    load
+      .then((a) => {
+        if (!cancelled) setAnswers(a);
+      })
+      .catch((err) => console.error("Error fetching onboarding answers:", err));
+    return () => {
+      cancelled = true;
+    };
+  }, [isAuthenticated]);
+
+  const wantedForYou = useMemo(
+    () =>
+      answers
+        ? specsForAnswers({ envies: answers.envies, needs: answers.needs })
+        : [],
+    [answers]
+  );
+  const filterSpecs = useMemo(
+    () =>
+      filters
+        .map((f) => FILTER_SPECS[f])
+        .filter((s): s is SpecId => Boolean(s)),
+    [filters]
+  );
+  const sort: PlaceSortId =
+    sortChoice ?? (wantedForYou.length > 0 ? "for_you" : "distance");
+  const sortOptions = PLACE_SORTS.filter(
+    (o) => o.id !== "for_you" || wantedForYou.length > 0
+  );
+
   const allPlaceIds = useMemo(() => places.map((p) => p.id), [places]);
   const pulse = usePlacePulse(allPlaceIds);
 
@@ -161,15 +211,10 @@ export default function NearbyList() {
           : null,
       }));
 
-    rows.sort((a, b) => {
-      if (a.distanceM == null && b.distanceM == null) {
-        return a.name.localeCompare(b.name, "fr");
-      }
-      if (a.distanceM == null) return 1;
-      if (b.distanceM == null) return -1;
-      return a.distanceM - b.distanceM;
+    return sortPlaces(rows, sort, {
+      specsByPlace: pulse.specs,
+      wanted: sort === "for_you" ? wantedForYou : filterSpecs,
     });
-
     return rows;
   }, [
     places,
@@ -179,6 +224,9 @@ export default function NearbyList() {
     isAuthenticated,
     savedIds,
     userCoords,
+    sort,
+    wantedForYou,
+    filterSpecs,
   ]);
 
   const openStatusByPlace = pulse.open ?? {};
@@ -203,6 +251,13 @@ export default function NearbyList() {
         <h1 className="font-display text-[34px] font-extrabold leading-tight text-ds-text">
           À proximité
         </h1>
+        <Link
+          href="/top"
+          className="inline-flex h-10 items-center gap-1.5 rounded-full bg-ds-accentsoft px-3.5 text-sm font-bold text-ds-accenttext no-underline"
+        >
+          <Trophy size={17} weight="bold" aria-hidden />
+          Top de Nice
+        </Link>
       </div>
 
       <div className="flex gap-2 overflow-x-auto scrollbar-hide px-4 pb-1 pt-3.5">
@@ -228,8 +283,23 @@ export default function NearbyList() {
         <div className="w-2 shrink-0" aria-hidden />
       </div>
 
-      <div className="flex items-center px-5 pb-2 pt-2.5">
+      <div className="flex items-center justify-between gap-3 px-5 pb-2 pt-2.5">
         <span className="text-sm text-ds-text2">{counterLabel}</span>
+        <label className="flex items-center gap-1.5 text-sm text-ds-text2">
+          <span className="sr-only sm:not-sr-only">Trier :</span>
+          <select
+            value={sort}
+            onChange={(e) => setSortChoice(e.target.value as PlaceSortId)}
+            className="h-9 rounded-full border border-ds-line bg-ds-surface px-3 text-sm font-semibold text-ds-text"
+            aria-label="Trier les cafés"
+          >
+            {sortOptions.map((o) => (
+              <option key={o.id} value={o.id}>
+                {o.label}
+              </option>
+            ))}
+          </select>
+        </label>
       </div>
 
       <div className="flex flex-col gap-2.5 px-4">

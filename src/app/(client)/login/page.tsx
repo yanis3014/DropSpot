@@ -18,6 +18,7 @@ import {
   resolvePostAuthDestination,
   safeRedirectPath,
 } from '@/lib/auth/redirect';
+import { hasProIntent, withProIntent } from '@/lib/auth/proIntent';
 import { cn } from '@/lib/cn';
 
 type AuthMode = 'login' | 'signup';
@@ -70,14 +71,20 @@ function LoginPageContent() {
     [searchParams]
   );
 
+  // "Revendiquer mon café" started on this device: read at use time, the
+  // `?redirect=` may have been lost on the way (e-mail link, Google…).
+  // (Client-only: useSearchParams keeps this page out of the prerender.)
+  const [proIntent] = useState(hasProIntent);
+  const nextAfterAuth = () => withProIntent(preferredNext, hasProIntent());
+
   const espacePro = useMemo(() => {
-    if (searchParams.get('espace') === 'pro') return true;
+    if (searchParams.get('espace') === 'pro' || proIntent) return true;
     return preferredNext.startsWith('/dashboard-pro') || preferredNext === '/pro';
-  }, [preferredNext, searchParams]);
+  }, [preferredNext, proIntent, searchParams]);
 
   const buildAuthCallbackUrl = () => {
     const params = new URLSearchParams();
-    params.set('next', preferredNext);
+    params.set('next', nextAfterAuth());
     return `${window.location.origin}/auth/callback?${params.toString()}`;
   };
 
@@ -92,7 +99,7 @@ function LoginPageContent() {
       const dest = await resolvePostAuthDestination(
         supabase,
         user.id,
-        preferredNext
+        withProIntent(preferredNext, hasProIntent())
       );
       if (!cancelled) leaveLoginPage(dest);
     })();
@@ -162,7 +169,7 @@ function LoginPageContent() {
       const dest = await resolvePostAuthDestination(
         supabase,
         userId,
-        preferredNext
+        nextAfterAuth()
       );
       leaveLoginPage(dest);
     } catch (err) {
@@ -201,7 +208,7 @@ function LoginPageContent() {
         const dest = await resolvePostAuthDestination(
           supabase,
           userId,
-          preferredNext
+          nextAfterAuth()
         );
         leaveLoginPage(dest);
         return;

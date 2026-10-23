@@ -9,8 +9,16 @@ export async function GET(request: NextRequest) {
   const code = searchParams.get('code');
   const preferredNext = safeRedirectPath(searchParams.get('next'));
 
+  // Failures go back to /login with the destination, so signing in again
+  // still lands on the page the user was heading to.
+  const loginWithError = (reason: string) => {
+    const params = new URLSearchParams({ error: reason });
+    if (preferredNext !== '/') params.set('redirect', preferredNext);
+    return NextResponse.redirect(`${origin}/login?${params.toString()}`);
+  };
+
   if (!code) {
-    return NextResponse.redirect(`${origin}/login?error=missing_code`);
+    return loginWithError('missing_code');
   }
 
   const cookiesToApply: CookieToSet[] = [];
@@ -34,9 +42,7 @@ export async function GET(request: NextRequest) {
 
   if (error) {
     console.error('Auth callback error:', error.message);
-    return NextResponse.redirect(
-      `${origin}/login?error=${encodeURIComponent(error.message)}`
-    );
+    return loginWithError(error.message);
   }
 
   const userId = data.session?.user?.id;

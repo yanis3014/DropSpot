@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { Storefront } from "@phosphor-icons/react";
 import Button from "@/components/ui/Button";
+import { writeProIntent } from "@/lib/auth/proIntent";
 
 export default function ProLandingPage() {
   return (
@@ -27,6 +28,7 @@ export default function ProLandingPage() {
       <Link
         href="/dashboard-pro/onboarding"
         prefetch={false}
+        onClick={writeProIntent}
         className="no-underline"
       >
         <Button variant="main" className="w-full">

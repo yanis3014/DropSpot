@@ -9,6 +9,7 @@ import {
   getPendingPlaceClaim,
   type PendingPlaceClaim,
 } from "@/app/(pro)/dashboard-pro/lib/api/vendor";
+import { clearProIntent } from "@/lib/auth/proIntent";
 
 export default function DashboardProOnboardingPage() {
   const router = useRouter();
@@ -27,6 +28,8 @@ export default function DashboardProOnboardingPage() {
 
   useEffect(() => {
     if (!isAuthenticated) return;
+    // Arrived: the "Revendiquer mon café" intent has done its job.
+    clearProIntent();
     let cancelled = false;
     void Promise.all([countProPlaceMemberships(), getPendingPlaceClaim()]).then(
       ([membershipCount, pending]) => {

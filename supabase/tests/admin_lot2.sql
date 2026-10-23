@@ -75,9 +75,9 @@ begin
     raise exception 'FAIL: client can update a place';
   end if;
 
-  v_res := public.admin_log_user_action('suspend_user', v_owner, 'x');
+  v_res := public.admin_set_user_suspended(v_owner, true, 'xxx');
   if (v_res ->> 'ok')::boolean then
-    raise exception 'FAIL: client can write the admin log';
+    raise exception 'FAIL: client can suspend an account';
   end if;
 
   select count(*) into v_count from public.admin_actions;
@@ -159,13 +159,9 @@ begin
     raise exception 'FAIL: owner should be listed as Pro';
   end if;
 
-  v_res := public.admin_log_user_action('suspend_user', v_client, 'spam');
+  v_res := public.admin_set_user_suspended(v_client, true, 'spam');
   if not coalesce((v_res ->> 'ok')::boolean, false) then
-    raise exception 'FAIL: log suspend: %', v_res;
-  end if;
-  v_res := public.admin_log_user_action('delete_everything', v_client, null);
-  if coalesce((v_res ->> 'ok')::boolean, false) then
-    raise exception 'FAIL: arbitrary action accepted in the log';
+    raise exception 'FAIL: suspend: %', v_res;
   end if;
 
   select count(*) into v_count

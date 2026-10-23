@@ -13,15 +13,8 @@ import {
   CaretLeft,
   CaretRight,
   Coffee,
-  WifiHigh,
-  Plugs,
-  SpeakerHigh,
-  Laptop,
-  SunDim,
-  Leaf,
   MapPin,
   NavigationArrow,
-  Lightning,
   ShareNetwork,
   Images,
   Clock,
@@ -37,21 +30,12 @@ import {
 import FavoriteButton from '@/components/places/FavoriteButton';
 import PhotoViewer from '@/components/places/PhotoViewer';
 import CheckInModal from '@/components/spots/CheckInModal';
-import TrophyModal from '@/components/places/TrophyModal';
-import TrophyBadge from '@/components/places/TrophyBadge';
+import CafePulse from '@/components/places/CafePulse';
+import { specMap } from '@/lib/api/specs';
+import type { PlaceSpec } from '@/lib/specs';
 import { Place } from '@/lib/api/places';
-import { crowdConfig, type AggregatedVibe } from '@/lib/api/checkins';
-import { getPlaceTopTrophy, type PlaceTrophy } from '@/lib/api/endorsements';
-import {
-  markTrophyPromptShown,
-  shouldShowTrophyPrompt,
-} from '@/lib/trophyPrompt';
+import type { AggregatedVibe } from '@/lib/api/checkins';
 import { formatAddress, openDirections } from '@/lib/utils/directions';
-import {
-  laptopLabel,
-  noiseLabel,
-  wifiLabel,
-} from '@/lib/placeAmenities';
 import type { PlaceMedia } from '@/lib/api/placeMedia';
 import { buildPlaceGallery, sectionForIndex } from '@/lib/placeGallery';
 import { getPlaceOpenStatus } from '@/lib/api/openingHours';
@@ -64,6 +48,8 @@ export interface PlaceDetailViewProps {
   place: Place;
   media?: PlaceMedia[];
   vibe?: AggregatedVibe | null;
+  /** Café pulse: specificities announced and confirmed on site. */
+  specs?: PlaceSpec[];
   /** Next events and offers of this café. */
   drops?: Drop[];
   isAuthenticated: boolean;
@@ -92,17 +78,11 @@ const MAX_CAROUSEL_DOTS = 8;
 const ROUND_BUTTON =
   'w-11 h-11 flex items-center justify-center rounded-full bg-ds-surface text-ds-text shadow-[var(--shadow)] active:scale-95 transition-all';
 
-function timeAgo(iso: string): string {
-  const minutes = Math.round((Date.now() - new Date(iso).getTime()) / 60000);
-  if (minutes < 1) return "à l'instant";
-  if (minutes < 60) return `il y a ${minutes} min`;
-  return `il y a ${Math.round(minutes / 60)} h`;
-}
-
 export default function PlaceDetailView({
   place,
   media = [],
   vibe,
+  specs = [],
   drops = [],
   isAuthenticated,
   isSaved,
@@ -112,11 +92,6 @@ export default function PlaceDetailView({
 }: PlaceDetailViewProps) {
   const router = useRouter();
   const [showCheckIn, setShowCheckIn] = useState(false);
-  const [trophy, setTrophy] = useState<PlaceTrophy | null>(null);
-  const [trophyPlace, setTrophyPlace] = useState<{
-    id: string;
-    name: string;
-  } | null>(null);
   const [toast, setToast] = useState<string | null>(null);
   const [slideIndex, setSlideIndex] = useState(0);
   const [viewerIndex, setViewerIndex] = useState<number | null>(null);
@@ -133,10 +108,6 @@ export default function PlaceDetailView({
   );
   const photos = gallery.photos;
   const currentSection = sectionForIndex(gallery, slideIndex);
-
-  useEffect(() => {
-    getPlaceTopTrophy(place.id).then(setTrophy);
-  }, [place.id]);
 
   useEffect(() => {
     let cancelled = false;
@@ -187,29 +158,6 @@ export default function PlaceDetailView({
   };
 
   const address = formatAddress(place);
-  const crowd = vibe ? crowdConfig[vibe.crowd_level] : null;
-
-  const features = [
-    place.wifi_speed && {
-      icon: WifiHigh,
-      label: 'Wi-Fi',
-      value: wifiLabel(place.wifi_speed),
-    },
-    place.has_plugs && { icon: Plugs, label: 'Prises', value: 'Disponibles' },
-    place.noise_level && {
-      icon: SpeakerHigh,
-      label: 'Ambiance',
-      value: noiseLabel(place.noise_level),
-    },
-    place.laptop_policy && {
-      icon: Laptop,
-      label: 'Ordinateur',
-      value: laptopLabel(place.laptop_policy),
-    },
-    place.has_terrace && { icon: SunDim, label: 'Terrasse', value: 'Oui' },
-    place.is_vegan && { icon: Leaf, label: 'Vegan', value: 'Options vegan' },
-  ].filter(Boolean) as { icon: typeof WifiHigh; label: string; value: string }[];
-
   const onGalleryScroll = (e: UIEvent<HTMLDivElement>) => {
     const el = e.currentTarget;
     const i = Math.round(el.scrollLeft / (el.clientWidth || 1));
@@ -384,52 +332,11 @@ export default function PlaceDetailView({
           </div>
         </div>
 
-        {trophy && (
-          <div className="px-1 -mt-2">
-            <TrophyBadge trophy={trophy} size="md" />
-          </div>
-        )}
-
-        {crowd && vibe && (
-          <div
-            className={`flex items-center justify-between gap-3 rounded-2xl px-4 py-3 ${crowd.classes}`}
-          >
-            <div className="flex items-center gap-2">
-              <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-current opacity-60" />
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-current" />
-              </span>
-              <span className="text-sm font-bold">
-                {crowd.emoji} {crowd.label} en ce moment
-              </span>
-            </div>
-            <span className="text-[11px] font-medium opacity-80">
-              Wi-Fi {vibe.wifi_speed === 'good' ? '🚀' : '🐌'} ·{' '}
-              {timeAgo(vibe.latest_at)}
-            </span>
-          </div>
-        )}
-
-        {features.length > 0 && (
-          <div className="grid grid-cols-2 gap-2.5">
-            {features.map(({ icon: Icon, label, value }) => (
-              <div
-                key={label}
-                className="flex flex-col gap-1.5 p-3.5 rounded-[18px] bg-ds-surface border border-ds-line"
-              >
-                <div className="flex items-center gap-2">
-                  <span className="w-8 h-8 flex items-center justify-center rounded-[10px] bg-ds-accentsoft text-ds-accenttext">
-                    <Icon size={18} weight="bold" />
-                  </span>
-                  <span className="text-sm font-semibold text-ds-text2">
-                    {label}
-                  </span>
-                </div>
-                <span className="text-base font-bold text-ds-text">{value}</span>
-              </div>
-            ))}
-          </div>
-        )}
+        <CafePulse
+          vibe={vibe}
+          specs={specs}
+          onImHere={() => setShowCheckIn(true)}
+        />
 
         {photos.length > 1 && (
           <section className="flex flex-col gap-2.5">
@@ -574,8 +481,8 @@ export default function PlaceDetailView({
             onClick={() => setShowCheckIn(true)}
             className="flex items-center justify-center gap-2 h-[52px] px-5 bg-ds-accentsoft text-ds-accenttext font-bold rounded-[14px] active:scale-[0.98] transition-all"
           >
-            <Lightning size={20} weight="fill" />
-            Checker
+            <MapPin size={20} weight="fill" />
+            Je suis ici
           </button>
         </div>
       </div>
@@ -592,26 +499,10 @@ export default function PlaceDetailView({
       {showCheckIn && (
         <CheckInModal
           place={{ id: place.id, name: place.name, image_url: place.image_url }}
+          specs={specMap(specs)}
           isAuthenticated={isAuthenticated}
           onClose={() => setShowCheckIn(false)}
           onSubmitted={onCheckedIn}
-          onSuccessDismiss={(p) => {
-            if (isAuthenticated && shouldShowTrophyPrompt()) {
-              markTrophyPromptShown();
-              setTrophyPlace(p);
-            }
-          }}
-        />
-      )}
-
-      {trophyPlace && (
-        <TrophyModal
-          place={trophyPlace}
-          onClose={() => setTrophyPlace(null)}
-          onVoted={() => {
-            showToast('Merci ! 🎉');
-            getPlaceTopTrophy(place.id).then(setTrophy);
-          }}
         />
       )}
 

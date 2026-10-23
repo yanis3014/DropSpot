@@ -40,7 +40,8 @@ import {
 } from "@/lib/cafePresentation";
 import { AMENITY_FILTER_IDS, type AmenityFilterId } from "@/lib/mapFilters";
 import { usePlaceFilters } from "@/lib/hooks/usePlaceFilters";
-import { usePlacesOpenStatus } from "@/hooks/usePlacesOpenStatus";
+import { usePlacePulse } from "@/lib/hooks/usePlacePulse";
+import type { PlaceSpecMap } from "@/lib/specs";
 import {
   distanceMeters,
   formatDistance,
@@ -96,15 +97,15 @@ const FEATURE_LABELS: Record<CafeFeatureId, string> = {
   activites: "Activités",
 };
 
-function cafeFeatures(place: Place): CafeRowFeature[] {
-  return cafeFeatureIds(place).map((id) => ({
+function cafeFeatures(place: Place, specs: PlaceSpecMap): CafeRowFeature[] {
+  return cafeFeatureIds(place, specs).map((id) => ({
     icon: FEATURE_ICONS[id],
     label: FEATURE_LABELS[id],
   }));
 }
 
-function pinIconFor(place: Place): ReactNode {
-  switch (pinKindFor(place)) {
+function pinIconFor(place: Place, specs: PlaceSpecMap): ReactNode {
+  switch (pinKindFor(place, specs)) {
     case "wifi":
       return <WifiHigh size={20} weight="regular" />;
     case "matcha":
@@ -368,20 +369,19 @@ export default function PremiumMap() {
     }
   };
 
+  const allPlaceIds = useMemo(() => places.map((p) => p.id), [places]);
+  const pulse = usePlacePulse(allPlaceIds);
+
   const visiblePlaces = useMemo(
     () =>
       places.filter(
         (p) =>
-          hasValidCoordinates(p) && placeMatchesFilters(p, amenityFilters)
+          hasValidCoordinates(p) && placeMatchesFilters(p, amenityFilters, pulse)
       ),
-    [places, amenityFilters]
+    [places, amenityFilters, pulse]
   );
 
-  const visiblePlaceIds = useMemo(
-    () => visiblePlaces.map((p) => p.id),
-    [visiblePlaces]
-  );
-  const openStatusByPlace = usePlacesOpenStatus(visiblePlaceIds);
+  const openStatusByPlace = pulse.open ?? {};
 
   const selectedMeta = selectedPlace
     ? cafeOpenStatus(selectedPlace, openStatusByPlace[selectedPlace.id])
@@ -494,7 +494,7 @@ export default function PremiumMap() {
               onClick={(e) => handleMarkerClick(e, place)}
             >
               <MapPin
-                icon={pinIconFor(place)}
+                icon={pinIconFor(place, pulse.specs[place.id] ?? {})}
                 selected={selected}
                 label={selected ? place.name : undefined}
                 badge={dropPlaceIds.has(place.id)}
@@ -617,7 +617,7 @@ export default function PremiumMap() {
             status={selectedMeta.status}
             statusDetail={selectedMeta.statusDetail}
             distance={selectedDistance}
-            features={cafeFeatures(selectedPlace)}
+            features={cafeFeatures(selectedPlace, pulse.specs[selectedPlace.id] ?? {})}
             imageSrc={selectedPlace.image_url}
             className="max-w-none rounded-[22px] border-0 shadow-ds"
             onClick={() => router.push(`/place/${selectedPlace.id}`)}

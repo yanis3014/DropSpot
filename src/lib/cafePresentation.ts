@@ -5,6 +5,7 @@ import {
   isPlaceOpenNow,
   normalizeKey,
 } from "@/lib/filters";
+import { isSpecPositive, sortSpecs, type PlaceSpec, type PlaceSpecMap, type SpecId } from "@/lib/specs";
 
 export type CafeOpenStatus = "open" | "closing_soon" | "closed";
 
@@ -28,7 +29,32 @@ export function placeIsCalm(place: Place): boolean {
 
 export type CafeFeatureId = "wifi" | "matcha" | "calme" | "activites";
 
-export function cafeFeatureIds(place: Place): CafeFeatureId[] {
+const FEATURE_BY_SPEC: Partial<Record<SpecId, CafeFeatureId>> = {
+  wifi: "wifi",
+  matcha: "matcha",
+  calm: "calme",
+  events: "activites",
+};
+
+/** Features backed by the café pulse, best confirmed first. */
+function featureIdsFromSpecs(specs: PlaceSpecMap): CafeFeatureId[] {
+  const positive = sortSpecs(
+    Object.values(specs).filter((s): s is PlaceSpec => isSpecPositive(s))
+  );
+  const ids: CafeFeatureId[] = [];
+  for (const s of positive) {
+    const id = FEATURE_BY_SPEC[s.spec];
+    if (id && !ids.includes(id)) ids.push(id);
+  }
+  return ids;
+}
+
+/**
+ * Feature tags of a café. With `specs` (the café pulse), only what the café
+ * announced or the community confirmed; without, a guess from its columns.
+ */
+export function cafeFeatureIds(place: Place, specs?: PlaceSpecMap): CafeFeatureId[] {
+  if (specs) return featureIdsFromSpecs(specs).slice(0, 3);
   const ids: CafeFeatureId[] = [];
   if (place.wifi_speed || place.has_plugs || place.laptop_policy) {
     ids.push("wifi");
@@ -60,7 +86,8 @@ export function cafeOpenStatus(
 
 export type PinKind = "wifi" | "matcha" | "calme" | "activites" | "coffee";
 
-export function pinKindFor(place: Place): PinKind {
+export function pinKindFor(place: Place, specs?: PlaceSpecMap): PinKind {
+  if (specs) return featureIdsFromSpecs(specs)[0] ?? "coffee";
   if (place.wifi_speed || place.laptop_policy) return "wifi";
   if (placeHasMatcha(place)) return "matcha";
   if (placeIsCalm(place)) return "calme";

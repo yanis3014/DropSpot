@@ -97,7 +97,7 @@ begin
   perform set_config('request.jwt.claim.sub', v_admin::text, true);
   perform set_config(
     'request.jwt.claims',
-    json_build_object('sub', v_admin::text, 'role', 'authenticated')::text,
+    json_build_object('sub', v_admin::text, 'role', 'authenticated', 'aal', 'aal2')::text,
     true
   );
   execute 'set local role authenticated';

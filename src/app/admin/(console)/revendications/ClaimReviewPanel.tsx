@@ -5,7 +5,7 @@ import {
   approveClaimAction,
   getClaimProofSignedUrlAction,
   rejectClaimAction,
-} from "@/app/admin/revendications/actions";
+} from "@/app/admin/(console)/revendications/actions";
 
 export type PendingClaimRow = {
   id: string;
@@ -79,7 +79,7 @@ function ClaimRow({ claim }: { claim: PendingClaimRow }) {
   };
 
   return (
-    <li className="rounded-[18px] border border-ds-line bg-ds-surface p-4 flex flex-col gap-3">
+    <li id={`claim-${claim.id}`} className="scroll-mt-6 rounded-[18px] border border-ds-line bg-ds-surface p-4 flex flex-col gap-3">
       <div>
         <h2 className="font-display text-lg font-bold text-ds-text m-0">
           {claim.place_name ?? "Établissement"}

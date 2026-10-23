@@ -5,12 +5,11 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/hooks/useAuth";
 import { fetchIsPro } from "@/app/(pro)/dashboard-pro/lib/api/vendor";
 import { readDropspotMode } from "@/lib/auth/dropspotMode";
-import { hasSeenOnboarding } from "@/lib/onboardingStorage";
 import { hasProIntent, PRO_CLAIM_PATH } from "@/lib/auth/proIntent";
 
 /**
  * Root `/` : pro → dashboard, unless they chose the client app.
- * A first-time guest gets the welcome + envies flow before the map.
+ * A guest always gets the welcome screen first (envies or map from there).
  * A signed-in user who started a café claim on this device resumes it.
  */
 export default function HomeRedirect() {
@@ -26,7 +25,7 @@ export default function HomeRedirect() {
     }
 
     if (!isAuthenticated) {
-      router.replace(hasSeenOnboarding() ? "/map" : "/onboarding");
+      router.replace("/bienvenue");
       return;
     }
 

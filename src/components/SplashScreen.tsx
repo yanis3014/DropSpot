@@ -1,10 +1,16 @@
 const SESSION_KEY = 'dropspot_splash_seen';
+const LAST_LOAD_KEY = 'dropspot_splash_at';
+
+/** Back in the app after this long without a page load: show it again. */
+const SPLASH_IDLE_MS = 30 * 60 * 1000;
 
 /**
- * Runs in <head> before first paint: the splash is shown once per browser
- * session, then hidden via html[data-splash="seen"].
+ * Runs in <head> before first paint. The splash plays at each opening of the
+ * app: a new browser session (app relaunched, new tab) or a return after
+ * SPLASH_IDLE_MS. Full reloads inside a visit (after sign-in…) skip it via
+ * html[data-splash="seen"].
  */
-export const splashBootScript = `(function(){try{var s=sessionStorage;if(s.getItem('${SESSION_KEY}')){document.documentElement.dataset.splash='seen';}else{s.setItem('${SESSION_KEY}','1');}}catch(e){}})();`;
+export const splashBootScript = `(function(){try{var s=sessionStorage,l=localStorage,n=Date.now(),t=Number(l.getItem('${LAST_LOAD_KEY}'))||0;l.setItem('${LAST_LOAD_KEY}',String(n));if(s.getItem('${SESSION_KEY}')&&n-t<${SPLASH_IDLE_MS}){document.documentElement.dataset.splash='seen';}else{s.setItem('${SESSION_KEY}','1');}}catch(e){}})();`;
 
 /**
  * Launch screen. Server component: the entrance and the exit are pure CSS

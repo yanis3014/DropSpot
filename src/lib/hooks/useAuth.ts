@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
 import type { User } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase/client';
 import { clearDropspotMode } from '@/lib/auth/dropspotMode';
@@ -32,7 +31,6 @@ function fetchUserOnce(): Promise<User | null> {
 }
 
 export function useAuth() {
-  const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -57,7 +55,8 @@ export function useAuth() {
   }, []);
 
   /**
-   * Déconnexion unifiée : clear session + état local + redirect `/login`.
+   * Déconnexion unifiée : clear session + état local, puis l'écran d'accueil.
+   * Navigation complète : rien du compte ne reste dans le cache du routeur.
    */
   const signOut = useCallback(async () => {
     try {
@@ -69,10 +68,9 @@ export function useAuth() {
     } finally {
       setUser(null);
       clearDropspotMode();
-      router.push('/login');
-      router.refresh();
+      window.location.replace('/bienvenue?deconnexion=1');
     }
-  }, [router]);
+  }, []);
 
   return {
     user,

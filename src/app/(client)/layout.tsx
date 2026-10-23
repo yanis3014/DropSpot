@@ -1,9 +1,8 @@
 import BottomNav from "@/components/layout/BottomNav";
-import SplashScreen from "@/components/SplashScreen";
 import IosInstallPrompt from "@/components/pwa/IosInstallPrompt";
 import AndroidInstallPrompt from "@/components/pwa/AndroidInstallPrompt";
 
-/** B2C shell: max-w-md, BottomNav, splash & PWA prompts. `(client)` is omitted from URLs. */
+/** B2C shell: max-w-md, BottomNav & PWA prompts. `(client)` is omitted from URLs. */
 export default function ClientLayout({ children }: LayoutProps<"/">) {
   return (
     <>
@@ -13,7 +12,6 @@ export default function ClientLayout({ children }: LayoutProps<"/">) {
       </div>
       <IosInstallPrompt />
       <AndroidInstallPrompt />
-      <SplashScreen />
     </>
   );
 }

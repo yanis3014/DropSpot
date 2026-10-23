@@ -24,6 +24,7 @@ const HIDDEN_PREFIXES = [
   "/reglages",
   "/valider",
   "/login",
+  "/bienvenue",
   "/onboarding",
   "/admin",
 ] as const;

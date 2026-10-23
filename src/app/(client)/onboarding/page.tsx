@@ -92,6 +92,8 @@ function OnboardingGate() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const wantsEdit = searchParams.get('edit') === '1';
+  // Coming from `/bienvenue`: the welcome screen was just shown.
+  const fromWelcome = searchParams.get('start') === 'envies';
   const rawNext = searchParams.get('next');
   const safeNext = rawNext ? safeRedirectPath(rawNext) : null;
   const next = safeNext && !safeNext.startsWith('/onboarding') ? safeNext : null;
@@ -120,6 +122,7 @@ function OnboardingGate() {
     <OnboardingFlow
       mode={mode}
       next={next}
+      fromWelcome={fromWelcome}
       profileAnswers={profile?.onboarding_answers ?? null}
       initialName={profile?.full_name ?? displayName ?? ''}
       photoUrl={profile?.avatar_url ?? avatarUrl ?? null}
@@ -132,6 +135,7 @@ function OnboardingGate() {
 interface OnboardingFlowProps {
   mode: Mode;
   next: string | null;
+  fromWelcome: boolean;
   profileAnswers: OnboardingAnswers | null;
   initialName: string;
   photoUrl: string | null;
@@ -139,11 +143,15 @@ interface OnboardingFlowProps {
   onSave: (patch: ProfilePatch) => Promise<UpsertProfileResult>;
 }
 
-function initialState(mode: Mode, profileAnswers: OnboardingAnswers | null) {
+function initialState(
+  mode: Mode,
+  profileAnswers: OnboardingAnswers | null,
+  fromWelcome: boolean
+) {
   if (mode === 'guest') {
     const local = readLocalOnboarding();
     return {
-      step: 'welcome' as Step,
+      step: (fromWelcome ? 'envies' : 'welcome') as Step,
       answers: local?.answers ?? emptyOnboardingAnswers(),
     };
   }
@@ -160,6 +168,7 @@ function initialState(mode: Mode, profileAnswers: OnboardingAnswers | null) {
 function OnboardingFlow({
   mode,
   next,
+  fromWelcome,
   profileAnswers,
   initialName,
   photoUrl,
@@ -167,7 +176,9 @@ function OnboardingFlow({
   onSave,
 }: OnboardingFlowProps) {
   const router = useRouter();
-  const [initial] = useState(() => initialState(mode, profileAnswers));
+  const [initial] = useState(() =>
+    initialState(mode, profileAnswers, fromWelcome)
+  );
   const [step, setStep] = useState<Step>(initial.step);
   const [answers, setAnswers] = useState<OnboardingAnswers>(initial.answers);
   // Needs are pre-filled from the envies until the user edits them.
@@ -334,7 +345,9 @@ function OnboardingFlow({
             : step === 'where'
               ? () => setStep('needs')
               : mode === 'guest'
-                ? () => setStep('welcome')
+                ? fromWelcome
+                  ? () => router.replace('/bienvenue')
+                  : () => setStep('welcome')
                 : mode === 'edit'
                   ? () => router.replace('/profile')
                   : undefined
@@ -349,6 +362,7 @@ function OnboardingFlow({
         <WelcomeStep
           onStart={() => setStep('envies')}
           onLogin={() => router.push('/login?redirect=/map')}
+          onPro={() => router.push('/pro')}
         />
       )}
 

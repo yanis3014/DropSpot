@@ -38,6 +38,7 @@ function drop(partial: Partial<Drop> & { id: string }): Drop {
   const hour = 60 * 60 * 1000;
   return {
     title: partial.id,
+    family: 'offer',
     drop_type: 'promo',
     start_time: new Date(Date.now() - hour).toISOString(),
     end_time: new Date(Date.now() + hour).toISOString(),
@@ -214,12 +215,12 @@ describe('drop mis en avant', () => {
   it('préfère un drop qui colle aux envies, ignore les drops finis', () => {
     const ended = drop({
       id: 'ended',
-      drop_type: 'sport',
+      drop_type: 'sport', family: 'event', event_category: 'sport',
       start_time: new Date(Date.now() - 3 * 3600_000).toISOString(),
       end_time: new Date(Date.now() - 3600_000).toISOString(),
     });
     const promo = drop({ id: 'promo' });
-    const run = drop({ id: 'run', drop_type: 'sport' });
+    const run = drop({ id: 'run', drop_type: 'sport', family: 'event', event_category: 'sport' });
     expect(pickDropForAnswers([ended, promo, run], { envies: ['sport'] })?.id).toBe('run');
     expect(pickDropForAnswers([ended, promo], { envies: ['sport'] })?.id).toBe('promo');
     expect(pickDropForAnswers([ended], { envies: ['sport'] })).toBeNull();

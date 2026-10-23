@@ -4,6 +4,7 @@ import type {
 } from '@/app/(pro)/dashboard-pro/lib/api/flashDrops';
 import type { DropFormExample } from '@/app/(pro)/dashboard-pro/lib/proDrops/examples';
 import { formatParisTimeHHMM } from '@/app/(pro)/dashboard-pro/lib/proHome/parisTime';
+import type { EventCategory } from '@/lib/api/drops';
 
 const PARIS = 'Europe/Paris';
 
@@ -14,6 +15,8 @@ export interface DropFormState {
   title: string;
   description: string;
   kind: FlashDropKind;
+  /** Events only (kind = activity). Null until the café picks one. */
+  eventCategory: EventCategory | null;
   discountValue: string;
   discountUnit: 'percent' | 'eur';
   startsAtLocal: string;
@@ -29,6 +32,7 @@ export interface DropContentWritePayload {
   title: string;
   description: string | null;
   kind: FlashDropKind;
+  event_category: EventCategory | null;
   discount_value: number | null;
   discount_unit: 'percent' | 'eur' | null;
   conditions: string | null;
@@ -258,17 +262,19 @@ export function buildDefaultDropFormState(now: Date = new Date()): DropFormState
   const start = new Date(now.getTime());
   start.setSeconds(0, 0);
   const end = new Date(start.getTime() + 2 * 3_600_000);
+  // Events first: most cafés start with something they already organise.
   return {
     title: '',
     description: '',
-    kind: 'discount',
+    kind: 'activity',
+    eventCategory: null,
     discountValue: '20',
     discountUnit: 'percent',
     startsAtLocal: formatParisDatetimeLocal(start),
     endsAtLocal: formatParisDatetimeLocal(end),
-    quantityMode: 'limited',
+    quantityMode: 'unlimited',
     maxUses: '20',
-    conditions: DEFAULT_DROP_CONDITIONS,
+    conditions: '',
   };
 }
 
@@ -300,6 +306,7 @@ export function buildFormStateFromDrop(
     title: drop.title.slice(0, 60),
     description: drop.description ?? '',
     kind,
+    eventCategory: kind === 'activity' ? (drop.event_category ?? 'other') : null,
     discountValue,
     discountUnit: kind === 'special_price' ? 'eur' : discountUnit,
     startsAtLocal: dates.startsAtLocal,
@@ -309,7 +316,9 @@ export function buildFormStateFromDrop(
     conditions:
       drop.conditions != null && drop.conditions.trim() !== ''
         ? drop.conditions
-        : DEFAULT_DROP_CONDITIONS,
+        : kind === 'activity'
+          ? ''
+          : DEFAULT_DROP_CONDITIONS,
   };
 }
 
@@ -325,11 +334,15 @@ export function buildFormStateFromExample(
     title: example.title.slice(0, 60),
     description: example.description ?? '',
     kind: example.kind,
+    eventCategory: example.kind === 'activity' ? (example.eventCategory ?? 'other') : null,
     discountValue: matchPct ? matchPct[1] : base.discountValue,
     discountUnit: example.kind === 'special_price' ? 'eur' : 'percent',
-    quantityMode: 'limited',
     maxUses: matchPlaces ? matchPlaces[1] : base.maxUses,
-    conditions: example.conditions ?? DEFAULT_DROP_CONDITIONS,
+    quantityMode: example.kind === 'activity' && !matchPlaces ? 'unlimited' : 'limited',
+    conditions:
+      example.kind === 'activity'
+        ? ''
+        : (example.conditions ?? DEFAULT_DROP_CONDITIONS),
   };
 }
 
@@ -356,6 +369,10 @@ export function validateDropFormState(
 
   if (!ctx.placeId || !ctx.vendorId) {
     return { valid: false, error: 'Aucun établissement sélectionné.' };
+  }
+
+  if (state.kind === 'activity' && !state.eventCategory) {
+    return { valid: false, error: 'Choisis le type d’événement.' };
   }
 
   let discountValue: number | null = null;
@@ -418,6 +435,7 @@ export function validateDropFormState(
       title,
       description: state.description.trim() || null,
       kind: state.kind,
+      event_category: state.kind === 'activity' ? state.eventCategory : null,
       discount_value: discountValue,
       discount_unit: discountUnit,
       conditions: state.conditions.trim() || null,

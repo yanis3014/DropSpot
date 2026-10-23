@@ -8,6 +8,7 @@ import {
   type UIEvent,
 } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import {
   CaretLeft,
   CaretRight,
@@ -24,7 +25,15 @@ import {
   ShareNetwork,
   Images,
   Clock,
+  Tag,
 } from '@phosphor-icons/react';
+import { EVENT_CATEGORY_ICONS } from '@/components/drops/DropCard';
+import {
+  EVENT_CATEGORY_LABELS,
+  formatStartLabel,
+  isDropLive,
+  type Drop,
+} from '@/lib/api/drops';
 import FavoriteButton from '@/components/places/FavoriteButton';
 import PhotoViewer from '@/components/places/PhotoViewer';
 import CheckInModal from '@/components/spots/CheckInModal';
@@ -55,6 +64,8 @@ export interface PlaceDetailViewProps {
   place: Place;
   media?: PlaceMedia[];
   vibe?: AggregatedVibe | null;
+  /** Next events and offers of this café. */
+  drops?: Drop[];
   isAuthenticated: boolean;
   isSaved: boolean;
   onToggleSave: (placeId: string) => void | Promise<void>;
@@ -92,6 +103,7 @@ export default function PlaceDetailView({
   place,
   media = [],
   vibe,
+  drops = [],
   isAuthenticated,
   isSaved,
   onToggleSave,
@@ -459,6 +471,45 @@ export default function PlaceDetailView({
                 </button>
               ))}
             </div>
+          </section>
+        )}
+
+        {drops.length > 0 && (
+          <section className="flex flex-col gap-2.5">
+            <h2 className="font-display px-1 text-xl font-extrabold text-ds-text">
+              Ses drops
+            </h2>
+            {drops.map((drop) => {
+              const Icon =
+                drop.family === 'event'
+                  ? EVENT_CATEGORY_ICONS[drop.event_category ?? 'other']
+                  : Tag;
+              const live = isDropLive(drop);
+              return (
+                <Link
+                  key={drop.id}
+                  href={`/drop/${drop.id}`}
+                  className="flex items-center gap-3 rounded-[18px] border border-ds-line bg-ds-surface p-3.5 no-underline active:scale-[0.99] transition-transform"
+                >
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-ds-accentsoft text-ds-accenttext">
+                    <Icon size={20} weight="bold" aria-hidden />
+                  </span>
+                  <span className="flex min-w-0 flex-col">
+                    <span className="truncate text-[15px] font-bold text-ds-text">
+                      {drop.title}
+                    </span>
+                    <span className="text-[13px] font-medium text-ds-text2">
+                      {drop.family === 'event'
+                        ? EVENT_CATEGORY_LABELS[drop.event_category ?? 'other']
+                        : 'Offre'}
+                      {' · '}
+                      {live ? 'En ce moment' : formatStartLabel(drop.start_time)}
+                    </span>
+                  </span>
+                  <CaretRight size={18} weight="bold" className="ml-auto shrink-0 text-ds-text2" />
+                </Link>
+              );
+            })}
           </section>
         )}
 

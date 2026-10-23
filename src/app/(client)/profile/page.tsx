@@ -30,6 +30,13 @@ import { avatarColorHex, envieLabel } from '@/lib/onboarding';
 import { ENVIE_ICONS } from '@/components/onboarding/icons';
 import { useTheme } from '@/lib/theme';
 import { cn } from '@/lib/cn';
+import { EVENT_CATEGORY_ICONS } from '@/components/drops/DropCard';
+import {
+  formatStartLabel,
+  getMyUpcomingEvents,
+  isDropLive,
+  type Drop,
+} from '@/lib/api/drops';
 
 const PREVIEW_CONTRIBS = 3;
 
@@ -111,6 +118,7 @@ export default function ProfilePage() {
   const [contribsLoading, setContribsLoading] = useState(true);
   const [showAllContribs, setShowAllContribs] = useState(false);
   const [isPro, setIsPro] = useState(false);
+  const [myEvents, setMyEvents] = useState<Drop[]>([]);
 
   useEffect(() => {
     if (!isAuthenticated) return;
@@ -128,6 +136,19 @@ export default function ProfilePage() {
     setProfileSyncKey(nextProfileKey);
     setName(profile?.full_name ?? displayName ?? '');
   }
+
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    let cancelled = false;
+    getMyUpcomingEvents()
+      .then((rows) => {
+        if (!cancelled) setMyEvents(rows);
+      })
+      .catch((err) => console.error(err));
+    return () => {
+      cancelled = true;
+    };
+  }, [isAuthenticated]);
 
   useEffect(() => {
     if (!isAuthenticated) return;
@@ -377,6 +398,38 @@ export default function ProfilePage() {
         </div>
 
       </section>
+
+      {myEvents.length > 0 ? (
+        <section className="flex flex-col gap-2">
+          <h2 className="font-display px-1 text-[19px] font-bold text-ds-text">
+            Mes prochains événements
+          </h2>
+          {myEvents.map((drop) => {
+            const Icon = EVENT_CATEGORY_ICONS[drop.event_category ?? 'other'];
+            return (
+              <Link
+                key={drop.id}
+                href={`/drop/${drop.id}`}
+                className="flex items-center gap-3 rounded-[18px] border border-ds-line bg-ds-surface p-3.5 no-underline"
+              >
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-ds-accentsoft text-ds-accenttext">
+                  <Icon size={20} weight="bold" aria-hidden />
+                </span>
+                <span className="flex min-w-0 flex-col">
+                  <span className="truncate text-[15px] font-bold text-ds-text">
+                    {drop.title}
+                  </span>
+                  <span className="truncate text-[13px] font-medium text-ds-text2">
+                    {drop.places?.name ?? 'Café'} ·{' '}
+                    {isDropLive(drop) ? 'En ce moment' : formatStartLabel(drop.start_time)}
+                  </span>
+                </span>
+                <CaretRight size={18} weight="bold" className="ml-auto shrink-0 text-ds-text2" />
+              </Link>
+            );
+          })}
+        </section>
+      ) : null}
 
       {/* Badges (from gamification) */}
       <section className="flex flex-col gap-2">

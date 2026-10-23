@@ -49,6 +49,7 @@ import {
 } from "@/lib/geo";
 import { useTheme } from "@/lib/theme";
 import MapPin from "@/components/ui/MapPin";
+import { dropMoment, getActiveDrops } from "@/lib/api/drops";
 import CafeRow, { type CafeRowFeature } from "@/components/ui/CafeRow";
 import Chip from "@/components/ui/Chip";
 import EmptyState from "@/components/ui/EmptyState";
@@ -172,6 +173,7 @@ export default function PremiumMap() {
     () => peekCache<Place[]>("places:full") ?? []
   );
   const [error, setError] = useState<string | null>(null);
+  const [dropPlaceIds, setDropPlaceIds] = useState<Set<string>>(() => new Set());
   const [userCoords, setUserCoords] = useState<LatLng | null>(null);
   const [geoDenied, setGeoDenied] = useState(false);
   const [locBannerDismissed, setLocBannerDismissed] = useState(false);
@@ -212,6 +214,30 @@ export default function PremiumMap() {
     };
 
     void fetchPlaces();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // Cafés with a drop live now or later today get a dot on their pin.
+  useEffect(() => {
+    let cancelled = false;
+    getActiveDrops()
+      .then((drops) => {
+        if (cancelled) return;
+        const now = Date.now();
+        setDropPlaceIds(
+          new Set(
+            drops
+              .filter((d) => {
+                const moment = dropMoment(d, now);
+                return moment === "now" || moment === "today";
+              })
+              .map((d) => d.place_id)
+          )
+        );
+      })
+      .catch((err) => console.error("Error fetching drops:", err));
     return () => {
       cancelled = true;
     };
@@ -471,7 +497,12 @@ export default function PremiumMap() {
                 icon={pinIconFor(place)}
                 selected={selected}
                 label={selected ? place.name : undefined}
-                aria-label={place.name}
+                badge={dropPlaceIds.has(place.id)}
+                aria-label={
+                  dropPlaceIds.has(place.id)
+                    ? `${place.name}, drop aujourd’hui`
+                    : place.name
+                }
                 className={cn("shadow-ds", selected && "max-w-[220px]")}
                 onClick={(ev) => {
                   ev.stopPropagation();

@@ -321,6 +321,9 @@ describe('Composant DropForm', () => {
     const onSaved = vi.fn();
     const initial = {
       ...buildDefaultDropFormState(new Date('2026-10-22T13:00:00.000Z')),
+      kind: 'discount' as const,
+      quantityMode: 'limited' as const,
+      conditions: DEFAULT_DROP_CONDITIONS,
       startsAtLocal: '2026-10-22T15:00',
       endsAtLocal: '2026-10-22T17:00',
     };
@@ -364,6 +367,7 @@ describe('Composant DropForm', () => {
       title: '−20 % sur les boissons chaudes',
       description: null,
       kind: 'discount',
+      event_category: null,
       discount_value: 20,
       discount_unit: 'percent',
       conditions: DEFAULT_DROP_CONDITIONS,
@@ -377,6 +381,51 @@ describe('Composant DropForm', () => {
     expect(payload).not.toHaveProperty('is_active');
     expect(payload).not.toHaveProperty('stopped_at');
     expect(onSaved).toHaveBeenCalled();
+  });
+});
+
+describe('Composant DropForm (événement)', () => {
+  beforeEach(() => {
+    mockInsertFlashDrop.mockReset();
+  });
+
+  it('demande le type d’événement puis l’envoie avec le drop', async () => {
+    const user = userEvent.setup();
+    const initial = {
+      ...buildDefaultDropFormState(new Date('2026-10-22T13:00:00.000Z')),
+      startsAtLocal: '2026-10-25T09:00',
+      endsAtLocal: '2026-10-25T11:00',
+    };
+    mockInsertFlashDrop.mockResolvedValue({
+      id: 'event-created',
+      vendor_id: 'vendor-user-id',
+      place_id: 'place-1',
+      title: 'Run du dimanche',
+      starts_at: '2026-10-25T08:00:00.000Z',
+      ends_at: '2026-10-25T10:00:00.000Z',
+      is_active: true,
+    });
+
+    render(<DropForm place={verifiedPlace} initialState={initial} />);
+
+    await user.type(screen.getByLabelText(/titre/i), 'Run du dimanche');
+    const submitBtn = screen.getByRole('button', {
+      name: /publier à|programmer/i,
+    });
+    await user.click(submitBtn);
+    expect(mockInsertFlashDrop).not.toHaveBeenCalled();
+    expect(screen.getByRole('alert')).toHaveTextContent(/type d’événement/i);
+
+    await user.click(screen.getByRole('button', { name: 'Sport' }));
+    await user.click(submitBtn);
+
+    expect(mockInsertFlashDrop).toHaveBeenCalledTimes(1);
+    const payload = mockInsertFlashDrop.mock.calls[0][0];
+    expect(payload).toMatchObject({
+      kind: 'activity',
+      event_category: 'sport',
+      max_uses: null,
+    });
   });
 });
 

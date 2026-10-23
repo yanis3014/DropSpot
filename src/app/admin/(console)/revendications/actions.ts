@@ -2,7 +2,6 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
-import { createServiceClient } from "@/lib/supabase/service";
 
 async function assertAdmin() {
   const supabase = await createClient();
@@ -63,8 +62,9 @@ export async function getClaimProofSignedUrlAction(claimId: string) {
     return { ok: false as const, error: "proof_not_found" };
   }
 
-  const service = createServiceClient();
-  const { data: signed, error: signError } = await service.storage
+  // Signed with the admin's own session: the storage policy lets admins
+  // (with the 6-digit code) read claim proofs.
+  const { data: signed, error: signError } = await gate.supabase.storage
     .from("claim-proofs")
     .createSignedUrl(claim.proof_path, 3600);
 

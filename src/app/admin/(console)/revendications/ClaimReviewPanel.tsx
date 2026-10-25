@@ -43,14 +43,19 @@ function ClaimRow({ claim }: { claim: PendingClaimRow }) {
   const [message, setMessage] = useState<string | null>(null);
 
   const onViewProof = () => {
+    // Open the tab during the click, or popup blockers stop it after the await.
+    const tab = window.open("", "_blank");
+    if (tab) tab.opener = null;
     startTransition(async () => {
       setMessage(null);
       const res = await getClaimProofSignedUrlAction(claim.id);
       if (!res.ok || !("url" in res)) {
+        tab?.close();
         setMessage(res.error ?? "Impossible d’ouvrir le justificatif.");
         return;
       }
-      window.open(res.url, "_blank", "noopener,noreferrer");
+      if (tab) tab.location.href = res.url;
+      else window.location.assign(res.url);
     });
   };
 

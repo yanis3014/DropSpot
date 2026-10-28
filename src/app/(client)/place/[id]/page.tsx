@@ -1,7 +1,7 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { Suspense, useCallback, useEffect, useRef, useState } from 'react';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { Spinner } from '@phosphor-icons/react';
 import PlaceDetailView from '@/components/places/PlaceDetailView';
 import { getPlaceById, Place } from '@/lib/api/places';
@@ -12,12 +12,27 @@ import { getPlaceSpecs } from '@/lib/api/specs';
 import { getPlaceRanks, type PlaceRank } from '@/lib/api/rankings';
 import type { PlaceSpec } from '@/lib/specs';
 import { getSavedPlaceIds, savePlace, unsavePlace } from '@/lib/api/saved';
+import {
+  logPlaceEvent,
+  placeEventSourceFromParam,
+} from '@/lib/api/placeEvents';
 import { useAuth } from '@/lib/hooks/useAuth';
 
-export default function PlacePage() {
+function PlaceLoading() {
+  return (
+    <div className="flex flex-col items-center justify-center min-h-[100dvh] gap-3 bg-ds-bg">
+      <Spinner size={28} className="animate-spin text-ds-ok" />
+      <p className="text-sm text-ds-text2">Chargement du café…</p>
+    </div>
+  );
+}
+
+function PlacePageInner() {
   const params = useParams();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const id = typeof params?.id === 'string' ? params.id : '';
+  const viewLoggedFor = useRef<string | null>(null);
 
   const { isAuthenticated, loading: authLoading } = useAuth();
   const [place, setPlace] = useState<Place | null>(null);
@@ -118,6 +133,17 @@ export default function PlacePage() {
     [isAuthenticated, savedIds]
   );
 
+  useEffect(() => {
+    if (!place?.id) return;
+    if (viewLoggedFor.current === place.id) return;
+    viewLoggedFor.current = place.id;
+    logPlaceEvent(
+      place.id,
+      'view',
+      placeEventSourceFromParam(searchParams.get('from'))
+    );
+  }, [place, searchParams]);
+
   // After « Je suis ici »: live vibe and specificities changed.
   const refreshPulse = useCallback(async () => {
     if (!id) return;
@@ -134,12 +160,7 @@ export default function PlacePage() {
   }, [id]);
 
   if (loading || authLoading) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[100dvh] gap-3 bg-ds-bg">
-        <Spinner size={28} className="animate-spin text-ds-ok" />
-        <p className="text-sm text-ds-text2">Chargement du café…</p>
-      </div>
-    );
+    return <PlaceLoading />;
   }
 
   if (error || !place) {
@@ -174,5 +195,13 @@ export default function PlacePage() {
       onCheckedIn={refreshPulse}
       backHref="/map"
     />
+  );
+}
+
+export default function PlacePage() {
+  return (
+    <Suspense fallback={<PlaceLoading />}>
+      <PlacePageInner />
+    </Suspense>
   );
 }

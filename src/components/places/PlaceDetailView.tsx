@@ -39,6 +39,7 @@ import { rankChipLabel } from '@/lib/placeRanking';
 import { Place } from '@/lib/api/places';
 import type { AggregatedVibe } from '@/lib/api/checkins';
 import { formatAddress, openDirections } from '@/lib/utils/directions';
+import { logPlaceEvent } from '@/lib/api/placeEvents';
 import type { PlaceMedia } from '@/lib/api/placeMedia';
 import { buildPlaceGallery, sectionForIndex } from '@/lib/placeGallery';
 import { getPlaceOpenStatus } from '@/lib/api/openingHours';
@@ -334,7 +335,10 @@ export default function PlaceDetailView({
             </p>
             <button
               type="button"
-              onClick={() => openDirections(place)}
+              onClick={() => {
+                logPlaceEvent(place.id, 'directions');
+                openDirections(place);
+              }}
               className="shrink-0 inline-flex items-center gap-1 h-11 text-[15px] font-bold text-ds-accent"
             >
               <NavigationArrow size={18} weight="fill" />

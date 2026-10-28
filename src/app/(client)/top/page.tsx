@@ -102,7 +102,7 @@ export default function TopPage() {
             return (
               <Link
                 key={row.place_id}
-                href={`/place/${row.place_id}`}
+                href={`/place/${row.place_id}?from=top`}
                 className="flex items-center gap-3 rounded-[20px] border border-ds-line bg-ds-surface p-3 no-underline active:scale-[0.99]"
               >
                 <span

@@ -12,7 +12,7 @@ export interface ProLockProps {
   /** Feature name shown next to the lock. */
   label: string;
   variant?: ProLockVariant;
-  /** CTA for the row variant (default « Débloquer »). */
+  /** CTA for the row variant (default « Débloquer »). Row hides the button without onUnlock. */
   actionLabel?: string;
   onUnlock?: () => void;
   className?: string;
@@ -44,13 +44,15 @@ export default function ProLock({
         </span>
         <span className="min-w-0 flex-1 font-bold text-ds-text">{label}</span>
         <PlanBadge plan="pro" />
-        <Button
-          variant="tonal"
-          onClick={onUnlock}
-          className="h-9 shrink-0 rounded-[10px] px-3 text-sm"
-        >
-          {actionLabel}
-        </Button>
+        {onUnlock ? (
+          <Button
+            variant="tonal"
+            onClick={onUnlock}
+            className="h-9 shrink-0 rounded-[10px] px-3 text-sm"
+          >
+            {actionLabel}
+          </Button>
+        ) : null}
       </div>
     );
   }

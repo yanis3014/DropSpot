@@ -55,7 +55,7 @@ const COMPARE_ROWS: CompareRow[] = [
     freeIncluded: false,
   },
   {
-    label: 'Connexion à ton ERP pour les statistiques',
+    label: 'Statistiques détaillées (30 et 90 jours)',
     freeIncluded: false,
   },
 ];
@@ -79,8 +79,8 @@ const PRO_UNLOCK_CARDS: {
     text: 'Plus de photos et une courte vidéo sur ta fiche.',
   },
   {
-    title: 'Connexion à l’ERP',
-    text: 'Les chiffres détaillés arrivent dans ton outil de statistiques.',
+    title: 'Statistiques détaillées',
+    text: 'Tes heures de pointe, le détail de chaque drop et ce que cherchent tes visiteurs.',
   },
 ];
 

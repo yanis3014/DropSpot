@@ -620,7 +620,7 @@ export default function PremiumMap() {
             features={cafeFeatures(selectedPlace, pulse.specs[selectedPlace.id] ?? {})}
             imageSrc={selectedPlace.image_url}
             className="max-w-none rounded-[22px] border-0 shadow-ds"
-            onClick={() => router.push(`/place/${selectedPlace.id}`)}
+            onClick={() => router.push(`/place/${selectedPlace.id}?from=map`)}
           />
         ) : null}
       </div>

@@ -1,7 +1,14 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import {
+  Suspense,
+  startTransition,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { Spinner } from '@phosphor-icons/react';
 import PlaceDetailView from '@/components/places/PlaceDetailView';
 import { getPlaceById, Place } from '@/lib/api/places';
@@ -12,12 +19,27 @@ import { getPlaceSpecs } from '@/lib/api/specs';
 import { getPlaceRanks, type PlaceRank } from '@/lib/api/rankings';
 import type { PlaceSpec } from '@/lib/specs';
 import { getSavedPlaceIds, savePlace, unsavePlace } from '@/lib/api/saved';
+import {
+  logPlaceEvent,
+  placeEventSourceFromParam,
+} from '@/lib/api/placeEvents';
 import { useAuth } from '@/lib/hooks/useAuth';
 
-export default function PlacePage() {
+function PlaceLoading() {
+  return (
+    <div className="flex flex-col items-center justify-center min-h-[100dvh] gap-3 bg-ds-bg">
+      <Spinner size={28} className="animate-spin text-ds-ok" />
+      <p className="text-sm text-ds-text2">Chargement du café…</p>
+    </div>
+  );
+}
+
+function PlacePageInner() {
   const params = useParams();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const id = typeof params?.id === 'string' ? params.id : '';
+  const viewLoggedFor = useRef<string | null>(null);
 
   const { isAuthenticated, loading: authLoading } = useAuth();
   const [place, setPlace] = useState<Place | null>(null);
@@ -31,15 +53,13 @@ export default function PlacePage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!id) {
-      setLoading(false);
-      setError('Identifiant manquant');
-      return;
-    }
+    if (!id) return;
 
     let cancelled = false;
-    setLoading(true);
-    setError(null);
+    startTransition(() => {
+      setLoading(true);
+      setError(null);
+    });
 
     (async () => {
       try {
@@ -84,15 +104,19 @@ export default function PlacePage() {
   }, [id]);
 
   useEffect(() => {
-    if (authLoading) return;
-    if (!isAuthenticated) {
-      setSavedIds([]);
-      return;
-    }
+    if (authLoading || !isAuthenticated) return;
+    let cancelled = false;
     getSavedPlaceIds()
-      .then(setSavedIds)
+      .then((ids) => {
+        if (!cancelled) setSavedIds(ids);
+      })
       .catch((err) => console.error('Error loading saved places:', err));
+    return () => {
+      cancelled = true;
+    };
   }, [isAuthenticated, authLoading]);
+
+  const effectiveSavedIds = isAuthenticated ? savedIds : [];
 
   const handleToggleSave = useCallback(
     async (placeId: string) => {
@@ -118,6 +142,17 @@ export default function PlacePage() {
     [isAuthenticated, savedIds]
   );
 
+  useEffect(() => {
+    if (!place?.id) return;
+    if (viewLoggedFor.current === place.id) return;
+    viewLoggedFor.current = place.id;
+    logPlaceEvent(
+      place.id,
+      'view',
+      placeEventSourceFromParam(searchParams.get('from'))
+    );
+  }, [place, searchParams]);
+
   // After « Je suis ici »: live vibe and specificities changed.
   const refreshPulse = useCallback(async () => {
     if (!id) return;
@@ -133,13 +168,23 @@ export default function PlacePage() {
     }
   }, [id]);
 
-  if (loading || authLoading) {
+  if (!id) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[100dvh] gap-3 bg-ds-bg">
-        <Spinner size={28} className="animate-spin text-ds-ok" />
-        <p className="text-sm text-ds-text2">Chargement du café…</p>
+      <div className="flex flex-col items-center justify-center min-h-[100dvh] gap-4 px-6 bg-ds-bg text-center">
+        <p className="text-base font-bold text-ds-text">Identifiant manquant</p>
+        <button
+          type="button"
+          onClick={() => router.push('/map')}
+          className="rounded-xl bg-ds-pin text-white font-bold text-sm px-5 py-3 active:scale-[0.98] transition-all"
+        >
+          Retour à la carte
+        </button>
       </div>
     );
+  }
+
+  if (loading || authLoading) {
+    return <PlaceLoading />;
   }
 
   if (error || !place) {
@@ -169,10 +214,18 @@ export default function PlacePage() {
       drops={drops}
       ranks={ranks}
       isAuthenticated={isAuthenticated}
-      isSaved={savedIds.includes(place.id)}
+      isSaved={effectiveSavedIds.includes(place.id)}
       onToggleSave={handleToggleSave}
       onCheckedIn={refreshPulse}
       backHref="/map"
     />
+  );
+}
+
+export default function PlacePage() {
+  return (
+    <Suspense fallback={<PlaceLoading />}>
+      <PlacePageInner />
+    </Suspense>
   );
 }

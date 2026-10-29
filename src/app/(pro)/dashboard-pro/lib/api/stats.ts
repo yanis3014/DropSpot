@@ -1,0 +1,87 @@
+import { supabase } from '@/lib/supabase/client';
+
+/** Free plan may only request this many days of place summary (SQL: FREE_STATS_MAX_DAYS). */
+export const FREE_STATS_MAX_DAYS = 7;
+
+/** Allowed `p_days` values for `pro_place_summary`. */
+export const PLACE_SUMMARY_PERIODS = [7, 30, 90] as const;
+export type PlaceSummaryDays = (typeof PLACE_SUMMARY_PERIODS)[number];
+
+export type PlaceSummary = {
+  from: string;
+  until: string;
+  days: number;
+  views: number;
+  directions: number;
+  check_ins: number;
+  unique_visitors: number;
+  saves: number;
+  codes_redeemed: number;
+};
+
+export type PlaceSummaryErrorCode =
+  | 'forbidden'
+  | 'pro_required'
+  | 'invalid_period'
+  | 'unknown';
+
+export class PlaceSummaryError extends Error {
+  readonly code: PlaceSummaryErrorCode;
+
+  constructor(code: PlaceSummaryErrorCode, message?: string) {
+    super(message ?? code);
+    this.name = 'PlaceSummaryError';
+    this.code = code;
+  }
+}
+
+function translateSummaryError(message: string | undefined): PlaceSummaryErrorCode {
+  const m = (message ?? '').toLowerCase();
+  if (m.includes('forbidden')) return 'forbidden';
+  if (m.includes('pro_required')) return 'pro_required';
+  if (m.includes('invalid_period')) return 'invalid_period';
+  return 'unknown';
+}
+
+function asNumber(value: unknown): number {
+  const n = typeof value === 'number' ? value : Number(value);
+  return Number.isFinite(n) ? n : 0;
+}
+
+/** Calls `pro_place_summary` and maps Postgres errors to PlaceSummaryError. */
+export async function getPlaceSummary(
+  placeId: string,
+  days: PlaceSummaryDays
+): Promise<PlaceSummary> {
+  if (!supabase) {
+    throw new PlaceSummaryError('unknown', 'Supabase client not initialized');
+  }
+  if (!PLACE_SUMMARY_PERIODS.includes(days)) {
+    throw new PlaceSummaryError('invalid_period');
+  }
+
+  const { data, error } = await supabase.rpc('pro_place_summary', {
+    p_place: placeId,
+    p_days: days,
+  });
+
+  if (error) {
+    throw new PlaceSummaryError(
+      translateSummaryError(error.message),
+      error.message
+    );
+  }
+
+  const row = (data ?? {}) as Record<string, unknown>;
+  return {
+    from: String(row.from ?? ''),
+    until: String(row.until ?? ''),
+    days: asNumber(row.days) || days,
+    views: asNumber(row.views),
+    directions: asNumber(row.directions),
+    check_ins: asNumber(row.check_ins),
+    unique_visitors: asNumber(row.unique_visitors),
+    saves: asNumber(row.saves),
+    codes_redeemed: asNumber(row.codes_redeemed),
+  };
+}

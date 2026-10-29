@@ -1,9 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import {
-  ArrowSquareOut,
+  startTransition,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
+import {
   Check,
   Lightning,
   Lock,
@@ -12,6 +18,7 @@ import {
 } from "@phosphor-icons/react";
 import DropCard from "@/components/pro/DropCard";
 import StatTile from "@/components/pro/StatTile";
+import ProLock from "@/components/pro/ProLock";
 import ConfirmDialog from "@/components/pro/ConfirmDialog";
 import StatusTag from "@/components/pro/StatusTag";
 import QuickDropSheet from "@/app/(pro)/dashboard-pro/components/QuickDropSheet";
@@ -27,6 +34,11 @@ import {
 } from "@/app/(pro)/dashboard-pro/lib/api/proHome";
 import type { FlashDrop } from "@/app/(pro)/dashboard-pro/lib/api/flashDrops";
 import type { VendorTodayStats } from "@/app/(pro)/dashboard-pro/lib/api/validate";
+import {
+  FREE_STATS_MAX_DAYS,
+  getPlaceSummary,
+  type PlaceSummary,
+} from "@/app/(pro)/dashboard-pro/lib/api/stats";
 import {
   buildChecklistTasks,
   countChecklistDone,
@@ -44,7 +56,8 @@ import { supabase } from "@/lib/supabase/client";
 import { cn } from "@/lib/cn";
 import type { Place } from "@/lib/api/places";
 
-const ERP_URL = process.env.NEXT_PUBLIC_ERP_URL?.trim() ?? "";
+/** Internal /statistiques page — enable when that route ships. */
+const STATS_PAGE_ENABLED = false;
 
 function firstName(full: string | null | undefined): string {
   const t = full?.trim();
@@ -69,6 +82,7 @@ function DashboardProHomeLoaded({
   actorName,
   withCafe,
 }: LoadedProps) {
+  const router = useRouter();
   const placeId = place.id;
   const dateParis = useMemo(() => formatParisDateLong(new Date()), []);
 
@@ -82,12 +96,15 @@ function DashboardProHomeLoaded({
   const [actionLoading, setActionLoading] = useState(false);
   const [stopError, setStopError] = useState<string | null>(null);
   const [quickDropOpen, setQuickDropOpen] = useState(false);
+  const [weekSummary, setWeekSummary] = useState<PlaceSummary | null>(null);
+  const [weekLoading, setWeekLoading] = useState(false);
   const isPendingVerification =
     meta?.verificationStatus != null
       ? meta.verificationStatus !== "verified"
       : place.verification_status != null &&
         place.verification_status !== "verified";
   const canCreateDrop = role === "owner" || role === "manager";
+  const canViewWeekStats = role === "owner" || role === "manager";
   const checklistDone = meta ? countChecklistDone(meta.checklist) : 0;
 
   const checklistTasks = useMemo(() => {
@@ -136,6 +153,27 @@ function DashboardProHomeLoaded({
       cancelled = true;
     };
   }, [applySnapshot, placeId]);
+
+  useEffect(() => {
+    if (!canViewWeekStats) return;
+    let cancelled = false;
+    startTransition(() => {
+      setWeekLoading(true);
+    });
+    void getPlaceSummary(placeId, FREE_STATS_MAX_DAYS)
+      .then((summary) => {
+        if (!cancelled) setWeekSummary(summary);
+      })
+      .catch(() => {
+        if (!cancelled) setWeekSummary(null);
+      })
+      .finally(() => {
+        if (!cancelled) setWeekLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [canViewWeekStats, placeId]);
 
   const liveDropIdsKey = useMemo(
     () =>
@@ -226,6 +264,8 @@ function DashboardProHomeLoaded({
   const usedToday = stats?.validations_today ?? 0;
   const liveCount = liveDrops.length;
   const statsMuted = isPendingVerification;
+  // No figures while loading or when the summary failed: never show a fake 0.
+  const weekMuted = statsMuted || weekLoading || weekSummary == null;
 
   return (
     <div className="flex flex-col gap-5 pb-6 lg:gap-5">
@@ -312,16 +352,13 @@ function DashboardProHomeLoaded({
           </p>
         </div>
         <div className="flex items-center gap-2.5">
-          {ERP_URL ? (
-            <a
-              href={ERP_URL}
-              target="_blank"
-              rel="noopener noreferrer"
+          {STATS_PAGE_ENABLED && canViewWeekStats ? (
+            <Link
+              href={withCafe("/statistiques")}
               className="inline-flex h-11 items-center gap-2 rounded-xl px-4 text-[15px] font-bold text-ds-accent no-underline"
             >
               Voir les statistiques
-              <ArrowSquareOut size={18} weight="bold" aria-hidden />
-            </a>
+            </Link>
           ) : null}
           {isPendingVerification ? (
             <span className="inline-flex h-11 cursor-not-allowed items-center gap-2 rounded-xl border border-ds-line bg-ds-surface2 px-4 text-[15px] font-bold text-ds-text2">
@@ -431,6 +468,52 @@ function DashboardProHomeLoaded({
             </div>
           )}
         </section>
+
+        {canViewWeekStats ? (
+          <section className="flex flex-col gap-3">
+            <div>
+              <h2 className="font-display m-0 text-lg font-bold text-ds-text">
+                Ta semaine
+              </h2>
+              <p className="m-0 mt-0.5 text-sm text-ds-text2">
+                7 derniers jours
+              </p>
+            </div>
+            <div className="grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-4">
+              <StatTile
+                label="vues de ta fiche"
+                value={weekMuted ? "—" : weekSummary.views}
+                muted={weekMuted}
+              />
+              <StatTile
+                label="passages confirmés"
+                value={weekMuted ? "—" : weekSummary.check_ins}
+                muted={weekMuted}
+              />
+              <StatTile
+                label="favoris ajoutés"
+                value={weekMuted ? "—" : weekSummary.saves}
+                muted={weekMuted}
+              />
+              <StatTile
+                label="codes utilisés"
+                value={weekMuted ? "—" : weekSummary.codes_redeemed}
+                muted={weekMuted}
+              />
+            </div>
+            {!hasPro ? (
+              <ProLock
+                variant="row"
+                label="Compare avec la semaine d'avant et vois tes heures de pointe"
+                onUnlock={
+                  role === "owner"
+                    ? () => router.push(withCafe("/abonnement"))
+                    : undefined
+                }
+              />
+            ) : null}
+          </section>
+        ) : null}
 
         <section className="flex flex-col gap-3">
           <h2 className="font-display m-0 text-lg font-bold text-ds-text">

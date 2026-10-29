@@ -264,7 +264,7 @@ export default function DropPage() {
             {ended ? "Terminé" : whenLabel}
           </p>
           <Link
-            href={`/place/${drop.place_id}`}
+            href={`/place/${drop.place_id}?from=drop`}
             className="flex items-center gap-2 text-[15px] font-semibold text-ds-text no-underline"
           >
             <NavigationArrow size={18} weight="bold" className="text-ds-text2" aria-hidden />
@@ -340,7 +340,7 @@ export default function DropPage() {
             <Button
               variant="tonal"
               className="h-12 w-full"
-              onClick={() => router.push(`/place/${drop.place_id}`)}
+              onClick={() => router.push(`/place/${drop.place_id}?from=drop`)}
             >
               Voir le café
             </Button>

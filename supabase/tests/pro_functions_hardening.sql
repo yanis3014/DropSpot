@@ -7,14 +7,15 @@ begin
   -- No SECURITY DEFINER function in public is callable without signing in,
   -- except the public readers used by the map without an account
   -- (opening hours, live vibes, event participant counts and café
-  -- specificities, no user ids).
+  -- specificities, no user ids), plus log_place_event (anonymous views of a
+  -- café sheet, write-only, deduplicated per day).
   select string_agg(p.oid::regprocedure::text, ', ')
   into v_fn
   from pg_proc p
   where p.pronamespace = 'public'::regnamespace
     and p.prosecdef
     and p.proname not in ('place_open_status', 'places_open_status', 'get_place_vibes', 'drop_participants', 'get_place_specs',
-                           'get_spec_rankings', 'get_place_ranks')
+                           'get_spec_rankings', 'get_place_ranks', 'log_place_event')
     and has_function_privilege('anon', p.oid, 'execute');
   if v_fn is not null then
     raise exception 'FAIL: anon can execute SECURITY DEFINER functions: %', v_fn;

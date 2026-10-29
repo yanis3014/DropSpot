@@ -1,0 +1,68 @@
+import { supabase } from '@/lib/supabase/client';
+
+export type PlaceEventKind = 'view' | 'directions';
+export type PlaceEventSource = 'map' | 'list' | 'top' | 'drop' | 'direct';
+
+const ANON_STORAGE_KEY = 'dropspot_anon_id';
+
+const VALID_SOURCES = new Set<PlaceEventSource>([
+  'map',
+  'list',
+  'top',
+  'drop',
+  'direct',
+]);
+
+/** Maps `?from=` query values to a tracked source; anything else → direct. */
+export function placeEventSourceFromParam(
+  raw: string | null | undefined
+): PlaceEventSource {
+  if (!raw) return 'direct';
+  return VALID_SOURCES.has(raw as PlaceEventSource)
+    ? (raw as PlaceEventSource)
+    : 'direct';
+}
+
+function readOrCreateAnonId(): string | null {
+  try {
+    const existing = localStorage.getItem(ANON_STORAGE_KEY);
+    if (existing) return existing;
+    const id = crypto.randomUUID();
+    localStorage.setItem(ANON_STORAGE_KEY, id);
+    return id;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Fire-and-forget place view / directions ping.
+ * Never throws to the UI; skips silently when Supabase or anon id is unavailable.
+ */
+export function logPlaceEvent(
+  placeId: string,
+  kind: PlaceEventKind,
+  source?: PlaceEventSource
+): void {
+  if (!supabase || !placeId) return;
+
+  void (async () => {
+    try {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      const isLoggedIn = Boolean(session?.user?.id);
+      const anonId = isLoggedIn ? null : readOrCreateAnonId();
+      if (!isLoggedIn && !anonId) return;
+
+      await supabase.rpc('log_place_event', {
+        p_place: placeId,
+        p_kind: kind,
+        p_source: source ?? null,
+        p_anon_id: anonId,
+      });
+    } catch {
+      // Fire and forget: never block the place sheet.
+    }
+  })();
+}

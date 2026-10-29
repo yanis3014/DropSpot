@@ -340,7 +340,7 @@ export default function NearbyList() {
                 }
                 features={cafeFeatures(place, pulse.specs[place.id] ?? {})}
                 imageSrc={place.image_url}
-                href={`/place/${place.id}`}
+                href={`/place/${place.id}?from=list`}
                 className={cn("max-w-none")}
               />
             );

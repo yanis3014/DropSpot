@@ -165,6 +165,11 @@ begin
     (u_visitor, place_a, 'moderate', 'slow', v_until - interval '2 days'),
     (u_owner_b, place_a, 'full', 'good', v_until - interval '3 days');
 
+  -- A view on the Paris day exactly p_days before v_until is outside the window.
+  insert into public.place_events (place_id, kind, source, viewer_hash, day)
+  values (place_a, 'view', 'map', 'outside-window',
+          ((v_until - interval '7 days') at time zone 'Europe/Paris')::date);
+
   insert into public.saved_places (user_id, place_id, created_at)
   values
     (u_visitor, place_a, v_until - interval '1 day'),

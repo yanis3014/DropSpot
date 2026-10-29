@@ -264,6 +264,8 @@ function DashboardProHomeLoaded({
   const usedToday = stats?.validations_today ?? 0;
   const liveCount = liveDrops.length;
   const statsMuted = isPendingVerification;
+  // No figures while loading or when the summary failed: never show a fake 0.
+  const weekMuted = statsMuted || weekLoading || weekSummary == null;
 
   return (
     <div className="flex flex-col gap-5 pb-6 lg:gap-5">
@@ -480,46 +482,34 @@ function DashboardProHomeLoaded({
             <div className="grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-4">
               <StatTile
                 label="vues de ta fiche"
-                value={
-                  statsMuted || weekLoading
-                    ? "—"
-                    : (weekSummary?.views ?? 0)
-                }
-                muted={statsMuted || weekLoading}
+                value={weekMuted ? "—" : weekSummary.views}
+                muted={weekMuted}
               />
               <StatTile
                 label="passages confirmés"
-                value={
-                  statsMuted || weekLoading
-                    ? "—"
-                    : (weekSummary?.check_ins ?? 0)
-                }
-                muted={statsMuted || weekLoading}
+                value={weekMuted ? "—" : weekSummary.check_ins}
+                muted={weekMuted}
               />
               <StatTile
                 label="favoris ajoutés"
-                value={
-                  statsMuted || weekLoading
-                    ? "—"
-                    : (weekSummary?.saves ?? 0)
-                }
-                muted={statsMuted || weekLoading}
+                value={weekMuted ? "—" : weekSummary.saves}
+                muted={weekMuted}
               />
               <StatTile
                 label="codes utilisés"
-                value={
-                  statsMuted || weekLoading
-                    ? "—"
-                    : (weekSummary?.codes_redeemed ?? 0)
-                }
-                muted={statsMuted || weekLoading}
+                value={weekMuted ? "—" : weekSummary.codes_redeemed}
+                muted={weekMuted}
               />
             </div>
             {!hasPro ? (
               <ProLock
                 variant="row"
                 label="Compare avec la semaine d'avant et vois tes heures de pointe"
-                onUnlock={() => router.push(withCafe("/abonnement"))}
+                onUnlock={
+                  role === "owner"
+                    ? () => router.push(withCafe("/abonnement"))
+                    : undefined
+                }
               />
             ) : null}
           </section>

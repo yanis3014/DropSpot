@@ -142,7 +142,8 @@ begin
   into v_views, v_directions
   from public.place_events pe
   where pe.place_id = p_place
-    and pe.day >= (v_from at time zone 'Europe/Paris')::date
+    -- Exactly p_days Paris days, ending on the day of v_until.
+    and pe.day > (v_from at time zone 'Europe/Paris')::date
     and pe.day <= (v_until at time zone 'Europe/Paris')::date;
 
   select

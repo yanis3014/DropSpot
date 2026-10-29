@@ -55,8 +55,9 @@ export function useAuth() {
   }, []);
 
   /**
-   * Déconnexion unifiée : clear session + état local, puis l'écran d'accueil.
-   * Navigation complète : rien du compte ne reste dans le cache du routeur.
+   * Déconnexion unifiée : clear session + caches de pages PWA + état local,
+   * puis l'écran d'accueil. Navigation complète : rien du compte ne reste
+   * dans le cache du routeur.
    */
   const signOut = useCallback(async () => {
     try {
@@ -65,11 +66,31 @@ export function useAuth() {
       }
     } catch (err) {
       console.error('signOut error:', err);
-    } finally {
-      setUser(null);
-      clearDropspotMode();
-      window.location.replace('/bienvenue?deconnexion=1');
     }
+
+    // Drop Workbox page/RSC caches only (keep images, fonts, static assets).
+    // Names come from next-pwa defaults + our runtimeCaching (see public/sw.js).
+    try {
+      if (typeof window !== 'undefined' && 'caches' in window) {
+        const keys = await caches.keys();
+        await Promise.all(
+          keys
+            .filter(
+              (k) =>
+                k.startsWith('pages') ||
+                k === 'others' ||
+                k.includes('rsc')
+            )
+            .map((k) => caches.delete(k))
+        );
+      }
+    } catch (err) {
+      console.error('signOut cache clear error:', err);
+    }
+
+    setUser(null);
+    clearDropspotMode();
+    window.location.replace('/bienvenue?deconnexion=1');
   }, []);
 
   return {

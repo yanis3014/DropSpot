@@ -1,6 +1,36 @@
 import type { NextConfig } from "next";
 import withPWA from "@ducanh2912/next-pwa";
 
+/**
+ * Account-related shells: never cache HTML, RSC payloads, or Server Actions.
+ * Exact path or any nested segment (e.g. `/profile/grains`, `/admin/cafes`).
+ */
+const PRIVATE_PATH_PREFIXES = [
+  "/profile",
+  "/dashboard-pro",
+  "/etablissement",
+  "/specificites",
+  "/reglages",
+  "/valider",
+  "/equipe",
+  "/abonnement",
+  "/admin",
+  "/onboarding",
+] as const;
+
+function escapeRegex(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+/**
+ * Workbox serializes `urlPattern` into `public/sw.js` (no closures).
+ * A RegExp is self-contained. The SW only controls this origin, so host
+ * matching is enough; query (`?_rsc=`) and POST Server Actions share the path.
+ */
+const PRIVATE_PATH_URL_PATTERN = new RegExp(
+  `^https?://[^/]+(?:${PRIVATE_PATH_PREFIXES.map(escapeRegex).join("|")})(?:[/?#]|$)`
+);
+
 const nextConfig: NextConfig = {
   transpilePackages: ['react-map-gl', 'mapbox-gl'],
   async redirects() {
@@ -57,6 +87,19 @@ export default withPWA({
   extendDefaultRuntimeCaching: true,
   workboxOptions: {
     runtimeCaching: [
+      // Must stay first: Workbox uses the first matching route (GET + POST).
+      {
+        urlPattern: PRIVATE_PATH_URL_PATTERN,
+        handler: "NetworkOnly",
+        method: "GET",
+        options: { cacheName: "private-pages" },
+      },
+      {
+        urlPattern: PRIVATE_PATH_URL_PATTERN,
+        handler: "NetworkOnly",
+        method: "POST",
+        options: { cacheName: "private-pages" },
+      },
       {
         urlPattern: /^https:\/\/.*\.supabase\.co\/.*/i,
         handler: "NetworkOnly",

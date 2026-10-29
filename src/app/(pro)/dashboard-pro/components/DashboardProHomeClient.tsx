@@ -2,7 +2,13 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import {
+  startTransition,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import {
   Check,
   Lightning,
@@ -149,12 +155,11 @@ function DashboardProHomeLoaded({
   }, [applySnapshot, placeId]);
 
   useEffect(() => {
-    if (!canViewWeekStats) {
-      setWeekSummary(null);
-      return;
-    }
+    if (!canViewWeekStats) return;
     let cancelled = false;
-    setWeekLoading(true);
+    startTransition(() => {
+      setWeekLoading(true);
+    });
     void getPlaceSummary(placeId, FREE_STATS_MAX_DAYS)
       .then((summary) => {
         if (!cancelled) setWeekSummary(summary);

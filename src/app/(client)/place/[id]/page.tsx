@@ -1,6 +1,13 @@
 'use client';
 
-import { Suspense, useCallback, useEffect, useRef, useState } from 'react';
+import {
+  Suspense,
+  startTransition,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { Spinner } from '@phosphor-icons/react';
 import PlaceDetailView from '@/components/places/PlaceDetailView';
@@ -46,15 +53,13 @@ function PlacePageInner() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!id) {
-      setLoading(false);
-      setError('Identifiant manquant');
-      return;
-    }
+    if (!id) return;
 
     let cancelled = false;
-    setLoading(true);
-    setError(null);
+    startTransition(() => {
+      setLoading(true);
+      setError(null);
+    });
 
     (async () => {
       try {
@@ -99,15 +104,19 @@ function PlacePageInner() {
   }, [id]);
 
   useEffect(() => {
-    if (authLoading) return;
-    if (!isAuthenticated) {
-      setSavedIds([]);
-      return;
-    }
+    if (authLoading || !isAuthenticated) return;
+    let cancelled = false;
     getSavedPlaceIds()
-      .then(setSavedIds)
+      .then((ids) => {
+        if (!cancelled) setSavedIds(ids);
+      })
       .catch((err) => console.error('Error loading saved places:', err));
+    return () => {
+      cancelled = true;
+    };
   }, [isAuthenticated, authLoading]);
+
+  const effectiveSavedIds = isAuthenticated ? savedIds : [];
 
   const handleToggleSave = useCallback(
     async (placeId: string) => {
@@ -159,6 +168,21 @@ function PlacePageInner() {
     }
   }, [id]);
 
+  if (!id) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[100dvh] gap-4 px-6 bg-ds-bg text-center">
+        <p className="text-base font-bold text-ds-text">Identifiant manquant</p>
+        <button
+          type="button"
+          onClick={() => router.push('/map')}
+          className="rounded-xl bg-ds-pin text-white font-bold text-sm px-5 py-3 active:scale-[0.98] transition-all"
+        >
+          Retour à la carte
+        </button>
+      </div>
+    );
+  }
+
   if (loading || authLoading) {
     return <PlaceLoading />;
   }
@@ -190,7 +214,7 @@ function PlacePageInner() {
       drops={drops}
       ranks={ranks}
       isAuthenticated={isAuthenticated}
-      isSaved={savedIds.includes(place.id)}
+      isSaved={effectiveSavedIds.includes(place.id)}
       onToggleSave={handleToggleSave}
       onCheckedIn={refreshPulse}
       backHref="/map"

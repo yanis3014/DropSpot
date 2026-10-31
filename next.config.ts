@@ -1,5 +1,6 @@
 import type { NextConfig } from "next";
 import withPWA from "@ducanh2912/next-pwa";
+import { securityHeaders } from "./src/lib/security/headers";
 
 /**
  * Account-related shells: never cache HTML, RSC payloads, or Server Actions.
@@ -33,6 +34,14 @@ const PRIVATE_PATH_URL_PATTERN = new RegExp(
 
 const nextConfig: NextConfig = {
   transpilePackages: ['react-map-gl', 'mapbox-gl'],
+  async headers() {
+    return [
+      {
+        source: "/:path*",
+        headers: securityHeaders(),
+      },
+    ];
+  },
   async redirects() {
     return [
       { source: '/gamification', destination: '/profile', permanent: true },

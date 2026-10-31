@@ -237,13 +237,13 @@ export function placeMatchesFilter(
   }
   const categories = place.categories ?? [];
 
-  if (key === 'wifi' || key === 'wi-fi' || key === 'remote' || key === 'plugs') {
-    return (
-      !!place.has_plugs ||
-      !!place.wifi_speed ||
-      !!place.laptop_policy ||
-      categories.includes('remote')
-    );
+  if (key === 'plugs') return !!place.has_plugs;
+  if (key === 'wifi' || key === 'wi-fi' || key === 'remote') {
+    // Without the pulse, only a Wi-Fi the café row says is good. Not
+    // laptop_policy or has_plugs: laptop_policy has a default on every café,
+    // which let every café through.
+    const wifi = normalizeKey(place.wifi_speed);
+    return wifi === 'fast' || wifi === 'fiber' || wifi === 'good';
   }
   if (key === 'matcha') {
     const haystack = placeHaystack(place);

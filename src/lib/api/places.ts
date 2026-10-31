@@ -5,6 +5,7 @@ import {
   type PlaceCategoryId,
 } from '@/lib/filters';
 import { cachedQuery } from '@/lib/cache/clientCache';
+import type { Bounds } from '@/lib/map/viewport';
 export interface Place {
   id: string;
   name: string;
@@ -202,6 +203,47 @@ export async function getMapPlaces(): Promise<Place[]> {
     console.error('Error in getMapPlaces:', error);
     throw error;
   }
+}
+
+/** Most cafés asked for one map area (server cap: 1 000). */
+export const MAP_AREA_LIMIT = 500;
+
+/** PostgREST / Postgres codes for a function that does not exist yet. */
+function isMissingFunction(error: { code?: string } | null): boolean {
+  return error?.code === 'PGRST202' || error?.code === '42883';
+}
+
+/**
+ * Map pins of the cafés inside `bounds` (places_in_bbox), closest to the
+ * centre first. `complete` is false when the area holds more than `limit`
+ * cafés. Falls back to the full pin list (`everywhere`) while the SQL
+ * function is not deployed.
+ */
+export async function getPlacesInBounds(
+  bounds: Bounds,
+  limit: number = MAP_AREA_LIMIT
+): Promise<{ places: Place[]; complete: boolean; everywhere?: boolean }> {
+  if (!supabase) return { places: [], complete: true };
+  const { data, error } = await supabase.rpc('places_in_bbox', {
+    p_min_lng: bounds.minLng,
+    p_min_lat: bounds.minLat,
+    p_max_lng: bounds.maxLng,
+    p_max_lat: bounds.maxLat,
+    p_limit: limit,
+  });
+  if (error) {
+    if (isMissingFunction(error)) {
+      const all = await getMapPlaces();
+      return { places: all, complete: true, everywhere: true };
+    }
+    console.error('Error fetching places in area:', error);
+    throw error;
+  }
+  const rows = (data ?? []) as RawPlace[];
+  return {
+    places: rows.map(normalizePlace).filter(hasValidCoordinates),
+    complete: rows.length < limit,
+  };
 }
 
 export async function getPlaceById(id: string): Promise<Place | null> {

@@ -29,8 +29,7 @@ import {
   Moon,
   WifiHigh,
 } from "@phosphor-icons/react";
-import { getPlaces, getPlaceById, type Place } from "@/lib/api/places";
-import { peekCache } from "@/lib/cache/clientCache";
+import { getPlaceById, getPlacesInBounds, type Place } from "@/lib/api/places";
 import { hasValidCoordinates, placeMatchesFilters } from "@/lib/filters";
 import {
   cafeFeatureIds,
@@ -41,6 +40,15 @@ import {
 import { AMENITY_FILTER_IDS, type AmenityFilterId } from "@/lib/mapFilters";
 import { usePlaceFilters } from "@/lib/hooks/usePlaceFilters";
 import { usePlacePulse } from "@/lib/hooks/usePlacePulse";
+import {
+  AREA_PADDING_RATIO,
+  CLUSTER_MAX_ZOOM,
+  boundsOf,
+  containsBounds,
+  groupPoints,
+  padBounds,
+  type Bounds,
+} from "@/lib/map/viewport";
 import type { PlaceSpecMap } from "@/lib/specs";
 import {
   distanceMeters,
@@ -71,6 +79,50 @@ const GEOLOCATE_TIMEOUT_MS = 10_000;
 const GEOLOCATE_ERROR_HINT_MS = 4_000;
 /** GeolocationPositionError.PERMISSION_DENIED */
 const GEO_ERROR_PERMISSION_DENIED = 1;
+
+const INITIAL_VIEW = { longitude: 7.262, latitude: 43.7102, zoom: 13 };
+/** First area asked before Mapbox knows the screen size (≈ Nice centre). */
+const INITIAL_AREA: Bounds = {
+  minLng: INITIAL_VIEW.longitude - 0.06,
+  minLat: INITIAL_VIEW.latitude - 0.06,
+  maxLng: INITIAL_VIEW.longitude + 0.06,
+  maxLat: INITIAL_VIEW.latitude + 0.06,
+};
+/** Wait after the map stops moving before asking for its area. */
+const AREA_LOAD_DEBOUNCE_MS = 250;
+/** A loaded area is asked again after this long (new cafés). */
+const AREA_TTL_MS = 2 * 60_000;
+
+/**
+ * Cafés and areas already loaded, kept for the SPA session so coming back
+ * to the Carte tab shows the pins at once.
+ */
+const loadedPlaces = new globalThis.Map<string, Place>();
+let loadedAreas: { bounds: Bounds; at: number }[] = [];
+const WORLD: Bounds = { minLng: -180, minLat: -90, maxLng: 180, maxLat: 90 };
+
+function isAreaLoaded(bounds: Bounds): boolean {
+  const now = Date.now();
+  loadedAreas = loadedAreas.filter((a) => now - a.at < AREA_TTL_MS);
+  return loadedAreas.some((a) => containsBounds(a.bounds, bounds));
+}
+
+/**
+ * Loads the cafés of `view` plus a margin and adds them to the ones already
+ * loaded. Resolves with every loaded café, or null when the area was
+ * already loaded.
+ */
+async function fetchArea(view: Bounds): Promise<Place[] | null> {
+  if (isAreaLoaded(view)) return null;
+  const area = padBounds(view, AREA_PADDING_RATIO);
+  const { places, complete, everywhere } = await getPlacesInBounds(area);
+  for (const p of places) loadedPlaces.set(p.id, p);
+  // A full answer means the area holds more cafés: ask again next move.
+  if (complete) {
+    loadedAreas.push({ bounds: everywhere ? WORLD : area, at: Date.now() });
+  }
+  return [...loadedPlaces.values()];
+}
 
 const FILTER_CHIPS: {
   id: AmenityFilterId;
@@ -170,9 +222,8 @@ export default function PremiumMap() {
   );
 
   const [selectedPlace, setSelectedPlace] = useState<Place | null>(null);
-  const [places, setPlaces] = useState<Place[]>(
-    () => peekCache<Place[]>("places:full") ?? []
-  );
+  const [places, setPlaces] = useState<Place[]>(() => [...loadedPlaces.values()]);
+  const [zoom, setZoom] = useState(INITIAL_VIEW.zoom);
   const [error, setError] = useState<string | null>(null);
   const [dropPlaceIds, setDropPlaceIds] = useState<Set<string>>(() => new Set());
   const [userCoords, setUserCoords] = useState<LatLng | null>(null);
@@ -196,29 +247,66 @@ export default function PremiumMap() {
 
   const mapStyle = theme === "dark" ? MAP_STYLE_DARK : MAP_STYLE_LIGHT;
 
+  const areaTimerRef = useRef<number | null>(null);
+
+  // Only the cafés of the visible area (plus a margin) are loaded; each new
+  // area adds its cafés to the ones already on the map.
+  const loadArea = useCallback((view: Bounds) => {
+    return fetchArea(view)
+      .then((all) => {
+        if (!all) return;
+        setPlaces(all);
+        setError(null);
+      })
+      .catch((err) => {
+        console.error("Error fetching places:", err);
+        if (loadedPlaces.size === 0) setError("Impossible de charger les cafés");
+      });
+  }, []);
+
   // The map starts right away; markers appear once places arrive, so Mapbox
   // and the Supabase query load in parallel instead of one after the other.
   useEffect(() => {
     let cancelled = false;
-
-    const fetchPlaces = async () => {
-      try {
-        const data = await getPlaces({ withCoordinatesOnly: true });
-        if (cancelled) return;
-        setPlaces(data);
-        if (data.length === 0) setError("Aucun café trouvé");
-        else setError(null);
-      } catch (err) {
+    fetchArea(INITIAL_AREA)
+      .then((all) => {
+        if (!cancelled && all) setPlaces(all);
+      })
+      .catch((err) => {
         console.error("Error fetching places:", err);
-        if (!cancelled) setError("Impossible de charger les cafés");
-      }
-    };
-
-    void fetchPlaces();
+        if (!cancelled && loadedPlaces.size === 0) {
+          setError("Impossible de charger les cafés");
+        }
+      });
     return () => {
       cancelled = true;
     };
   }, []);
+
+  const handleMoveEnd = useCallback(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    setZoom(map.getZoom());
+    if (areaTimerRef.current !== null) window.clearTimeout(areaTimerRef.current);
+    areaTimerRef.current = window.setTimeout(() => {
+      areaTimerRef.current = null;
+      const b = map.getBounds();
+      if (!b) return;
+      void loadArea({
+        minLng: b.getWest(),
+        minLat: b.getSouth(),
+        maxLng: b.getEast(),
+        maxLat: b.getNorth(),
+      });
+    }, AREA_LOAD_DEBOUNCE_MS);
+  }, [loadArea]);
+
+  useEffect(
+    () => () => {
+      if (areaTimerRef.current !== null) window.clearTimeout(areaTimerRef.current);
+    },
+    []
+  );
 
   // Cafés with a drop live now or later today get a dot on their pin.
   useEffect(() => {
@@ -274,12 +362,13 @@ export default function PremiumMap() {
   }, []);
 
   const handleMapLoad = useCallback(() => {
+    handleMoveEnd();
     if (didAutoGeolocate.current) return;
     didAutoGeolocate.current = true;
     requestAnimationFrame(() => {
       void triggerGeolocateIfGranted(geolocateControlRef.current);
     });
-  }, []);
+  }, [handleMoveEnd]);
 
   const stopLocating = useCallback(() => {
     setLocating(false);
@@ -381,6 +470,63 @@ export default function PremiumMap() {
     [places, amenityFilters, pulse]
   );
 
+  // Nearby pins merge into a bubble below street zoom; the selected café
+  // always keeps its own pin.
+  const groups = useMemo(
+    () =>
+      groupPoints(
+        visiblePlaces.filter((p) => p.id !== selectedPlace?.id),
+        zoom
+      ),
+    [visiblePlaces, selectedPlace?.id, zoom]
+  );
+
+  const zoomOnCluster = (items: Place[]) => {
+    const b = boundsOf(items);
+    const map = mapRef.current;
+    if (!b || !map) return;
+    map.fitBounds(
+      [
+        [b.minLng, b.minLat],
+        [b.maxLng, b.maxLat],
+      ],
+      { padding: 96, maxZoom: CLUSTER_MAX_ZOOM + 1, duration: 600 }
+    );
+  };
+
+  const renderPin = (place: Place) => {
+    const selected = selectedPlace?.id === place.id;
+    return (
+      <Marker
+        key={place.id}
+        longitude={place.lng}
+        latitude={place.lat}
+        anchor="center"
+        onClick={(e) => handleMarkerClick(e, place)}
+      >
+        <MapPin
+          icon={pinIconFor(place, pulse.specs[place.id] ?? {})}
+          selected={selected}
+          label={selected ? place.name : undefined}
+          badge={dropPlaceIds.has(place.id)}
+          aria-label={
+            dropPlaceIds.has(place.id)
+              ? `${place.name}, drop aujourd’hui`
+              : place.name
+          }
+          className={cn("shadow-ds", selected && "max-w-[220px]")}
+          onClick={(ev) => {
+            ev.stopPropagation();
+            void handleMarkerClick(
+              { originalEvent: { stopPropagation: () => undefined } },
+              place
+            );
+          }}
+        />
+      </Marker>
+    );
+  };
+
   const openStatusByPlace = pulse.open ?? {};
 
   const selectedMeta = selectedPlace
@@ -434,17 +580,14 @@ export default function PremiumMap() {
         // the Carte tab, so coming back does not rebuild the map from scratch.
         reuseMaps
         mapboxAccessToken={MAPBOX_TOKEN}
-        initialViewState={{
-          longitude: 7.262,
-          latitude: 43.7102,
-          zoom: 13,
-        }}
+        initialViewState={INITIAL_VIEW}
         style={{ width: "100%", height: "100%" }}
         mapStyle={mapStyle}
         attributionControl={false}
         onError={handleMapError}
         onLoad={handleMapLoad}
         onMove={() => updateFarFromUser(userCoords)}
+        onMoveEnd={handleMoveEnd}
         onClick={() => setSelectedPlace(null)}
       >
         <GeolocateControl
@@ -483,38 +626,40 @@ export default function PremiumMap() {
           }}
         />
 
-        {visiblePlaces.map((place) => {
-          const selected = selectedPlace?.id === place.id;
+        {groups.map((group) => {
+          if (group.kind === "point") return renderPin(group.item);
+          const withDrop = group.items.some((p) => dropPlaceIds.has(p.id));
           return (
             <Marker
-              key={place.id}
-              longitude={place.lng}
-              latitude={place.lat}
+              key={group.key}
+              longitude={group.lng}
+              latitude={group.lat}
               anchor="center"
-              onClick={(e) => handleMarkerClick(e, place)}
+              onClick={(e) => {
+                e.originalEvent.stopPropagation();
+                zoomOnCluster(group.items);
+              }}
             >
-              <MapPin
-                icon={pinIconFor(place, pulse.specs[place.id] ?? {})}
-                selected={selected}
-                label={selected ? place.name : undefined}
-                badge={dropPlaceIds.has(place.id)}
-                aria-label={
-                  dropPlaceIds.has(place.id)
-                    ? `${place.name}, drop aujourd’hui`
-                    : place.name
-                }
-                className={cn("shadow-ds", selected && "max-w-[220px]")}
-                onClick={(ev) => {
-                  ev.stopPropagation();
-                  void handleMarkerClick(
-                    { originalEvent: { stopPropagation: () => undefined } },
-                    place
-                  );
-                }}
-              />
+              <button
+                type="button"
+                aria-label={`${group.items.length} cafés, zoomer`}
+                className="relative flex h-11 min-w-11 items-center justify-center rounded-full border-2 border-ds-surface bg-ds-pin px-3 text-sm font-bold text-ds-onpin shadow-ds"
+              >
+                {group.items.length}
+                {withDrop ? (
+                  <span
+                    aria-hidden
+                    className="absolute -right-0.5 -top-0.5 h-3.5 w-3.5 rounded-full border-2 border-ds-surface bg-ds-accent"
+                  />
+                ) : null}
+              </button>
             </Marker>
           );
         })}
+
+        {selectedPlace && hasValidCoordinates(selectedPlace)
+          ? renderPin(selectedPlace)
+          : null}
 
         {selectedPlace && hasValidCoordinates(selectedPlace) && (
           <FlyToPlace place={selectedPlace} />

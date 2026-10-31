@@ -13,7 +13,7 @@ export type Bounds = {
 /** Beyond this zoom every café gets its own pin (street level). */
 export const CLUSTER_MAX_ZOOM = 15;
 /** Size (px) of a grouping cell: pins closer than this merge into a bubble. */
-export const CLUSTER_CELL_PX = 60;
+export const CLUSTER_CELL_PX = 80;
 /** Each loaded area extends this ratio past the screen on every side. */
 export const AREA_PADDING_RATIO = 0.5;
 

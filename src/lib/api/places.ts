@@ -216,13 +216,13 @@ function isMissingFunction(error: { code?: string } | null): boolean {
 /**
  * Map pins of the cafés inside `bounds` (places_in_bbox), closest to the
  * centre first. `complete` is false when the area holds more than `limit`
- * cafés. Falls back to the full pin list while the SQL function is not
- * deployed.
+ * cafés. Falls back to the full pin list (`everywhere`) while the SQL
+ * function is not deployed.
  */
 export async function getPlacesInBounds(
   bounds: Bounds,
   limit: number = MAP_AREA_LIMIT
-): Promise<{ places: Place[]; complete: boolean }> {
+): Promise<{ places: Place[]; complete: boolean; everywhere?: boolean }> {
   if (!supabase) return { places: [], complete: true };
   const { data, error } = await supabase.rpc('places_in_bbox', {
     p_min_lng: bounds.minLng,
@@ -234,7 +234,7 @@ export async function getPlacesInBounds(
   if (error) {
     if (isMissingFunction(error)) {
       const all = await getMapPlaces();
-      return { places: all, complete: true };
+      return { places: all, complete: true, everywhere: true };
     }
     console.error('Error fetching places in area:', error);
     throw error;

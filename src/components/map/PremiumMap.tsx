@@ -99,6 +99,7 @@ const AREA_TTL_MS = 2 * 60_000;
  */
 const loadedPlaces = new globalThis.Map<string, Place>();
 let loadedAreas: { bounds: Bounds; at: number }[] = [];
+const WORLD: Bounds = { minLng: -180, minLat: -90, maxLng: 180, maxLat: 90 };
 
 function isAreaLoaded(bounds: Bounds): boolean {
   const now = Date.now();
@@ -114,10 +115,12 @@ function isAreaLoaded(bounds: Bounds): boolean {
 async function fetchArea(view: Bounds): Promise<Place[] | null> {
   if (isAreaLoaded(view)) return null;
   const area = padBounds(view, AREA_PADDING_RATIO);
-  const { places, complete } = await getPlacesInBounds(area);
+  const { places, complete, everywhere } = await getPlacesInBounds(area);
   for (const p of places) loadedPlaces.set(p.id, p);
   // A full answer means the area holds more cafés: ask again next move.
-  if (complete) loadedAreas.push({ bounds: area, at: Date.now() });
+  if (complete) {
+    loadedAreas.push({ bounds: everywhere ? WORLD : area, at: Date.now() });
+  }
   return [...loadedPlaces.values()];
 }
 

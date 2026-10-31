@@ -90,10 +90,10 @@ begin
     full_name = excluded.full_name,
     onboarding_answers = excluded.onboarding_answers;
 
-  insert into public.places (id, name, vendor_id, lat, lng, verification_status)
+  insert into public.places (id, name, address, location, vendor_id, lat, lng, verification_status)
   values
-    (place_a, 'Insights Cafe A', u_owner_a, 43.70, 7.26, 'verified'),
-    (place_b, 'Insights Cafe B', u_owner_b, 43.71, 7.27, 'verified')
+    (place_a, 'Insights Cafe A', '1 rue Test, Nice', 'SRID=4326;POINT(7.26 43.70)', u_owner_a, 43.70, 7.26, 'verified'),
+    (place_b, 'Insights Cafe B', '2 rue Test, Nice', 'SRID=4326;POINT(7.27 43.71)', u_owner_b, 43.71, 7.27, 'verified')
   on conflict (id) do update set
     vendor_id = excluded.vendor_id,
     name = excluded.name,

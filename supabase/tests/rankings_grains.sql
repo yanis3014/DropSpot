@@ -160,9 +160,11 @@ begin
   end if;
 
   -- (5) Rankings: Rank Cafe confirmed Wi-Fi (3 yes), Second Cafe announced
+  -- (A and B already voted Yes through the Wi-Fi answer of their check-ins).
   insert into public.place_spec_votes (place_id, user_id, spec, vote)
   values (v_place, u_a, 'wifi', true), (v_place, u_b, 'wifi', true),
-         (v_place, u_vip, 'wifi', true);
+         (v_place, u_vip, 'wifi', true)
+  on conflict (place_id, user_id, spec) do update set vote = excluded.vote;
   insert into public.place_spec_declarations (place_id, spec, value)
   values (v_place2, 'wifi', true);
 

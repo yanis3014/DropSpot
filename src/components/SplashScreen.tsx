@@ -1,3 +1,5 @@
+import { VITRINE_PATH } from '@/lib/vitrine/offers';
+
 const SESSION_KEY = 'dropspot_splash_seen';
 const LAST_LOAD_KEY = 'dropspot_splash_at';
 
@@ -8,9 +10,9 @@ const SPLASH_IDLE_MS = 30 * 60 * 1000;
  * Runs in <head> before first paint. The splash plays at each opening of the
  * app: a new browser session (app relaunched, new tab) or a return after
  * SPLASH_IDLE_MS. Full reloads inside a visit (after sign-in…) skip it via
- * html[data-splash="seen"].
+ * html[data-splash="seen"]. The café landing (VITRINE_PATH) never shows it.
  */
-export const splashBootScript = `(function(){try{var s=sessionStorage,l=localStorage,n=Date.now(),t=Number(l.getItem('${LAST_LOAD_KEY}'))||0;l.setItem('${LAST_LOAD_KEY}',String(n));if(s.getItem('${SESSION_KEY}')&&n-t<${SPLASH_IDLE_MS}){document.documentElement.dataset.splash='seen';}else{s.setItem('${SESSION_KEY}','1');}}catch(e){}})();`;
+export const splashBootScript = `(function(){try{if(location.pathname.indexOf('${VITRINE_PATH}')===0){document.documentElement.dataset.splash='seen';return;}var s=sessionStorage,l=localStorage,n=Date.now(),t=Number(l.getItem('${LAST_LOAD_KEY}'))||0;l.setItem('${LAST_LOAD_KEY}',String(n));if(s.getItem('${SESSION_KEY}')&&n-t<${SPLASH_IDLE_MS}){document.documentElement.dataset.splash='seen';}else{s.setItem('${SESSION_KEY}','1');}}catch(e){}})();`;
 
 /**
  * Launch screen. Server component: the entrance and the exit are pure CSS

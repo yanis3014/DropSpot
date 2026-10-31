@@ -43,6 +43,41 @@ export async function getAllPlaceSpecs(): Promise<SpecsByPlace> {
   return cachedQuery('specs:all', async () => groupSpecsByPlace(await fetchSpecs(null)));
 }
 
+/** Most cafés per get_places_specs call (server cap). */
+const SPECS_BATCH = 1000;
+
+/**
+ * Specificities of the listed cafés (get_places_specs, cached server-side).
+ * Falls back to every café's specificities while the SQL function is not
+ * deployed.
+ */
+export async function getPlacesSpecs(placeIds: string[]): Promise<SpecsByPlace> {
+  const ids = [...new Set(placeIds.filter(Boolean))];
+  if (!supabase || ids.length === 0) return {};
+  const client = supabase;
+  const batches: string[][] = [];
+  for (let i = 0; i < ids.length; i += SPECS_BATCH) batches.push(ids.slice(i, i + SPECS_BATCH));
+  const rows: PlaceSpec[] = [];
+  for (const batch of batches) {
+    const { data, error } = await client.rpc('get_places_specs', { p_place_ids: batch });
+    if (error) {
+      if (error.code === 'PGRST202' || error.code === '42883') {
+        const all = await getAllPlaceSpecs();
+        const out: SpecsByPlace = {};
+        for (const id of ids) if (all[id]) out[id] = all[id];
+        return out;
+      }
+      console.error('Error fetching places specs:', error);
+      throw error;
+    }
+    for (const row of (data ?? []) as Record<string, unknown>[]) {
+      const spec = toPlaceSpec(row);
+      if (spec) rows.push(spec);
+    }
+  }
+  return groupSpecsByPlace(rows);
+}
+
 /** Specificities of one café. */
 export async function getPlaceSpecs(placeId: string): Promise<PlaceSpec[]> {
   return fetchSpecs(placeId);

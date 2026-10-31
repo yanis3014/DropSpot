@@ -29,7 +29,7 @@ import {
   Moon,
   WifiHigh,
 } from "@phosphor-icons/react";
-import { getPlaces, getPlaceById, type Place } from "@/lib/api/places";
+import { getMapPlaces, getPlaceById, type Place } from "@/lib/api/places";
 import { peekCache } from "@/lib/cache/clientCache";
 import { hasValidCoordinates, placeMatchesFilters } from "@/lib/filters";
 import {
@@ -171,7 +171,7 @@ export default function PremiumMap() {
 
   const [selectedPlace, setSelectedPlace] = useState<Place | null>(null);
   const [places, setPlaces] = useState<Place[]>(
-    () => peekCache<Place[]>("places:full") ?? []
+    () => peekCache<Place[]>("places:map")?.filter(hasValidCoordinates) ?? []
   );
   const [error, setError] = useState<string | null>(null);
   const [dropPlaceIds, setDropPlaceIds] = useState<Set<string>>(() => new Set());
@@ -203,7 +203,9 @@ export default function PremiumMap() {
 
     const fetchPlaces = async () => {
       try {
-        const data = await getPlaces({ withCoordinatesOnly: true });
+        // Pins only: no description or photo (the selected café is hydrated
+        // with getPlaceById on tap).
+        const data = await getMapPlaces();
         if (cancelled) return;
         setPlaces(data);
         if (data.length === 0) setError("Aucun café trouvé");

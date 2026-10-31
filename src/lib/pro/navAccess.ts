@@ -14,6 +14,7 @@ const READ_ALL_ROLES_PREFIXES = [
 ];
 
 const MANAGER_EXTRA_PREFIXES = [
+  '/statistiques',
   '/dashboard-pro/drops',
   ...READ_ALL_ROLES_PREFIXES,
 ];
@@ -147,6 +148,9 @@ export function filterProNavHref(
   const path = href.split('?')[0] ?? href;
   if (!role) return false;
   if (path === '/dashboard-pro' || path === '/valider') return true;
+  if (path === '/statistiques' || path.startsWith('/statistiques/')) {
+    return role === 'owner' || role === 'manager';
+  }
   if (path === '/dashboard-pro/drops' || path.startsWith('/dashboard-pro/drops/')) {
     return role === 'owner' || role === 'manager';
   }
@@ -169,6 +173,7 @@ export function filterProNavHref(
     return (
       path === '/dashboard-pro' ||
       path === '/valider' ||
+      path === '/statistiques' ||
       path === '/dashboard-pro/drops' ||
       path.startsWith('/dashboard-pro/drops/') ||
       path === ETABLISSEMENT_PREFIX ||
@@ -185,6 +190,7 @@ export function isOwnerOnlyPath(pathname: string): boolean {
 
 /** Routes that can appear in the mobile « Plus » sheet (filtered by role). */
 export const MORE_NAV_HREFS = [
+  '/statistiques',
   '/etablissement',
   '/specificites',
   '/equipe',

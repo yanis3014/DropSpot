@@ -166,6 +166,20 @@ begin
   insert into public.place_spec_declarations (place_id, spec, value)
   values (v_place2, 'wifi', true);
 
+  -- Ranks and the all-cafés scores are read from a cache (pg_cron, every
+  -- 5 min). The café sheet stays live: one café's scores show the vote at once.
+  select count(*)::integer into v_count from public.get_place_specs(v_place)
+  where spec = 'wifi' and status = 'confirmed';
+  if v_count <> 1 then
+    raise exception 'FAIL: get_place_specs(café) should be live, got %', v_count;
+  end if;
+  perform public.refresh_spec_caches();
+  select count(*)::integer into v_count from public.get_place_specs()
+  where place_id = v_place and spec = 'wifi' and status = 'confirmed';
+  if v_count <> 1 then
+    raise exception 'FAIL: cached get_place_specs() should match after refresh, got %', v_count;
+  end if;
+
   perform set_config('request.jwt.claim.sub', '', true);
   perform set_config('request.jwt.claims', '{}', true);
   execute 'set local role anon';
@@ -186,6 +200,25 @@ begin
   begin
     perform public.spec_scores_at(now(), null);
     raise exception 'FAIL: spec_scores_at must not be callable by anon';
+  exception
+    when insufficient_privilege then null;
+  end;
+  -- Cache tables and their refresh are server-only.
+  begin
+    perform public.refresh_spec_caches();
+    raise exception 'FAIL: refresh_spec_caches must not be callable by anon';
+  exception
+    when insufficient_privilege then null;
+  end;
+  begin
+    perform 1 from public.spec_ranks_cache limit 1;
+    raise exception 'FAIL: anon must not read spec_ranks_cache';
+  exception
+    when insufficient_privilege then null;
+  end;
+  begin
+    perform 1 from public.spec_scores_cache limit 1;
+    raise exception 'FAIL: anon must not read spec_scores_cache';
   exception
     when insufficient_privilege then null;
   end;

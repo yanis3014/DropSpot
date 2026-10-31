@@ -56,9 +56,6 @@ import { supabase } from "@/lib/supabase/client";
 import { cn } from "@/lib/cn";
 import type { Place } from "@/lib/api/places";
 
-/** Internal /statistiques page — enable when that route ships. */
-const STATS_PAGE_ENABLED = false;
-
 function firstName(full: string | null | undefined): string {
   const t = full?.trim();
   if (!t) return "là";
@@ -352,7 +349,7 @@ function DashboardProHomeLoaded({
           </p>
         </div>
         <div className="flex items-center gap-2.5">
-          {STATS_PAGE_ENABLED && canViewWeekStats ? (
+          {canViewWeekStats ? (
             <Link
               href={withCafe("/statistiques")}
               className="inline-flex h-11 items-center gap-2 rounded-xl px-4 text-[15px] font-bold text-ds-accent no-underline"

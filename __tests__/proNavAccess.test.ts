@@ -10,6 +10,7 @@ import {
 const SIDE_NAV = [
   '/dashboard-pro',
   '/dashboard-pro/drops',
+  '/statistiques',
   '/etablissement',
   '/specificites',
   '/equipe',
@@ -31,6 +32,7 @@ describe('ProShell nav visibility by role', () => {
     expect(filterProNavHref('/reglages', 'staff')).toBe(true);
     expect(filterProNavHref('/etablissement', 'staff')).toBe(true);
     expect(filterProNavHref('/dashboard-pro/drops', 'staff')).toBe(false);
+    expect(filterProNavHref('/statistiques', 'staff')).toBe(false);
     expect(filterProNavHref('/equipe', 'staff')).toBe(false);
     expect(filterProNavHref('/abonnement', 'staff')).toBe(false);
   });
@@ -65,6 +67,8 @@ describe('canAccessProPath (deep-link → accueil si interdit)', () => {
 
   it('refuse drops au staff', () => {
     expect(canAccessProPath('/dashboard-pro/drops', 'staff')).toBe(false);
+    expect(canAccessProPath('/statistiques', 'staff')).toBe(false);
+    expect(canAccessProPath('/statistiques', 'manager')).toBe(true);
     expect(canAccessProPath('/dashboard-pro/drops/nouveau', 'manager')).toBe(
       true
     );
@@ -86,6 +90,7 @@ describe('feuille Plus', () => {
 
   it('ne répète pas la fiche, déjà dans la barre, pour un gérant', () => {
     expect(moreNavHrefsForRole('owner')).toEqual([
+      '/statistiques',
       '/specificites',
       '/equipe',
       '/abonnement',

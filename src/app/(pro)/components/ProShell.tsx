@@ -4,6 +4,7 @@ import { Suspense, useId, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
+  ChartBar,
   Crown,
   GearSix,
   House,
@@ -36,6 +37,7 @@ const SIDE_NAV: {
 }[] = [
   { href: "/dashboard-pro", label: "Accueil", icon: House, exact: true },
   { href: "/dashboard-pro/drops", label: "Drops", icon: Lightning },
+  { href: "/statistiques", label: "Statistiques", icon: ChartBar },
   { href: "/etablissement", label: "Établissement", icon: Storefront },
   { href: "/specificites", label: "Spécificités", icon: ListChecks },
   { href: "/equipe", label: "Équipe", icon: UsersThree },
@@ -48,6 +50,7 @@ const MORE_NAV: {
   label: string;
   icon: typeof House;
 }[] = [
+  { href: "/statistiques", label: "Statistiques", icon: ChartBar },
   { href: "/etablissement", label: "Établissement", icon: Storefront },
   { href: "/specificites", label: "Spécificités", icon: ListChecks },
   { href: "/equipe", label: "Équipe", icon: UsersThree },

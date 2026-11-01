@@ -1,5 +1,10 @@
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
+import {
+  isProGatedPath,
+  parseProAccessStatus,
+  proGateRedirect,
+} from '@/lib/pro/accessStatus';
 
 /**
  * Routes accessibles uniquement avec une session Supabase valide.
@@ -15,6 +20,7 @@ const PROTECTED_PREFIXES = [
   '/abonnement',
   '/reglages',
   '/valider',
+  '/statistiques',
   '/admin',
 ] as const;
 
@@ -87,6 +93,32 @@ export async function updateSession(request: NextRequest) {
       redirectResponse.cookies.set(cookie.name, cookie.value);
     });
     return redirectResponse;
+  }
+
+  // Pro space: only once an admin approved the café. A café owner whose
+  // request is still under review gets the waiting screen, even after signing
+  // in again; just approved → welcome screen first. The database enforces the
+  // same rule on every query (has_place_role: verified cafés only).
+  if (user && isProGatedPath(pathname)) {
+    const { data, error } = await supabase.rpc('pro_access_status');
+    // On error (SQL not deployed yet, network…) let the page load: RLS stays
+    // the real barrier and the page shows nothing it may not read.
+    if (!error) {
+      const target = proGateRedirect(
+        pathname,
+        parseProAccessStatus(data).state
+      );
+      if (target) {
+        const url = request.nextUrl.clone();
+        url.pathname = target;
+        url.search = '';
+        const redirectResponse = NextResponse.redirect(url);
+        supabaseResponse.cookies.getAll().forEach((cookie) => {
+          redirectResponse.cookies.set(cookie.name, cookie.value);
+        });
+        return redirectResponse;
+      }
+    }
   }
 
   // IMPORTANT: you *must* return the supabaseResponse object as is so the

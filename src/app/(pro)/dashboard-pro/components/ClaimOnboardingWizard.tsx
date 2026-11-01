@@ -44,6 +44,7 @@ import {
   uploadClaimProof,
   type PendingPlaceClaim,
 } from '@/app/(pro)/dashboard-pro/lib/api/vendor';
+import { useClaimDecision } from '@/app/(pro)/dashboard-pro/hooks/useClaimDecision';
 import { formatParisClaimSentAt } from '@/app/(pro)/dashboard-pro/lib/proHome/parisTime';
 import { cn } from '@/lib/cn';
 
@@ -101,6 +102,8 @@ export default function ClaimOnboardingWizard({
   const [error, setError] = useState<string | null>(null);
   const [cancelOpen, setCancelOpen] = useState(false);
   const [cancelling, setCancelling] = useState(false);
+  // Live: approved → welcome screen; rejected → shown below.
+  const decision = useClaimDecision(step === 3 ? (pending?.id ?? null) : null);
 
   const q = query.trim();
   const results = q.length < 2 ? [] : searchResults;
@@ -699,9 +702,50 @@ export default function ClaimOnboardingWizard({
                 On vérifie que {cafeName} est bien à toi
               </h1>
               <p className="m-0 text-base leading-relaxed text-ds-text2">
-                On te prévient par e-mail.
+                Ton espace pro s&apos;ouvre dès que l&apos;équipe Dropspot a
+                validé ta demande. Cette page se met à jour toute seule, tu
+                peux aussi revenir plus tard.
               </p>
             </div>
+
+            {decision.kind === 'rejected' ? (
+              <div
+                role="alert"
+                className="flex flex-col gap-2 rounded-xl bg-ds-dangersoft px-4 py-3.5 text-sm text-ds-danger"
+              >
+                <p className="m-0 font-bold">
+                  Ta demande n&apos;a pas été acceptée.
+                </p>
+                {decision.note ? (
+                  <p className="m-0">Motif : {decision.note}</p>
+                ) : null}
+                <p className="m-0">
+                  Écris-nous si tu penses que c&apos;est une erreur, ou envoie
+                  une nouvelle demande avec un autre justificatif.
+                </p>
+                <div className="flex flex-wrap gap-2 pt-1">
+                  <Button
+                    variant="main"
+                    className="h-10 rounded-xl px-4 text-sm"
+                    onClick={() => {
+                      setPending(null);
+                      setSelected(null);
+                      setProofFile(null);
+                      setCertified(false);
+                      setStep(1);
+                    }}
+                  >
+                    Nouvelle demande
+                  </Button>
+                  <a
+                    href={HELP_MAILTO}
+                    className="inline-flex h-10 items-center rounded-xl px-4 text-sm font-bold text-ds-danger underline"
+                  >
+                    Nous écrire
+                  </a>
+                </div>
+              </div>
+            ) : null}
 
             <ol className="m-0 flex list-none flex-col gap-3.5 p-0">
               <li className="flex items-center gap-3">
@@ -732,15 +776,23 @@ export default function ClaimOnboardingWizard({
               </li>
             </ol>
 
-            <div className="pt-1">
-              <Button
-                variant="outline"
-                className="h-11 rounded-xl px-4 text-[15px]"
-                onClick={() => setCancelOpen(true)}
-              >
-                Annuler la demande
-              </Button>
-            </div>
+            {decision.kind === 'waiting' ? (
+              <div className="flex flex-wrap gap-2 pt-1">
+                <Button
+                  variant="outline"
+                  className="h-11 rounded-xl px-4 text-[15px]"
+                  onClick={() => setCancelOpen(true)}
+                >
+                  Annuler la demande
+                </Button>
+                <Link
+                  href="/map"
+                  className="inline-flex h-11 items-center rounded-xl px-4 text-[15px] font-bold text-ds-accent no-underline"
+                >
+                  Voir l&apos;app client
+                </Link>
+              </div>
+            ) : null}
           </section>
         ) : null}
       </div>

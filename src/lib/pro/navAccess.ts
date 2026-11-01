@@ -116,7 +116,8 @@ export function canAccessProPath(
   if (!role) return false;
   if (
     pathname === '/dashboard-pro' ||
-    pathname.startsWith('/dashboard-pro/onboarding')
+    pathname.startsWith('/dashboard-pro/onboarding') ||
+    pathname.startsWith('/dashboard-pro/bienvenue')
   ) {
     return true;
   }

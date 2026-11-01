@@ -10,6 +10,11 @@ import {
   type PendingPlaceClaim,
 } from "@/app/(pro)/dashboard-pro/lib/api/vendor";
 import { clearProIntent } from "@/lib/auth/proIntent";
+import {
+  fetchProAccessStatus,
+  PRO_WELCOME_PATH,
+} from "@/lib/pro/accessStatus";
+import { supabase } from "@/lib/supabase/client";
 
 export default function DashboardProOnboardingPage() {
   const router = useRouter();
@@ -31,13 +36,19 @@ export default function DashboardProOnboardingPage() {
     // Arrived: the "Revendiquer mon café" intent has done its job.
     clearProIntent();
     let cancelled = false;
-    void Promise.all([countProPlaceMemberships(), getPendingPlaceClaim()]).then(
-      ([membershipCount, pending]) => {
-        if (!cancelled) {
-          setBoot({ membershipCount, pending });
-        }
+    void Promise.all([
+      countProPlaceMemberships(),
+      getPendingPlaceClaim(),
+      fetchProAccessStatus(supabase),
+    ]).then(([membershipCount, pending, status]) => {
+      if (cancelled) return;
+      if (status?.state === "welcome") {
+        // Approved while away: welcome screen and first steps first.
+        window.location.replace(PRO_WELCOME_PATH);
+        return;
       }
-    );
+      setBoot({ membershipCount, pending });
+    });
     return () => {
       cancelled = true;
     };

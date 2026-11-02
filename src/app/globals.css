@@ -31,6 +31,21 @@
   --shadow: 0 6px 24px rgba(58, 34, 18, 0.14);
   --background: var(--bg);
   --foreground: var(--text);
+
+  /* Bandeau sombre de la landing cafés : identique en clair et en sombre */
+  --night: #17110d;
+  --night2: #211914;
+  --nightline: #3b3029;
+  --onnight: #f4ede6;
+  --onnight2: #bbad9f;
+  --nightaccent: #e3905a;
+  --onnightaccent: #1b0f08;
+  --nightaccenttext: #f3b086;
+  --sea: #14232b;
+  --street: #33281f;
+  --boulevard: #3d3027;
+  --park: #28301f;
+  --sealabel: #6f8996;
 }
 
 .dark {
@@ -87,6 +102,15 @@
   --color-ds-pin: var(--pin);
   --color-ds-onpin: var(--onpin);
   --color-ds-map: var(--map);
+  --color-ds-night: var(--night);
+  --color-ds-night2: var(--night2);
+  --color-ds-nightline: var(--nightline);
+  --color-ds-onnight: var(--onnight);
+  --color-ds-onnight2: var(--onnight2);
+  --color-ds-nightaccent: var(--nightaccent);
+  --color-ds-onnightaccent: var(--onnightaccent);
+  --color-ds-nightaccenttext: var(--nightaccenttext);
+  --color-ds-sea: var(--sea);
   --shadow-ds: var(--shadow);
 
   --color-background: var(--background);
@@ -158,6 +182,35 @@ body {
 
 @utility animate-pop {
   animation: pop 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Graphique « Une journée de café » (landing cafés) : barres qui montent
+   depuis le bas, puis bloc « drop » en fondu. Utilisé via motion-safe:
+   uniquement — sans animation, l'état final est déjà là. */
+@keyframes bar-grow {
+  from {
+    transform: scaleY(0);
+  }
+  to {
+    transform: scaleY(1);
+  }
+}
+
+@keyframes drop-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@utility animate-bar-grow {
+  animation: bar-grow 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@utility animate-drop-fade {
+  animation: drop-fade-in 0.5s ease-out both;
 }
 
 @utility scrollbar-hide {

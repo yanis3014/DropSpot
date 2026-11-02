@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import ClaimOnboardingWizard from "@/app/(pro)/dashboard-pro/components/ClaimOnboardingWizard";
 import { useAuth } from "@/lib/hooks/useAuth";
 import {
@@ -9,16 +9,30 @@ import {
   getPendingPlaceClaim,
   type PendingPlaceClaim,
 } from "@/app/(pro)/dashboard-pro/lib/api/vendor";
-import { clearProIntent } from "@/lib/auth/proIntent";
+import {
+  clearProClaimQuery,
+  clearProIntent,
+  readProClaimQuery,
+} from "@/lib/auth/proIntent";
 import {
   fetchProAccessStatus,
   PRO_WELCOME_PATH,
 } from "@/lib/pro/accessStatus";
 import { supabase } from "@/lib/supabase/client";
 
-export default function DashboardProOnboardingPage() {
+function OnboardingContent() {
+  const searchParams = useSearchParams();
   const router = useRouter();
   const { isAuthenticated, loading: authLoading } = useAuth();
+  // Café name typed on the landing: ?q= first, then the stored fallback.
+  // Read once; the stored value is forgotten as soon as it is consumed.
+  const [initialQuery] = useState<string | undefined>(() => {
+    const q = searchParams.get("q")?.trim();
+    if (q) return q;
+    const stored = readProClaimQuery();
+    if (stored) clearProClaimQuery();
+    return stored ?? undefined;
+  });
   const [boot, setBoot] = useState<{
     membershipCount: number;
     pending: PendingPlaceClaim | null;
@@ -67,6 +81,21 @@ export default function DashboardProOnboardingPage() {
       key={boot.pending?.id ?? "fresh"}
       hasMemberships={boot.membershipCount > 0}
       initialPending={boot.pending}
+      initialQuery={initialQuery}
     />
+  );
+}
+
+export default function DashboardProOnboardingPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex min-h-[50vh] flex-1 items-center justify-center">
+          <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-ds-accent" />
+        </div>
+      }
+    >
+      <OnboardingContent />
+    </Suspense>
   );
 }

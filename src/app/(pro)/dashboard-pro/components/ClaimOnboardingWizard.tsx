@@ -64,11 +64,14 @@ function placeAddressLine(place: Place): string {
 export interface ClaimOnboardingWizardProps {
   hasMemberships: boolean;
   initialPending: PendingPlaceClaim | null;
+  /** Café name typed on the landing: pre-fills the step-1 search. */
+  initialQuery?: string;
 }
 
 export default function ClaimOnboardingWizard({
   hasMemberships,
   initialPending,
+  initialQuery,
 }: ClaimOnboardingWizardProps) {
   const router = useRouter();
   const fileRef = useRef<HTMLInputElement>(null);
@@ -78,7 +81,9 @@ export default function ClaimOnboardingWizard({
     () => !initialPending && hasMemberships
   );
 
-  const [query, setQuery] = useState('');
+  // Pre-filled from the landing search: with 2+ chars, the effect below
+  // runs the existing search by itself on mount.
+  const [query, setQuery] = useState(initialQuery ?? '');
   const [searching, setSearching] = useState(false);
   const [searchResults, setSearchResults] = useState<Place[]>([]);
 

@@ -119,12 +119,24 @@ function OfferCard({ offer }: { offer: Offer }) {
   );
 }
 
-export default function OffersSection() {
+type OffersSectionProps = {
+  /** false dans le <details> du résumé : ni id, ni titre, ni cadre propre. */
+  showHeading?: boolean;
+};
+
+export default function OffersSection({
+  showHeading = true,
+}: OffersSectionProps) {
   return (
-    <section id="offres" className="border-t border-ds-line py-16 sm:py-20">
-      <h2 className="font-display m-0 text-[28px] font-extrabold tracking-tight text-balance text-ds-text sm:text-[36px]">
-        Trois offres, selon ce dont vous avez besoin
-      </h2>
+    <section
+      id={showHeading ? "offres" : undefined}
+      className={showHeading ? "border-t border-ds-line py-16 sm:py-20" : ""}
+    >
+      {showHeading ? (
+        <h2 className="font-display m-0 text-[28px] font-extrabold tracking-tight text-balance text-ds-text sm:text-[36px]">
+          Trois offres, selon ce dont vous avez besoin
+        </h2>
+      ) : null}
       <p className="mt-3 mb-0 max-w-[40em] text-[16px] leading-relaxed text-ds-text2 sm:text-[17px]">
         Commencez gratuitement. Passez à l’offre supérieure quand vous voulez.
       </p>
@@ -140,9 +152,9 @@ export default function OffersSection() {
             On lance Dropspot à Nice avec une trentaine de cafés
           </h3>
           <p className="mt-3 mb-0 max-w-[40em] text-[15px] leading-relaxed opacity-85 sm:text-[16px]">
-            Pendant le pilote, on active votre offre avec vous, directement par
-            e-mail. Les premiers cafés nous aident à construire l’outil, et on
-            les écoute.
+            Pendant le pilote, nous activons votre offre avec vous, directement
+            par e-mail. Les premiers cafés nous aident à construire l’outil, et
+            nous vous écoutons.
           </p>
           <ul className="mt-5 m-0 flex list-none flex-col gap-2 p-0 sm:flex-row sm:flex-wrap sm:gap-x-6">
             {PILOT_POINTS.map((point) => (

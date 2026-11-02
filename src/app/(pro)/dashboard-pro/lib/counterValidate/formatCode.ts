@@ -15,6 +15,30 @@ export function appendDigitToCode(current: string, digit: string): string {
   return normalizeDropCodeRaw(current + digit);
 }
 
+/** Letters used by generate_drop_code() (no I, L, O to avoid confusion). */
+export const DROP_CODE_LETTERS = 'ABCDEFGHJKMNPQRSTUVWXYZ'.split('');
+
+/** Number of leading letters in a drop code (format XX-####). */
+export const DROP_CODE_LETTER_COUNT = 2;
+
+/** Does the next slot of the code expect a letter (true) or a digit (false)? */
+export function nextSlotIsLetter(current: string): boolean {
+  return normalizeDropCodeRaw(current).length < DROP_CODE_LETTER_COUNT;
+}
+
+/**
+ * Append a key from the counter keypad: letters for the first two slots,
+ * digits after. A key of the wrong kind is ignored.
+ */
+export function appendKeyToCode(current: string, key: string): string {
+  const n = normalizeDropCodeRaw(current);
+  if (n.length >= 6) return n;
+  const k = key.toUpperCase();
+  const wantLetter = nextSlotIsLetter(n);
+  if (wantLetter ? !/^[A-Z]$/.test(k) : !/^\d$/.test(k)) return n;
+  return normalizeDropCodeRaw(n + k);
+}
+
 export function backspaceCode(current: string): string {
   return normalizeDropCodeRaw(current).slice(0, -1);
 }

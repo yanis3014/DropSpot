@@ -25,14 +25,17 @@ import {
   cancelDropRedemption,
   fetchDropContextByCode,
   fetchFlashDropRemaining,
+  isOwnDropCode,
   redeemDropCode,
 } from "@/app/(pro)/dashboard-pro/lib/api/dropCodeValidate";
 import PlaceMemberRoleLoader from "@/app/(pro)/dashboard-pro/components/PlaceMemberRoleLoader";
 import {
-  appendDigitToCode,
+  appendKeyToCode,
   backspaceCode,
+  DROP_CODE_LETTERS,
   formatDropCodeDisplay,
   isCompleteDropCode,
+  nextSlotIsLetter,
   normalizeDropCodeRaw,
 } from "@/app/(pro)/dashboard-pro/lib/counterValidate/formatCode";
 import {
@@ -137,6 +140,7 @@ function CounterValidateInner({
   );
   const [cameraHint, setCameraHint] = useState<string | null>(null);
   const [quickDropOpen, setQuickDropOpen] = useState(false);
+  const lettersTurn = nextSlotIsLetter(keyboardCode);
 
   const lastScanRef = useRef<{ code: string; at: number }>({ code: "", at: 0 });
   const hiddenInputRef = useRef<HTMLInputElement>(null);
@@ -199,7 +203,12 @@ function CounterValidateInner({
       }
 
       setPendingOfflineCode(null);
-      const status = redeemStatusFromResult(result, false);
+      let status = redeemStatusFromResult(result, false);
+      // The server hides a self-issued code behind "not_found" (anti-fraud).
+      // Say why, otherwise a café testing with its own account sees "Code inconnu".
+      if (status === "not_found" && (await isOwnDropCode(normalized))) {
+        status = "own_code";
+      }
       const ctx = await fetchDropContextByCode(activePlace.id, normalized);
 
       let endedAtLabel: string | null = null;
@@ -383,43 +392,76 @@ function CounterValidateInner({
                 aria-label="Code client complet"
               />
               <p className="text-sm text-ds-text2">
-                6 caractères, affichés sous le QR dans l&apos;app du client.
+                2 lettres puis 4 chiffres, affichés sous le QR dans l&apos;app
+                du client.
               </p>
             </div>
-            <div className="absolute inset-x-0 bottom-0 grid grid-cols-3 gap-2 bg-ds-surface2 p-3 pb-10">
-              {["1", "2", "3", "4", "5", "6", "7", "8", "9"].map((d) => (
-                <button
-                  key={d}
-                  type="button"
-                  className="flex h-14 items-center justify-center rounded-[14px] bg-ds-surface text-2xl font-semibold"
-                  onClick={() =>
-                    setKeyboardCode((c) => appendDigitToCode(c, d))
-                  }
-                >
-                  {d}
-                </button>
-              ))}
+            <div
+              className={cn(
+                "absolute inset-x-0 bottom-0 grid gap-2 bg-ds-surface2 p-3 pb-10",
+                lettersTurn ? "grid-cols-6" : "grid-cols-3"
+              )}
+            >
+              {lettersTurn ? (
+                <>
+                  {DROP_CODE_LETTERS.map((l) => (
+                    <button
+                      key={l}
+                      type="button"
+                      className="flex h-12 items-center justify-center rounded-[14px] bg-ds-surface text-xl font-semibold"
+                      onClick={() =>
+                        setKeyboardCode((c) => appendKeyToCode(c, l))
+                      }
+                    >
+                      {l}
+                    </button>
+                  ))}
+                </>
+              ) : (
+                <>
+                  {["1", "2", "3", "4", "5", "6", "7", "8", "9"].map((d) => (
+                    <button
+                      key={d}
+                      type="button"
+                      className="flex h-14 items-center justify-center rounded-[14px] bg-ds-surface text-2xl font-semibold"
+                      onClick={() =>
+                        setKeyboardCode((c) => appendKeyToCode(c, d))
+                      }
+                    >
+                      {d}
+                    </button>
+                  ))}
+                </>
+              )}
               <button
                 type="button"
                 aria-label="Effacer"
-                className="flex h-14 items-center justify-center rounded-[14px] bg-ds-surface"
+                className={cn(
+                  "flex items-center justify-center rounded-[14px] bg-ds-surface",
+                  lettersTurn ? "h-12" : "h-14"
+                )}
                 onClick={() => setKeyboardCode((c) => backspaceCode(c))}
               >
                 <Backspace size={24} weight="bold" />
               </button>
-              <button
-                type="button"
-                className="flex h-14 items-center justify-center rounded-[14px] bg-ds-surface text-2xl font-semibold"
-                onClick={() =>
-                  setKeyboardCode((c) => appendDigitToCode(c, "0"))
-                }
-              >
-                0
-              </button>
+              {lettersTurn ? null : (
+                <button
+                  type="button"
+                  className="flex h-14 items-center justify-center rounded-[14px] bg-ds-surface text-2xl font-semibold"
+                  onClick={() =>
+                    setKeyboardCode((c) => appendKeyToCode(c, "0"))
+                  }
+                >
+                  0
+                </button>
+              )}
               <button
                 type="button"
                 disabled={!isCompleteDropCode(keyboardCode) || submitting}
-                className="flex h-14 items-center justify-center rounded-[14px] bg-ds-accent text-[17px] font-bold text-ds-onaccent disabled:opacity-50"
+                className={cn(
+                  "flex h-14 items-center justify-center rounded-[14px] bg-ds-accent text-[17px] font-bold text-ds-onaccent disabled:opacity-50",
+                  lettersTurn && "col-span-6"
+                )}
                 onClick={() => void submitCode(keyboardCode)}
               >
                 Vérifier
@@ -502,7 +544,9 @@ function CounterValidateInner({
                   </Link>
                 </>
               ) : null}
-              {verdict.kind === "ended" || verdict.kind === "not_found" ? (
+              {verdict.kind === "ended" ||
+              verdict.kind === "not_found" ||
+              verdict.kind === "own_code" ? (
                 <>
                   <button
                     type="button"

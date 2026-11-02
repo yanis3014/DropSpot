@@ -92,6 +92,7 @@ function ProShellInner({ children }: { children: React.ReactNode }) {
   const [moreOpen, setMoreOpen] = useState(false);
   const hideChrome =
     pathname.startsWith("/dashboard-pro/onboarding") ||
+    pathname.startsWith("/dashboard-pro/bienvenue") ||
     pathname === "/valider" ||
     pathname.startsWith("/valider/");
 

@@ -72,13 +72,14 @@ begin
     onboarding_completed_at = excluded.onboarding_completed_at,
     welcome_grains_claimed_at = excluded.welcome_grains_claimed_at;
 
-  insert into public.places (id, name, vendor_id, lat, lng)
+  insert into public.places (id, name, vendor_id, lat, lng, verification_status)
   values
-    (place_a, 'Cafe A Members', owner_a, 43.7, 7.2),
-    (place_b, 'Cafe B Members', owner_b, 43.7, 7.3)
+    (place_a, 'Cafe A Members', owner_a, 43.7, 7.2, 'verified'),
+    (place_b, 'Cafe B Members', owner_b, 43.7, 7.3, 'verified')
   on conflict (id) do update set
     vendor_id = excluded.vendor_id,
-    name = excluded.name;
+    name = excluded.name,
+    verification_status = excluded.verification_status;
 
   -- Ensure owner membership (trigger / backfill); add manager + staff on A
   insert into public.place_members (place_id, user_id, role)

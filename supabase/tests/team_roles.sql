@@ -63,13 +63,14 @@ begin
     (u_owner_b, 'Owner B Team', 'user', 0, now(), now(), '{}', '{}'::jsonb)
   on conflict (id) do update set full_name = excluded.full_name;
 
-  insert into public.places (id, name, vendor_id, lat, lng)
+  insert into public.places (id, name, vendor_id, lat, lng, verification_status)
   values
-    (place_a, 'Cafe A Team', u_owner_a, 43.71, 7.21),
-    (place_b, 'Cafe B Team', u_owner_b, 43.72, 7.22)
+    (place_a, 'Cafe A Team', u_owner_a, 43.71, 7.21, 'verified'),
+    (place_b, 'Cafe B Team', u_owner_b, 43.72, 7.22, 'verified')
   on conflict (id) do update set
     vendor_id = excluded.vendor_id,
-    name = excluded.name;
+    name = excluded.name,
+    verification_status = excluded.verification_status;
 
   insert into public.place_members (place_id, user_id, role)
   values

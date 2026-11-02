@@ -436,3 +436,55 @@ html[data-splash='seen'] .ds-splash {
     animation: none !important;
   }
 }
+
+/* Écran « Bienvenue sur Dropspot Pro » (après validation du café). */
+.ds-welcome {
+  background: radial-gradient(120% 70% at 50% 42%, #3d2719 0%, #14100d 62%);
+  color: #f4ede6;
+}
+
+.ds-welcome .ds-splash-ring {
+  animation: ds-ring 1.1s ease-out 0.3s 3 both;
+}
+
+.ds-welcome-tag {
+  animation: ds-fade-up 0.4s ease-out 0.55s both;
+}
+.ds-welcome-title {
+  animation: ds-word-in 0.5s cubic-bezier(0.2, 0.7, 0.2, 1) 0.7s both;
+}
+.ds-welcome-sub {
+  animation: ds-fade-up 0.4s ease-out 1s both;
+}
+.ds-welcome-hint {
+  animation: ds-fade-up 0.4s ease-out 1.8s both;
+}
+
+.ds-welcome-bean {
+  animation-name: ds-bean-fall;
+  animation-timing-function: cubic-bezier(0.4, 0, 0.7, 1);
+  animation-fill-mode: both;
+}
+
+@keyframes ds-bean-fall {
+  0% {
+    transform: translateY(0) rotate(0deg);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(110vh) rotate(var(--bean-rot, 90deg));
+    opacity: 0.9;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ds-welcome * {
+    animation: none !important;
+  }
+  .ds-welcome-bean {
+    display: none;
+  }
+}

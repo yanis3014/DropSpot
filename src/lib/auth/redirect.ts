@@ -1,4 +1,9 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
+import {
+  parseProAccessStatus,
+  PRO_WAITING_PATH,
+  type ProAccessState,
+} from '@/lib/pro/accessStatus';
 
 export type ProfileRole = 'user' | 'vendor' | 'owner';
 
@@ -49,6 +54,8 @@ export function destinationAfterAuth(
     isPro: boolean;
     onboardingCompleted: boolean;
     isAdmin?: boolean;
+    /** From pro_access_status; `pending` = café request under review. */
+    proState?: ProAccessState | null;
   },
   preferredNext?: string | null
 ): string {
@@ -85,7 +92,16 @@ export function destinationAfterAuth(
   }
 
   if (isProEntryPath(preferred)) {
-    return '/dashboard-pro/onboarding';
+    return PRO_WAITING_PATH;
+  }
+
+  // Café request still under review: back to the waiting screen, not the
+  // client app, unless a precise page was asked for.
+  if (
+    opts.proState === 'pending' &&
+    (isVaguePreferredPath(preferred) || isOnboardingPath(preferred))
+  ) {
+    return PRO_WAITING_PATH;
   }
 
   if (!opts.onboardingCompleted) {
@@ -105,6 +121,7 @@ export async function resolvePostAuthDestination(
     { data: profile },
     { data: isProRaw, error: proError },
     { data: isAdminRaw },
+    { data: proStatusRaw, error: proStatusError },
   ] = await Promise.all([
     supabase
       .from('profiles')
@@ -114,6 +131,7 @@ export async function resolvePostAuthDestination(
     supabase.rpc('is_pro', { p_user: userId }),
     // Membership only: the 6-digit code is asked on /admin itself.
     supabase.rpc('is_admin_member'),
+    supabase.rpc('pro_access_status'),
   ]);
 
   if (proError) {
@@ -125,6 +143,7 @@ export async function resolvePostAuthDestination(
       isPro: Boolean(isProRaw),
       onboardingCompleted: Boolean(profile?.onboarding_completed_at),
       isAdmin: Boolean(isAdminRaw),
+      proState: proStatusError ? null : parseProAccessStatus(proStatusRaw).state,
     },
     preferredNext
   );

@@ -7,6 +7,12 @@ import { fetchIsPro } from "@/app/(pro)/dashboard-pro/lib/api/vendor";
 import { readDropspotMode } from "@/lib/auth/dropspotMode";
 import { fetchIsAdminMember } from "@/lib/admin/isAdminMember";
 import { hasProIntent, PRO_CLAIM_PATH } from "@/lib/auth/proIntent";
+import {
+  fetchProAccessStatus,
+  PRO_WAITING_PATH,
+  PRO_WELCOME_PATH,
+} from "@/lib/pro/accessStatus";
+import { supabase } from "@/lib/supabase/client";
 
 /**
  * Root `/` : admin → admin console, pro → dashboard, unless they chose the
@@ -32,12 +38,27 @@ export default function HomeRedirect() {
     }
 
     let cancelled = false;
-    void Promise.all([fetchIsPro(), fetchIsAdminMember()]).then(
-      ([isPro, isAdmin]) => {
+    void Promise.all([
+      fetchIsPro(),
+      fetchIsAdminMember(),
+      fetchProAccessStatus(supabase),
+    ]).then(
+      ([isPro, isAdmin, proStatus]) => {
         if (cancelled) return;
+        const proState = proStatus?.state ?? null;
         if (isAdmin && !(isPro && readDropspotMode() === "pro")) {
           // Full load: /admin checks the 6-digit code on the server.
           window.location.replace("/admin");
+          return;
+        }
+        if (proState === "welcome") {
+          // Café just approved: welcome screen + first steps.
+          window.location.replace(PRO_WELCOME_PATH);
+          return;
+        }
+        if (proState === "pending" && !isAdmin) {
+          // Café request under review: waiting screen, every time.
+          window.location.replace(PRO_WAITING_PATH);
           return;
         }
         if (!isPro && hasProIntent()) {

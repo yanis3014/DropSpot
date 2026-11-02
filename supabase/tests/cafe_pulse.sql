@@ -31,9 +31,9 @@ begin
          (u_b, 'B', 'user', 0), (u_c, 'C', 'user', 0)
   on conflict (id) do update set grains_balance = 0;
 
-  insert into public.places (name, address, lat, lng, location)
+  insert into public.places (name, address, lat, lng, location, verification_status)
   values ('Pulse Cafe', '1 rue Pulse', 43.7, 7.26,
-          st_geogfromtext('SRID=4326;POINT(7.26 43.7)'))
+          st_geogfromtext('SRID=4326;POINT(7.26 43.7)'), 'verified')
   returning id into v_place;
   insert into public.places (name, address, lat, lng, location)
   values ('Other Cafe', '2 rue Pulse', 43.71, 7.27,

@@ -24,7 +24,10 @@ export interface QuickDropSheetProps {
   open: boolean;
   place: Place;
   role?: string | null;
+  /** The café's offer includes the Responsable role (team_manager). */
   hasPro?: boolean;
+  /** The café's offer includes drops. */
+  canDrop?: boolean;
   onClose: () => void;
   onPublished?: (drop: FlashDrop) => void;
 }
@@ -95,6 +98,7 @@ export default function QuickDropSheet({
   place,
   role,
   hasPro,
+  canDrop,
   onClose,
   onPublished,
 }: QuickDropSheetProps) {
@@ -209,7 +213,7 @@ export default function QuickDropSheet({
       onPublished?.(saved);
       onClose();
     } catch (err) {
-      setError(translateDropWriteError(err, { role, hasPro }));
+      setError(translateDropWriteError(err, { role, hasPro, canDrop }));
     } finally {
       setSubmitting(false);
     }
@@ -363,6 +367,11 @@ export default function QuickDropSheet({
           </div>
         </div>
 
+        {canDrop === false ? (
+          <p className="m-0 rounded-xl bg-ds-surface2 px-3.5 py-2.5 text-sm font-semibold text-ds-text2">
+            Les drops ne sont pas inclus dans l&apos;offre de ton café.
+          </p>
+        ) : null}
         {error ? (
           <p
             role="alert"
@@ -381,7 +390,7 @@ export default function QuickDropSheet({
         <Button
           type="button"
           variant="main"
-          disabled={submitting}
+          disabled={submitting || canDrop === false}
           onClick={() => void handlePublish()}
           className="h-14 w-full rounded-2xl text-[17px]"
         >

@@ -23,6 +23,7 @@ import ProLock from "@/components/pro/ProLock";
 import ProEmptyState from "@/components/pro/ProEmptyState";
 import { cn } from "@/lib/cn";
 import { EVENT_CATEGORIES, EVENT_CATEGORY_LABELS } from "@/lib/api/drops";
+import type { PlanId } from "@/lib/pro/planFeatures";
 
 export interface DropFormProps {
   place: Place;
@@ -31,7 +32,12 @@ export interface DropFormProps {
   initialState?: DropFormState;
   copiedFromBanner?: string | null;
   role?: string | null;
+  /** The café's offer includes the Responsable role (team_manager). */
   hasPro?: boolean;
+  /** The café's offer includes drops (false = form locked, server refuses too). */
+  canDrop?: boolean;
+  /** Cheapest offer with recurring drops (lock badge). */
+  recurringPlan?: PlanId;
   onCancel?: () => void;
   onSaved?: (drop: FlashDrop) => void;
   onUnlockPro?: () => void;
@@ -52,6 +58,8 @@ export default function DropForm({
   copiedFromBanner,
   role,
   hasPro,
+  canDrop,
+  recurringPlan,
   onCancel,
   onSaved,
   onUnlockPro,
@@ -109,7 +117,7 @@ export default function DropForm({
           : await insertFlashDrop(validation.payload);
       onSaved?.(saved);
     } catch (err) {
-      setError(translateDropWriteError(err, { role, hasPro }));
+      setError(translateDropWriteError(err, { role, hasPro, canDrop }));
     } finally {
       setSubmitting(false);
     }
@@ -432,9 +440,16 @@ export default function DropForm({
         <ProLock
           variant="row"
           label="Répéter chaque semaine"
+          plan={recurringPlan}
           onUnlock={onUnlockPro}
           className="border-dashed"
         />
+
+        {canDrop === false ? (
+          <p className="m-0 rounded-xl bg-ds-surface2 px-3.5 py-2.5 text-sm font-semibold text-ds-text2">
+            Les drops ne sont pas inclus dans l&apos;offre de ton café.
+          </p>
+        ) : null}
 
         {error ? (
           <p
@@ -458,7 +473,7 @@ export default function DropForm({
         <Button
           type="submit"
           variant="main"
-          disabled={submitting || !state.title.trim()}
+          disabled={submitting || !state.title.trim() || canDrop === false}
           className="h-11 rounded-xl px-[18px] text-[15px]"
         >
           {submitting ? "Enregistrement…" : submitLabel}

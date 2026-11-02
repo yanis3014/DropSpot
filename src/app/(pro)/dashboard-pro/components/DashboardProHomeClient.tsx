@@ -19,6 +19,7 @@ import {
 import DropCard from "@/components/pro/DropCard";
 import StatTile from "@/components/pro/StatTile";
 import ProLock from "@/components/pro/ProLock";
+import type { PlanId } from "@/lib/pro/planFeatures";
 import ConfirmDialog from "@/components/pro/ConfirmDialog";
 import StatusTag from "@/components/pro/StatusTag";
 import QuickDropSheet from "@/app/(pro)/dashboard-pro/components/QuickDropSheet";
@@ -65,7 +66,11 @@ function firstName(full: string | null | undefined): string {
 type LoadedProps = {
   place: Place;
   role: string | null;
+  /** Offer includes the Responsable role (team_manager). */
   hasPro: boolean;
+  canDrop: boolean;
+  hasInsights: boolean;
+  insightsPlan: PlanId;
   greeting: string;
   actorName: string | null;
   withCafe: (path: string) => string;
@@ -75,6 +80,9 @@ function DashboardProHomeLoaded({
   place,
   role,
   hasPro,
+  canDrop,
+  hasInsights,
+  insightsPlan,
   greeting,
   actorName,
   withCafe,
@@ -498,9 +506,10 @@ function DashboardProHomeLoaded({
                 muted={weekMuted}
               />
             </div>
-            {!hasPro ? (
+            {!hasInsights ? (
               <ProLock
                 variant="row"
+                plan={insightsPlan}
                 label="Compare avec la semaine d'avant et vois tes heures de pointe"
                 onUnlock={
                   role === "owner"
@@ -585,6 +594,7 @@ function DashboardProHomeLoaded({
         place={place}
         role={role}
         hasPro={hasPro}
+        canDrop={canDrop}
         onClose={() => setQuickDropOpen(false)}
         onPublished={() => void refresh()}
       />
@@ -601,7 +611,10 @@ export default function DashboardProHomeClient() {
   } = useActivePlace();
   const { isAuthenticated, loading: authLoading } = useAuth();
   const { profile } = useVendorProfile(isAuthenticated, authLoading);
-  const { hasPro } = useVendorPlan(isAuthenticated && !authLoading);
+  const { hasFeature, planFor } = useVendorPlan(
+    isAuthenticated && !authLoading,
+    activePlace?.id
+  );
 
   const greeting = firstName(profile?.full_name);
 
@@ -626,7 +639,10 @@ export default function DashboardProHomeClient() {
       key={activePlace.id}
       place={activePlace}
       role={activeMemberRole}
-      hasPro={hasPro}
+      hasPro={hasFeature("team_manager")}
+      canDrop={hasFeature("drops")}
+      hasInsights={hasFeature("stats_insights")}
+      insightsPlan={planFor("stats_insights")}
       greeting={greeting}
       actorName={profile?.full_name ?? null}
       withCafe={withCafe}

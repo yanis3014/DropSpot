@@ -35,6 +35,7 @@ export const ACTION_LABEL: Record<string, string> = {
   approve_claim: "a approuvé la revendication de",
   reject_claim: "a refusé la revendication de",
   set_plan: "a changé l'offre de",
+  set_plan_feature: "a changé les offres de la fonction",
   update_place: "a corrigé la fiche de",
   review_place: "a validé le café suggéré",
   suspend_user: "a suspendu",

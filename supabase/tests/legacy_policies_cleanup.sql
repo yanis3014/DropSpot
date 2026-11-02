@@ -56,8 +56,8 @@ begin
 
   -- Place vendor stays on free (no Pro) so manager inserts must fail RLS.
   insert into public.vendor_plans (user_id, plan, pro_until)
-  values (u_owner, 'free', null)
-  on conflict (user_id) do update set plan = 'free', pro_until = null;
+  values (u_owner, 'presence', null)
+  on conflict (user_id) do update set plan = 'presence', pro_until = null;
 
   if public.has_pro(u_owner) then
     raise exception 'FAIL: owner plan must stay free for this test';

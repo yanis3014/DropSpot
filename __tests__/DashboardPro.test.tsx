@@ -299,7 +299,13 @@ describe('Préremplissage depuis un drop existant et choix Programmer / Publier'
         { code: '42501', message: 'new row violates row-level security' },
         { role: 'manager', hasPro: false }
       )
-    ).toBe("Ton café doit être en Pro pour qu'un responsable crée des drops");
+    ).toBe("L'offre de ton café ne permet pas à un responsable de créer des drops");
+    expect(
+      translateDropWriteError(
+        { code: '42501', message: 'new row violates row-level security' },
+        { role: 'owner', canDrop: false }
+      )
+    ).toBe("Les drops ne sont pas inclus dans l'offre de ton café");
   });
 });
 

@@ -5,6 +5,7 @@ import { Lock } from "@phosphor-icons/react";
 import Button from "@/components/ui/Button";
 import PlanBadge from "@/components/pro/PlanBadge";
 import { cn } from "@/lib/cn";
+import { PLAN_LABELS, type PlanId } from "@/lib/pro/planFeatures";
 
 export type ProLockVariant = "button" | "row";
 
@@ -18,10 +19,12 @@ export interface ProLockProps {
   className?: string;
   /** Optional leading icon (row variant). */
   icon?: ReactNode;
+  /** Offer that unlocks the feature (badge). Default Premium. */
+  plan?: PlanId;
 }
 
 /**
- * Marks a Pro-only feature — outline button with Pro badge, or unlock row.
+ * Marks a feature not included in the current offer — outline button with Pro badge, or unlock row.
  */
 export default function ProLock({
   label,
@@ -30,6 +33,7 @@ export default function ProLock({
   onUnlock,
   className,
   icon,
+  plan = "premium",
 }: ProLockProps) {
   if (variant === "row") {
     return (
@@ -43,7 +47,7 @@ export default function ProLock({
           {icon ?? <Lock size={16} weight="bold" aria-hidden />}
         </span>
         <span className="min-w-0 flex-1 font-bold text-ds-text">{label}</span>
-        <PlanBadge plan="pro" />
+        <PlanBadge plan={plan} />
         {onUnlock ? (
           <Button
             variant="tonal"
@@ -61,7 +65,7 @@ export default function ProLock({
     <button
       type="button"
       onClick={onUnlock}
-      aria-label={`${label}, réservé à Pro`}
+      aria-label={`${label}, inclus dans l’offre ${PLAN_LABELS[plan]}`}
       className={cn(
         "inline-flex h-11 items-center justify-center gap-2 rounded-xl border-[1.5px] border-ds-line bg-ds-surface px-[18px] text-[15px] font-bold text-ds-text",
         className
@@ -69,7 +73,7 @@ export default function ProLock({
     >
       <Lock size={16} weight="bold" aria-hidden />
       {label}
-      <PlanBadge plan="pro" />
+      <PlanBadge plan={plan} />
     </button>
   );
 }

@@ -7,6 +7,7 @@ import {
   ClockCounterClockwise,
   Crown,
   DotsThreeOutline,
+  ListChecks,
   Briefcase,
   MapTrifold,
   SealCheck,
@@ -75,7 +76,8 @@ export default function AdminShell({
     { href: "/admin/revendications", label: "Revendications", icon: SealCheck, count: pendingClaims },
     { href: "/admin/cafes", label: "Cafés", icon: Storefront, count: placesToReview },
     { href: "/admin/utilisateurs", label: "Utilisateurs", icon: UsersThree },
-    { href: "/admin/abonnements", label: "Abonnements Pro", icon: Crown },
+    { href: "/admin/abonnements", label: "Abonnements", icon: Crown },
+    { href: "/admin/offres", label: "Offres et fonctions", icon: ListChecks },
   ];
   const follow: NavItem[] = [
     { href: "/admin/journal", label: "Journal", icon: ClockCounterClockwise },

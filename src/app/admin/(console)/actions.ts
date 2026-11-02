@@ -2,6 +2,13 @@
 
 import { revalidatePath } from "next/cache";
 import { assertAdmin } from "@/lib/admin/assertAdmin";
+import {
+  isPlanFeatureKey,
+  normalizePlanList,
+  PLAN_IDS,
+  type PlanFeatureKey,
+  type PlanId,
+} from "@/lib/pro/planFeatures";
 
 type ActionResult = { ok: true } | { ok: false; error: string };
 
@@ -57,19 +64,23 @@ export async function markPlaceReviewedAction(placeId: string): Promise<ActionRe
 }
 
 /**
- * Pro plan. `proUntil` is a YYYY-MM-DD day (end of that day, Paris) or empty
- * for no end date.
+ * Offer of a café owner account. `proUntil` is a YYYY-MM-DD day (end of that
+ * day, Paris) or empty for no end date; ignored for Présence.
  */
 export async function setVendorPlanAction(input: {
   userId: string;
-  plan: "free" | "pro";
+  plan: PlanId;
   proUntil: string;
 }): Promise<ActionResult> {
   const gate = await assertAdmin();
   if (!gate.ok) return gate;
 
+  if (!PLAN_IDS.includes(input.plan)) {
+    return { ok: false, error: "Offre inconnue." };
+  }
+
   let proUntil: string | null = null;
-  if (input.plan === "pro" && input.proUntil) {
+  if (input.plan !== "presence" && input.proUntil) {
     if (!/^\d{4}-\d{2}-\d{2}$/.test(input.proUntil)) {
       return { ok: false, error: "Date de fin invalide." };
     }
@@ -88,9 +99,43 @@ export async function setVendorPlanAction(input: {
   if (result.ok) {
     revalidatePath("/admin");
     revalidatePath("/admin/abonnements");
+    revalidatePath("/admin/offres");
     revalidatePath(`/admin/utilisateurs/${input.userId}`);
   }
   return result;
+}
+
+const FEATURE_ERRORS: Record<string, string> = {
+  invalid_feature: "Fonction inconnue.",
+  invalid_plans: "Offre inconnue.",
+  forbidden: "Accès admin requis.",
+};
+
+/** Which offers include a pro feature. Applied at once by every server-side gate. */
+export async function setPlanFeatureAction(input: {
+  feature: PlanFeatureKey;
+  plans: PlanId[];
+}): Promise<ActionResult> {
+  const gate = await assertAdmin();
+  if (!gate.ok) return gate;
+
+  if (!isPlanFeatureKey(input.feature)) {
+    return { ok: false, error: FEATURE_ERRORS.invalid_feature };
+  }
+
+  const { data, error } = await gate.supabase.rpc("admin_set_plan_feature", {
+    p_feature: input.feature,
+    p_plans: normalizePlanList(input.plans),
+  });
+  if (error) return { ok: false, error: error.message };
+  const res = data as { ok?: boolean; error?: string } | null;
+  if (!res?.ok) {
+    const code = res?.error ?? "unknown";
+    return { ok: false, error: FEATURE_ERRORS[code] ?? code };
+  }
+  revalidatePath("/admin/offres");
+  revalidatePath("/admin/journal");
+  return { ok: true };
 }
 
 const SUSPEND_ERRORS: Record<string, string> = {

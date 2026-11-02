@@ -74,9 +74,6 @@ function ProShellInner({ children }: { children: React.ReactNode }) {
     signOut,
   } = useAuth();
   const { profile } = useVendorProfile(isAuthenticated, authLoading);
-  const { plan, hasPro: hasProSubscription } = useVendorPlan(
-    isAuthenticated && !authLoading
-  );
   const {
     places,
     activePlace,
@@ -87,6 +84,10 @@ function ProShellInner({ children }: { children: React.ReactNode }) {
     withCafe,
     initialsFor,
   } = useActivePlace();
+  const { effectivePlan } = useVendorPlan(
+    isAuthenticated && !authLoading,
+    activePlace?.id
+  );
 
   const [switcherOpen, setSwitcherOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
@@ -172,15 +173,15 @@ function ProShellInner({ children }: { children: React.ReactNode }) {
         <div className="mt-auto flex flex-col gap-3">
           <div className="flex flex-col gap-2 rounded-[14px] bg-ds-surface2 p-3.5">
             <div className="flex items-center gap-2">
-              <PlanBadge plan={plan} />
+              <PlanBadge plan={effectivePlan} />
               <span className="text-[13px] text-ds-text2">Ton offre</span>
             </div>
-            {!hasProSubscription && (
+            {effectivePlan !== "premium" && (
               <Link
                 href={withCafe("/abonnement")}
                 className="text-sm font-bold text-ds-accent no-underline"
               >
-                Découvrir Pro →
+                Voir les offres →
               </Link>
             )}
           </div>

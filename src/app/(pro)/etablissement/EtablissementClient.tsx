@@ -104,7 +104,8 @@ export default function EtablissementClient() {
   const router = useRouter();
   const { activePlace, activeMemberRole, loading: placeLoading } =
     useActivePlace();
-  const { hasPro } = useVendorPlan();
+  const { hasFeature, planFor } = useVendorPlan(true, activePlace?.id);
+  const hasPro = hasFeature('gallery_full');
   const canEdit = activeMemberRole === 'owner';
 
   const [baseline, setBaseline] = useState<PlaceFicheDraft | null>(null);
@@ -638,7 +639,7 @@ export default function EtablissementClient() {
               >
                 <Lock className="h-4 w-4 shrink-0" weight="bold" aria-hidden />
                 Galerie complète et vidéo
-                <PlanBadge plan="pro" />
+                <PlanBadge plan={planFor('gallery_full')} />
               </button>
             ) : null}
 

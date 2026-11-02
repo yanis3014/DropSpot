@@ -30,7 +30,7 @@ const TEAM_ERROR_FR: Record<string, string> = {
   not_found: 'Membre ou invitation introuvable.',
   last_owner:
     'Tu es le dernier gérant de ce café. Nomme un autre gérant avant de partir ou de changer de rôle.',
-  pro_required: 'Le rôle Responsable nécessite l’offre Pro.',
+  pro_required: 'Ce rôle n’est pas inclus dans l’offre de ton café.',
   already_accepted: 'Cette invitation a déjà été acceptée.',
   already_member: 'Cette personne fait déjà partie de l’équipe.',
   cannot_invite_self: 'Tu ne peux pas t’inviter toi-même.',

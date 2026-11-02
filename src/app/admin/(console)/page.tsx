@@ -62,7 +62,7 @@ export default async function AdminTodoPage() {
     },
     { value: overview.places_total, label: "cafés en base" },
     { value: overview.places_verified, label: "cafés vérifiés" },
-    { value: overview.pros_active, label: "comptes Pro actifs" },
+    { value: overview.pros_active, label: "comptes en offre payante" },
   ];
 
   return (

@@ -451,7 +451,13 @@ export function validateDropFormState(
  */
 export function translateDropWriteError(
   err: unknown,
-  options: { role?: string | null; hasPro?: boolean } = {}
+  options: {
+    role?: string | null;
+    /** The café's offer includes the Responsable role (team_manager). */
+    hasPro?: boolean;
+    /** The café's offer includes drops. */
+    canDrop?: boolean;
+  } = {}
 ): string {
   const code =
     err && typeof err === 'object' && 'code' in err
@@ -468,6 +474,15 @@ export function translateDropWriteError(
     return "Ce café n'est pas encore vérifié";
   }
 
+  const deniedByDb =
+    code === '42501' ||
+    /row-level security/i.test(message) ||
+    /pro_required/i.test(message);
+
+  if (options.canDrop === false && deniedByDb) {
+    return "Les drops ne sont pas inclus dans l'offre de ton café";
+  }
+
   if (
     options.role === 'manager' &&
     options.hasPro === false &&
@@ -475,7 +490,7 @@ export function translateDropWriteError(
       /row-level security/i.test(message) ||
       /pro_required/i.test(message))
   ) {
-    return "Ton café doit être en Pro pour qu'un responsable crée des drops";
+    return "L'offre de ton café ne permet pas à un responsable de créer des drops";
   }
 
   if (code === '42501' || /row-level security/i.test(message)) {

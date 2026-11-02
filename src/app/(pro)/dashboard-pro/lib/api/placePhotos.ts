@@ -186,13 +186,13 @@ export function placeMediaErrorMessage(err: unknown): string {
         : String(err ?? '');
 
   if (/pro_required:\s*food and menu/i.test(message)) {
-    return 'La galerie food et menu est réservée à Pro.';
+    return 'Les photos des plats et de la carte ne sont pas incluses dans ton offre.';
   }
   if (/pro_required:\s*free plan allows/i.test(message)) {
-    return `Le plan Gratuit permet jusqu’à ${FREE_VENUE_PHOTO_MAX} photos. Passe en Pro pour en ajouter.`;
+    return `Ton offre permet jusqu’à ${FREE_VENUE_PHOTO_MAX} photos. Change d’offre pour en ajouter.`;
   }
   if (/pro_required/i.test(message)) {
-    return `Le plan Gratuit permet jusqu’à ${FREE_VENUE_PHOTO_MAX} photos. Passe en Pro pour en ajouter.`;
+    return `Ton offre permet jusqu’à ${FREE_VENUE_PHOTO_MAX} photos. Change d’offre pour en ajouter.`;
   }
   if (/Maximum \d+ photos/i.test(message)) {
     return message;

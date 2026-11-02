@@ -32,7 +32,8 @@ import {
   formatStartsInDaysLabel,
 } from "@/app/(pro)/dashboard-pro/lib/proDrops/display";
 import { DROP_FORM_EXAMPLES } from "@/app/(pro)/dashboard-pro/lib/proDrops/examples";
-import { getMyVendorPlan } from "@/lib/api/vendorPlan";
+import { getPlanFeatureGrid, getVendorPlan } from "@/lib/api/vendorPlan";
+import { cheapestPlanWith, type PlanId } from "@/lib/pro/planFeatures";
 import { cn } from "@/lib/cn";
 
 const STATUT_PARAM = "statut";
@@ -77,7 +78,9 @@ type DropsSnapshot = {
   scheduled: FlashDrop[];
   finished: FlashDrop[];
   finishedTotal: number;
-  hasPro: boolean;
+  /** Offer includes recurring drops. */
+  hasRecurring: boolean;
+  recurringPlan: PlanId;
 };
 
 function SectionTitle({ children }: { children: string }) {
@@ -146,10 +149,11 @@ function DashboardProDropsLoaded({
   const manage = canManageDrops(role);
 
   const fetchDrops = useCallback(async () => {
-    const [active, finishedPageResult, plan] = await Promise.all([
+    const [active, finishedPageResult, plan, grid] = await Promise.all([
       getActiveAndScheduledDrops(placeId),
       getFinishedDropsPage(placeId, finishedPage),
-      getMyVendorPlan(),
+      getVendorPlan(placeId),
+      getPlanFeatureGrid(),
     ]);
     return {
       placeId,
@@ -158,7 +162,8 @@ function DashboardProDropsLoaded({
       scheduled: active.scheduled,
       finished: finishedPageResult.drops,
       finishedTotal: finishedPageResult.total,
-      hasPro: plan.hasPro,
+      hasRecurring: plan.features.includes("recurring_drops"),
+      recurringPlan: cheapestPlanWith("recurring_drops", grid) ?? "premium",
     } satisfies DropsSnapshot;
   }, [placeId, finishedPage]);
 
@@ -193,7 +198,8 @@ function DashboardProDropsLoaded({
       : [];
   const finishedTotal =
     snapshot?.placeId === placeId ? snapshot.finishedTotal : 0;
-  const hasPro = snapshot?.hasPro ?? false;
+  const hasRecurring = snapshot?.hasRecurring ?? false;
+  const recurringPlan = snapshot?.recurringPlan ?? "premium";
 
   const counts = useMemo(
     () => ({
@@ -258,7 +264,7 @@ function DashboardProDropsLoaded({
     );
   };
 
-  const recurringLocked = !hasPro || !RECURRING_DROPS_ENABLED;
+  const recurringLocked = !hasRecurring || !RECURRING_DROPS_ENABLED;
 
   const showLive =
     statut === "tous" || statut === "en-cours" ? live.length > 0 : false;
@@ -292,6 +298,7 @@ function DashboardProDropsLoaded({
             {recurringLocked ? (
               <ProLock
                 label="Drop récurrent"
+                plan={recurringPlan}
                 onUnlock={() =>
                   router.push(withCafe("/abonnement"))
                 }
@@ -330,6 +337,7 @@ function DashboardProDropsLoaded({
               {recurringLocked ? (
                 <ProLock
                   label="Drop récurrent"
+                plan={recurringPlan}
                   onUnlock={() => router.push(withCafe("/abonnement"))}
                 />
               ) : null}

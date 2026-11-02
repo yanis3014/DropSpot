@@ -1,19 +1,37 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import {
-  getMyVendorPlan,
+  DEFAULT_PLAN,
+  getPlanFeatureGrid,
+  getVendorPlan,
   type VendorPlanState,
 } from '@/lib/api/vendorPlan';
+import {
+  cheapestPlanWith,
+  DEFAULT_FEATURE_GRID,
+  type PlanFeatureGrid,
+  type PlanFeatureKey,
+  type PlanId,
+} from '@/lib/pro/planFeatures';
 
-const DEFAULT: VendorPlanState = {
-  plan: 'free',
-  proUntil: null,
-  hasPro: false,
+export type UseVendorPlan = VendorPlanState & {
+  loading: boolean;
+  grid: PlanFeatureGrid;
+  /** La fonction est-elle incluse dans l'offre en vigueur ? */
+  hasFeature: (feature: PlanFeatureKey) => boolean;
+  /** Offre la moins chère qui débloque la fonction (pour les cadenas). */
+  planFor: (feature: PlanFeatureKey) => PlanId;
 };
 
-export function useVendorPlan(enabled = true): VendorPlanState & { loading: boolean } {
-  const [state, setState] = useState<VendorPlanState>(DEFAULT);
+/**
+ * Offre du café actif (placeId) ou, à défaut, du compte connecté, plus la
+ * grille des fonctions. Le serveur applique les mêmes règles : ceci ne sert
+ * qu'à afficher les cadenas au bon endroit.
+ */
+export function useVendorPlan(enabled = true, placeId?: string | null): UseVendorPlan {
+  const [state, setState] = useState<VendorPlanState>(DEFAULT_PLAN);
+  const [grid, setGrid] = useState<PlanFeatureGrid>(DEFAULT_FEATURE_GRID);
   const [loading, setLoading] = useState(enabled);
 
   useEffect(() => {
@@ -23,17 +41,29 @@ export function useVendorPlan(enabled = true): VendorPlanState & { loading: bool
     }
 
     let cancelled = false;
-    void getMyVendorPlan().then((next) => {
-      if (!cancelled) {
+    setLoading(true);
+    void Promise.all([getVendorPlan(placeId), getPlanFeatureGrid()]).then(
+      ([next, nextGrid]) => {
+        if (cancelled) return;
         setState(next);
+        setGrid(nextGrid);
         setLoading(false);
       }
-    });
+    );
 
     return () => {
       cancelled = true;
     };
-  }, [enabled]);
+  }, [enabled, placeId]);
 
-  return { ...state, loading };
+  const hasFeature = useCallback(
+    (feature: PlanFeatureKey) => state.features.includes(feature),
+    [state.features]
+  );
+  const planFor = useCallback(
+    (feature: PlanFeatureKey) => cheapestPlanWith(feature, grid) ?? 'premium',
+    [grid]
+  );
+
+  return { ...state, loading, grid, hasFeature, planFor };
 }

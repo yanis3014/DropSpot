@@ -8,7 +8,7 @@ import DayCurve from "./DayCurve";
 import FaqSection from "./FaqSection";
 import NiceMapHero from "./NiceMapHero";
 import OffersSummary from "./OffersSummary";
-import PitchVideo from "./PitchVideo";
+import PitchVideoLazy from "./PitchVideoLazy";
 
 const FOCUS_RING =
   "rounded-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ds-accent";
@@ -57,7 +57,7 @@ export default function PourLesCafesPage() {
       {/* Bandeau sombre pleine largeur, hors du conteneur max-w-6xl */}
       <NiceMapHero />
 
-      <div className="mx-auto max-w-6xl px-4 sm:px-6">
+      <div className="mx-auto max-w-6xl overflow-x-clip px-4 sm:px-6">
         {/* 1. L'heure creuse */}
         <DayCurve />
 
@@ -67,7 +67,7 @@ export default function PourLesCafesPage() {
             <h2 className="font-display m-0 max-w-[18em] text-[24px] font-extrabold leading-[1.15] tracking-tight text-balance text-ds-text sm:text-[28px]">
               Un mardi, 15 h, dans un café de Nice
             </h2>
-            <PitchVideo />
+            <PitchVideoLazy />
           </div>
         </section>
 
@@ -93,8 +93,8 @@ export default function PourLesCafesPage() {
                     className="mt-0.5 shrink-0 text-ds-accenttext"
                   />
                   <span className="text-[16px] leading-relaxed text-ds-text">
-                    On vous trouve par envie : travailler au calme, un bon
-                    matcha, une terrasse.
+                    Les clients vous trouvent par envie : travailler au calme,
+                    un bon matcha, une terrasse.
                   </span>
                 </li>
                 <li className="flex items-start gap-3">
@@ -156,7 +156,7 @@ export default function PourLesCafesPage() {
         </div>
       </section>
 
-      <div className="mx-auto max-w-6xl px-4 sm:px-6">
+      <div className="mx-auto max-w-6xl overflow-x-clip px-4 sm:px-6">
         {/* 6. Les offres, version courte */}
         <OffersSummary />
 
@@ -175,7 +175,7 @@ export default function PourLesCafesPage() {
             Une question ? Écrivez-nous à{" "}
             <a
               href={`mailto:${CONTACT_EMAIL}`}
-              className={`break-all font-semibold text-ds-accenttext underline ${FOCUS_RING}`}
+              className={`inline-flex min-h-11 items-center break-all font-semibold text-ds-accenttext underline ${FOCUS_RING}`}
             >
               {CONTACT_EMAIL}
             </a>
@@ -191,19 +191,19 @@ export default function PourLesCafesPage() {
             <Link
               href="/login?redirect=/dashboard-pro&espace=pro"
               prefetch={false}
-              className={`text-ds-text2 underline-offset-2 hover:underline ${FOCUS_RING}`}
+              className={`inline-flex min-h-11 items-center text-ds-text2 underline-offset-2 hover:underline ${FOCUS_RING}`}
             >
               Déjà gérant ? Se connecter
             </Link>
             <Link
               href="/map"
-              className={`text-ds-text2 underline-offset-2 hover:underline ${FOCUS_RING}`}
+              className={`inline-flex min-h-11 items-center text-ds-text2 underline-offset-2 hover:underline ${FOCUS_RING}`}
             >
               Vous êtes client ? Ouvrir la carte
             </Link>
             <a
               href={`mailto:${CONTACT_EMAIL}`}
-              className={`text-ds-text2 underline-offset-2 hover:underline ${FOCUS_RING}`}
+              className={`inline-flex min-h-11 items-center text-ds-text2 underline-offset-2 hover:underline ${FOCUS_RING}`}
             >
               Contact
             </a>

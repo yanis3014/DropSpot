@@ -10,7 +10,7 @@ export default function CafeCardPreview() {
       {/* Fausse photo : dégradé chaud en dur, exception assumée aux jetons
           (une vraie photo n'aurait pas de jeton non plus). */}
       <div className="relative h-[130px] bg-gradient-to-br from-[#d9b893] to-[#a7744a]">
-        <span className="absolute bottom-3 left-3 rounded-full bg-white/95 px-2.5 py-1 text-[12px] font-semibold text-[#3a2412]">
+        <span className="absolute bottom-3 left-3 rounded-full bg-ds-surface px-2.5 py-1 text-[12px] font-semibold text-ds-text shadow-ds">
           Ouvert · ferme à 19 h
         </span>
       </div>

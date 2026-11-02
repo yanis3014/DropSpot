@@ -96,7 +96,7 @@ export default function NiceMap() {
         >
           <span className="absolute h-3.5 w-3.5 -translate-x-1/2 -translate-y-1/2">
             <span
-              className="absolute inset-0 rounded-full motion-safe:animate-pulse-glow"
+              className="absolute inset-0 rounded-full motion-safe:animate-pulse-glow motion-reduce:animate-none"
               style={{
                 boxShadow: HALO_SHADOW,
                 animationDelay: `${index * 0.4}s`,

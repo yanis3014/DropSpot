@@ -152,9 +152,9 @@ export default function OffersSection({
             On lance Dropspot à Nice avec une trentaine de cafés
           </h3>
           <p className="mt-3 mb-0 max-w-[40em] text-[15px] leading-relaxed opacity-85 sm:text-[16px]">
-            Pendant le pilote, on active votre offre avec vous, directement par
-            e-mail. Les premiers cafés nous aident à construire l’outil, et on
-            les écoute.
+            Pendant le pilote, nous activons votre offre avec vous, directement
+            par e-mail. Les premiers cafés nous aident à construire l’outil, et
+            nous vous écoutons.
           </p>
           <ul className="mt-5 m-0 flex list-none flex-col gap-2 p-0 sm:flex-row sm:flex-wrap sm:gap-x-6">
             {PILOT_POINTS.map((point) => (

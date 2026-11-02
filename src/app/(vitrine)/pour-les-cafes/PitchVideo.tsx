@@ -28,7 +28,7 @@ export default function PitchVideo() {
 
   return (
     <div className="mx-auto flex w-full max-w-[300px] flex-col items-center gap-3">
-      <div className="aspect-[9/16] w-full overflow-hidden rounded-[36px] border-8 border-ds-text shadow-[0_18px_40px_rgba(0,0,0,0.18)]">
+      <div className="aspect-[9/16] w-full overflow-hidden rounded-[36px] border-8 border-ds-text shadow-ds">
         <video
           ref={videoRef}
           src="/vitrine/pub-pro.mp4"

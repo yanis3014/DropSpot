@@ -54,12 +54,12 @@ export default function OffersSummary() {
       </ul>
 
       <details className="group mt-6">
-        <summary className="flex min-h-11 cursor-pointer list-none items-center gap-2 text-[15px] font-semibold text-ds-accenttext [&::-webkit-details-marker]:hidden">
+        <summary className="flex min-h-11 cursor-pointer list-none items-center gap-2 rounded-md text-[15px] font-semibold text-ds-accenttext focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ds-accent [&::-webkit-details-marker]:hidden">
           <CaretDown
             size={16}
             weight="bold"
             aria-hidden
-            className="shrink-0 transition-transform duration-200 group-open:rotate-180 motion-reduce:transition-none"
+            className="shrink-0 text-ds-accenttext motion-safe:transition-transform motion-safe:duration-200 motion-safe:group-open:rotate-180"
           />
           Comparer le détail des offres
         </summary>

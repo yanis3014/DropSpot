@@ -1,7 +1,16 @@
+import dynamic from "next/dynamic";
 import Image from "next/image";
 import Link from "next/link";
-import HeroClaimSearch from "./HeroClaimSearch";
 import NiceMap from "./NiceMap";
+
+const HeroClaimSearch = dynamic(() => import("./HeroClaimSearch"), {
+  loading: () => (
+    <div
+      aria-hidden
+      className="min-h-[52px] rounded-[14px] border border-ds-nightline bg-ds-night2"
+    />
+  ),
+});
 
 /**
  * Bandeau sombre « Nice sur la carte » de la landing cafés.

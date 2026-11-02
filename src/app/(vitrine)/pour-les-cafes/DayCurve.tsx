@@ -50,7 +50,7 @@ export default function DayCurve() {
                   <div key={bar.hour} className="flex h-full flex-col justify-end">
                     {bar.height !== null ? (
                       <div
-                        className="motion-safe:animate-bar-grow w-full origin-bottom rounded-t-lg bg-ds-line"
+                        className="w-full origin-bottom rounded-t-lg bg-ds-line motion-safe:animate-bar-grow motion-reduce:animate-none"
                         style={{
                           height: `${bar.height}%`,
                           animationDelay: `${i * 40}ms`,
@@ -59,7 +59,7 @@ export default function DayCurve() {
                     ) : (
                       <>
                         <div
-                          className="motion-safe:animate-drop-fade flex flex-1 flex-col rounded-t-lg border-2 border-b-0 border-dashed border-ds-accent bg-ds-accentsoft"
+                          className="flex flex-1 flex-col rounded-t-lg border-2 border-b-0 border-dashed border-ds-accent bg-ds-accentsoft motion-safe:animate-drop-fade motion-reduce:animate-none"
                           style={{ animationDelay: `${DROP_BLOCK_DELAY_MS}ms` }}
                         >
                           <span className="pt-1 text-center text-[11px] font-bold text-ds-accenttext">
@@ -67,7 +67,7 @@ export default function DayCurve() {
                           </span>
                         </div>
                         <div
-                          className="motion-safe:animate-bar-grow w-full origin-bottom bg-ds-accent"
+                          className="w-full origin-bottom bg-ds-accent motion-safe:animate-bar-grow motion-reduce:animate-none"
                           style={{
                             height: `${DROP_BAR_HEIGHT}%`,
                             animationDelay: `${i * 40}ms`,

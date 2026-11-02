@@ -19,7 +19,7 @@ const QUESTIONS = [
   },
   {
     q: "Est-ce que je m’engage ?",
-    a: "L’offre Présence est gratuite, sans limite de durée. Pour Analytics et Premium, on en parle ensemble pendant le pilote.",
+    a: "L’offre Présence est gratuite, sans limite de durée. Pour Analytics et Premium, nous en parlons avec vous pendant le pilote.",
   },
   {
     q: "Et les données de mes clients ?",
@@ -35,7 +35,7 @@ const QUESTIONS = [
 export default function FaqSection() {
   return (
     <section id="questions" className="border-t border-ds-line py-16 sm:py-20">
-      <h2 className="font-display m-0 text-[28px] font-extrabold tracking-tight text-balance text-ds-text sm:text-[36px]">
+      <h2 className="font-display m-0 text-[32px] font-extrabold leading-[1.08] tracking-tight text-balance text-ds-text sm:text-[40px]">
         Vos questions
       </h2>
       <div className="mt-10 flex max-w-3xl flex-col gap-3">
@@ -44,13 +44,13 @@ export default function FaqSection() {
             key={q}
             className="group rounded-[18px] border border-ds-line bg-ds-surface"
           >
-            <summary className="flex cursor-pointer list-none items-center justify-between gap-4 rounded-[18px] px-5 py-4 text-[16px] font-bold text-ds-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ds-accent [&::-webkit-details-marker]:hidden">
+            <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-4 rounded-[18px] px-5 py-3 text-[16px] font-bold text-ds-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ds-accent [&::-webkit-details-marker]:hidden">
               {q}
               <CaretDown
                 size={20}
                 weight="bold"
                 aria-hidden
-                className="shrink-0 text-ds-text2 transition-transform group-open:rotate-180 motion-reduce:transition-none"
+                className="shrink-0 text-ds-text2 motion-safe:transition-transform motion-safe:duration-200 motion-safe:group-open:rotate-180"
               />
             </summary>
             <p className="m-0 px-5 pb-5 text-[15px] leading-relaxed text-ds-text2">

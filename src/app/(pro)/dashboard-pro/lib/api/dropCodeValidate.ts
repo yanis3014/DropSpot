@@ -102,6 +102,29 @@ export async function addDropPlaces(
   return { ok: Boolean(row?.ok), error: row?.error };
 }
 
+/**
+ * True when the code was issued to the signed-in user. redeem_drop_code answers
+ * "not_found" in that case (anti-fraud: nobody validates their own code), so we
+ * check it here only to explain the refusal. RLS "Users read own drop codes"
+ * limits this read to the user's own rows: no other code is revealed.
+ */
+export async function isOwnDropCode(rawCode: string): Promise<boolean> {
+  if (!supabase) return false;
+  const norm = normalizeDropCodeRaw(rawCode);
+  if (norm.length !== 6) return false;
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return false;
+  const { data, error } = await supabase
+    .from('drop_codes')
+    .select('id')
+    .eq('code', norm)
+    .eq('user_id', user.id)
+    .maybeSingle();
+  return !error && Boolean(data);
+}
+
 export interface DropCodeContext {
   dropTitle: string | null;
   maxUses: number | null;

@@ -5,6 +5,7 @@ export type RedeemStatus =
   | 'sold_out'
   | 'not_found'
   | 'not_authenticated'
+  | 'own_code'
   | 'offline';
 
 export type VerdictBand = 'ok' | 'warn' | 'danger' | 'neutral';
@@ -141,6 +142,19 @@ export function buildVerdictViewModel(input: {
         flashDropId: result?.flash_drop_id,
         codeDisplay,
       };
+    case 'own_code':
+      return {
+        kind: 'own_code',
+        band: 'warn',
+        title: 'C’est ton propre code',
+        body:
+          'On ne peut pas valider un code obtenu avec son propre compte. Pour tester, affiche le QR avec un autre compte (celui d’un ami ou un compte de test).',
+        dropTitle: dropTitle ?? undefined,
+        meta: codeDisplay ? `Code ${codeDisplay}` : undefined,
+        showCancelValidation: false,
+        showAddFivePlaces: false,
+        codeDisplay,
+      };
     case 'offline':
       return {
         kind: 'offline',
@@ -162,7 +176,8 @@ export function buildVerdictViewModel(input: {
         kind: 'not_found',
         band: 'neutral',
         title: 'Code inconnu',
-        body: 'Ce code ne correspond à aucun drop actif pour ce café.',
+        body:
+          'Ce code ne correspond à aucun drop de ce café. Vérifie que le café choisi en haut est bien celui du drop.',
         dropTitle: dropTitle ?? undefined,
         meta: codeDisplay ? `Code ${codeDisplay}` : undefined,
         showCancelValidation: false,

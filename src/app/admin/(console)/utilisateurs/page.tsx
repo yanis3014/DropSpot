@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { normalizePlanId, PLAN_LABELS } from "@/lib/pro/planFeatures";
 import AdminPageHeader from "@/app/admin/(console)/components/AdminPageHeader";
 import AdminSearch from "@/app/admin/(console)/components/AdminSearch";
 import { requireAdmin } from "@/lib/admin/requireAdmin";
@@ -75,7 +76,9 @@ export default async function AdminUsersPage({
                     <span className="flex flex-wrap items-center gap-1.5">
                       <span className="font-semibold text-ds-text">{name}</span>
                       {user.is_admin ? <Pill tone="admin">Admin</Pill> : null}
-                      {user.plan === "pro" ? <Pill tone="pro">Pro</Pill> : null}
+                      {user.plan && normalizePlanId(user.plan) !== "presence" ? (
+                        <Pill tone="pro">{PLAN_LABELS[normalizePlanId(user.plan)]}</Pill>
+                      ) : null}
                       {user.places_count > 0 ? <Pill tone="muted">Café</Pill> : null}
                       {isSuspended(user.banned_until) ? <Pill tone="danger">Suspendu</Pill> : null}
                     </span>

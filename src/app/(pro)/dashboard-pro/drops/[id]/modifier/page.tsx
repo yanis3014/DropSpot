@@ -22,7 +22,9 @@ export default function EditDropPage() {
   const dropId = typeof params.id === "string" ? params.id : "";
   const { activePlace, activeMemberRole, loading: placeLoading, withCafe } =
     useActivePlace();
-  const { hasPro } = useVendorPlan();
+  const { hasFeature, planFor } = useVendorPlan(true, activePlace?.id);
+  const hasPro = hasFeature("team_manager");
+  const canDrop = hasFeature("drops");
 
   const [loadedState, setLoadedState] = useState<{
     requestedId: string;
@@ -89,6 +91,8 @@ export default function EditDropPage() {
         initialState={initialState}
         role={activeMemberRole}
         hasPro={hasPro}
+        canDrop={canDrop}
+        recurringPlan={planFor("recurring_drops")}
         onCancel={() => router.push(withCafe("/dashboard-pro/drops"))}
         onSaved={() => router.push(withCafe("/dashboard-pro/drops"))}
         onUnlockPro={() => router.push(withCafe("/abonnement"))}

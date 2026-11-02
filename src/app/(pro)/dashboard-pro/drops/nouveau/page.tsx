@@ -25,7 +25,9 @@ function NewDropPageInner() {
   const depuisId = searchParams.get("depuis");
   const exempleId = searchParams.get("exemple");
   const { activePlace, activeMemberRole, loading, withCafe } = useActivePlace();
-  const { hasPro } = useVendorPlan();
+  const { hasFeature, planFor } = useVendorPlan(true, activePlace?.id);
+  const hasPro = hasFeature("team_manager");
+  const canDrop = hasFeature("drops");
 
   const exampleMatch = useMemo(
     () => DROP_FORM_EXAMPLES.find((e) => e.id === exempleId) ?? null,
@@ -114,6 +116,8 @@ function NewDropPageInner() {
         copiedFromBanner={copiedFromBanner}
         role={activeMemberRole}
         hasPro={hasPro}
+        canDrop={canDrop}
+        recurringPlan={planFor("recurring_drops")}
         onCancel={() => router.push(withCafe("/dashboard-pro/drops"))}
         onSaved={() => router.push(withCafe("/dashboard-pro/drops"))}
         onUnlockPro={() => router.push(withCafe("/abonnement"))}

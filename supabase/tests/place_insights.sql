@@ -109,8 +109,8 @@ begin
 
   -- Free plan first (pro_required cases).
   insert into public.vendor_plans (user_id, plan, pro_until)
-  values (u_owner_a, 'free', null), (u_owner_b, 'free', null)
-  on conflict (user_id) do update set plan = 'free', pro_until = null;
+  values (u_owner_a, 'presence', null), (u_owner_b, 'presence', null)
+  on conflict (user_id) do update set plan = 'presence', pro_until = null;
 
   delete from public.check_ins where place_id in (place_a, place_b);
   delete from public.drop_codes where flash_drop_id = v_drop;
@@ -195,9 +195,9 @@ begin
 
   -- Grant Pro on café A.
   insert into public.vendor_plans (user_id, plan, pro_until)
-  values (u_owner_a, 'pro', v_until + interval '30 days')
+  values (u_owner_a, 'premium', v_until + interval '30 days')
   on conflict (user_id) do update
-  set plan = 'pro', pro_until = excluded.pro_until;
+  set plan = 'premium', pro_until = excluded.pro_until;
 
   -- Seed: overlapping drop + redeemed code by owner (team member).
   insert into public.flash_drops (

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { normalizePlanId } from "@/lib/pro/planFeatures";
 import { notFound } from "next/navigation";
 import UserAdminActions from "@/app/admin/(console)/utilisateurs/[id]/UserAdminActions";
 import PlanControl from "@/app/admin/(console)/abonnements/PlanControl";
@@ -116,7 +117,7 @@ export default async function AdminUserPage({
           <div className="rounded-2xl border border-ds-line bg-ds-surface p-4">
             <PlanControl
               userId={user.id}
-              plan={user.plan?.plan === "pro" ? "pro" : "free"}
+              plan={normalizePlanId(user.plan?.plan)}
               proUntil={user.plan?.pro_until ?? null}
               hasPro={Boolean(user.plan?.has_pro)}
             />

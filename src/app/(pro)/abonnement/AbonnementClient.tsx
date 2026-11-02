@@ -1,12 +1,7 @@
 'use client';
 
-import { useId, useMemo, useRef, useState } from 'react';
-import {
-  Check,
-  Lock,
-  Minus,
-  X,
-} from '@phosphor-icons/react';
+import { useId, useMemo, useState } from 'react';
+import { Check, Minus, X } from '@phosphor-icons/react';
 import Button from '@/components/ui/Button';
 import PlanBadge from '@/components/pro/PlanBadge';
 import StatusTag from '@/components/pro/StatusTag';
@@ -15,77 +10,17 @@ import { useAuth } from '@/lib/hooks/useAuth';
 import { useActivePlace } from '@/app/(pro)/hooks/useActivePlace';
 import { CONTACT_EMAIL, PRO_PRICE_LABEL } from '@/lib/pro/contact';
 import { cn } from '@/lib/cn';
+import {
+  PLAN_FEATURES,
+  PLAN_IDS,
+  PLAN_LABELS,
+  type PlanId,
+} from '@/lib/pro/planFeatures';
+import { OFFERS } from '@/lib/vitrine/offers';
 
-type CompareRow = {
-  label: string;
-  freeIncluded: boolean;
-};
-
-const COMPARE_ROWS: CompareRow[] = [
-  {
-    label: 'Fiche, horaires et horaires exceptionnels',
-    freeIncluded: true,
-  },
-  {
-    label: 'Proposer ou contester une info',
-    freeIncluded: true,
-  },
-  {
-    label: 'Drops flash ponctuels',
-    freeIncluded: true,
-  },
-  {
-    label: 'Validation au comptoir (QR ou code)',
-    freeIncluded: true,
-  },
-  {
-    label: 'Équipiers qui valident les drops',
-    freeIncluded: true,
-  },
-  {
-    label: 'Drops récurrents (chaque semaine)',
-    freeIncluded: false,
-  },
-  {
-    label: 'Rôle Responsable dans l’équipe',
-    freeIncluded: false,
-  },
-  {
-    label: 'Galerie complète et vidéo',
-    freeIncluded: false,
-  },
-  {
-    label: 'Statistiques détaillées (30 et 90 jours)',
-    freeIncluded: false,
-  },
-];
-
-const PRO_UNLOCK_CARDS: {
-  title: string;
-  text: string;
-  soon?: boolean;
-}[] = [
-  {
-    title: 'Drops récurrents',
-    text: 'Ton happy hour du jeudi se publie tout seul chaque semaine.',
-    soon: true,
-  },
-  {
-    title: 'Rôle Responsable',
-    text: 'Un membre de l’équipe peut créer et arrêter des drops.',
-  },
-  {
-    title: 'Galerie complète',
-    text: 'Plus de photos et une courte vidéo sur ta fiche.',
-  },
-  {
-    title: 'Statistiques détaillées',
-    text: 'Tes heures de pointe, le détail de chaque drop et ce que cherchent tes visiteurs.',
-  },
-];
-
-const FREE_OFFER_BLURB =
-  "Fiche, drops ponctuels, validation au comptoir et une équipe d'équipiers.";
+const PLAN_TAGLINES: Record<PlanId, string> = Object.fromEntries(
+  OFFERS.map((o) => [o.id, o.tagline])
+) as Record<PlanId, string>;
 
 function formatProUntil(iso: string): string {
   return new Intl.DateTimeFormat('fr-FR', {
@@ -99,8 +34,9 @@ function formatProUntil(iso: string): string {
 function buildProMailto(opts: {
   displayName: string;
   cafeNames: string[];
+  plan: PlanId;
 }): string {
-  const subject = encodeURIComponent('Activer Dropspot Pro');
+  const subject = encodeURIComponent(`Passer à l’offre ${PLAN_LABELS[opts.plan]}`);
   const cafes =
     opts.cafeNames.length > 0
       ? opts.cafeNames.join(', ')
@@ -109,7 +45,7 @@ function buildProMailto(opts: {
     [
       'Bonjour,',
       '',
-      'Je souhaite activer l’offre Pro.',
+      `Je souhaite passer à l’offre ${PLAN_LABELS[opts.plan]}.`,
       `Compte : ${opts.displayName || '—'}`,
       `Établissements : ${cafes}`,
       '',
@@ -121,11 +57,14 @@ function buildProMailto(opts: {
 
 export default function AbonnementClient() {
   const titleId = useId();
-  const compareRef = useRef<HTMLElement>(null);
-  const { plan, hasPro, proUntil, loading } = useVendorPlan();
+  const { places, activePlace } = useActivePlace();
+  const { effectivePlan, proUntil, grid, loading } = useVendorPlan(
+    true,
+    activePlace?.id
+  );
   const { displayName, user } = useAuth();
-  const { places } = useActivePlace();
-  const [modalOpen, setModalOpen] = useState(false);
+  const [modalPlan, setModalPlan] = useState<PlanId | null>(null);
+  const modalOpen = modalPlan !== null;
 
   const cafeNames = useMemo(
     () => places.map((p) => p.name).filter(Boolean),
@@ -140,11 +79,12 @@ export default function AbonnementClient() {
   const mailto = buildProMailto({
     displayName: accountLabel,
     cafeNames,
+    plan: modalPlan ?? 'premium',
   });
 
-  const scrollToCompare = () => {
-    compareRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  };
+  const currentIndex = PLAN_IDS.indexOf(effectivePlan);
+  const upgrades = PLAN_IDS.slice(currentIndex + 1);
+  const isPaid = effectivePlan !== 'presence';
 
   return (
     <div className="flex min-h-0 flex-1 flex-col bg-ds-bg text-ds-text">
@@ -159,141 +99,135 @@ export default function AbonnementClient() {
         </div>
       </header>
 
-      <div className="flex min-h-0 flex-1 flex-col gap-5 px-4 py-5 lg:flex-row lg:gap-5 lg:px-8 lg:py-6">
-        <div className="flex min-w-0 flex-1 flex-col gap-4">
-          {/* Current offer */}
-          <section className="flex flex-col gap-4 rounded-[18px] border border-ds-line bg-ds-surface p-5 sm:flex-row sm:items-center sm:gap-4 sm:p-[20px_22px]">
-            <div className="flex min-w-0 flex-1 flex-col gap-1.5">
-              <span className="text-[13px] font-bold text-ds-text2">
-                Ton offre actuelle
+      <div className="flex min-h-0 flex-1 flex-col gap-4 px-4 py-5 lg:px-8 lg:py-6">
+        {/* Current offer */}
+        <section className="flex flex-col gap-4 rounded-[18px] border border-ds-line bg-ds-surface p-5 sm:flex-row sm:items-center sm:gap-4 sm:p-[20px_22px]">
+          <div className="flex min-w-0 flex-1 flex-col gap-1.5">
+            <span className="text-[13px] font-bold text-ds-text2">
+              Ton offre actuelle
+            </span>
+            <div className="flex flex-wrap items-center gap-2.5">
+              <span className="font-display text-[28px] font-extrabold leading-none">
+                {loading ? '…' : PLAN_LABELS[effectivePlan]}
               </span>
-              <div className="flex flex-wrap items-center gap-2.5">
-                <span className="font-display text-[28px] font-extrabold leading-none">
-                  {loading ? '…' : hasPro ? 'Pro' : 'Gratuit'}
-                </span>
-                {!loading ? <PlanBadge plan={plan} /> : null}
-              </div>
-              {hasPro && proUntil ? (
-                <p className="m-0 text-[15px] text-ds-text2">
-                  Actif jusqu&apos;au {formatProUntil(proUntil)}
-                </p>
-              ) : (
-                <p className="m-0 text-[15px] text-ds-text2">{FREE_OFFER_BLURB}</p>
-              )}
-              {PRO_PRICE_LABEL ? (
-                <p className="m-0 text-[15px] font-semibold text-ds-text">
-                  {PRO_PRICE_LABEL}
-                </p>
-              ) : null}
             </div>
-            {!hasPro ? (
-              <Button
-                variant="main"
-                className="h-[52px] shrink-0 rounded-[14px] px-5 text-base"
-                onClick={() => setModalOpen(true)}
-              >
-                Passer au Pro
-              </Button>
+            {isPaid && proUntil ? (
+              <p className="m-0 text-[15px] text-ds-text2">
+                Active jusqu&apos;au {formatProUntil(proUntil)}
+              </p>
+            ) : (
+              <p className="m-0 text-[15px] text-ds-text2">
+                {PLAN_TAGLINES[effectivePlan]}
+              </p>
+            )}
+            {PRO_PRICE_LABEL ? (
+              <p className="m-0 text-[15px] font-semibold text-ds-text">
+                {PRO_PRICE_LABEL}
+              </p>
             ) : null}
-          </section>
-
-          {/* Comparison table */}
-          <section
-            ref={compareRef}
-            className="overflow-hidden rounded-[18px] border border-ds-line bg-ds-surface"
-          >
-            <div className="grid grid-cols-[minmax(0,1fr)_88px_88px] items-center border-b border-ds-line sm:grid-cols-[minmax(0,1fr)_180px_180px]">
-              <div className="px-4 py-4 sm:px-[22px]">
-                <span className="font-display text-lg font-bold">Comparer</span>
-              </div>
-              <div className="flex flex-col items-center gap-0.5 py-3">
-                <PlanBadge plan="free" />
-                <span className="text-[13px] text-ds-text2">ton offre</span>
-              </div>
-              <div className="flex flex-col items-center justify-center gap-0.5 self-stretch bg-ds-accentsoft py-3">
-                <PlanBadge plan="pro" />
-              </div>
-            </div>
-
-            {COMPARE_ROWS.map((row) => (
-              <div
-                key={row.label}
-                className="grid grid-cols-[minmax(0,1fr)_88px_88px] items-center border-t border-ds-line sm:grid-cols-[minmax(0,1fr)_180px_180px]"
-              >
-                <span className="px-4 py-3.5 text-[15px] sm:px-[22px]">
-                  {row.label}
-                </span>
-                <span
-                  className={cn(
-                    'flex items-center justify-center',
-                    row.freeIncluded ? 'text-ds-ok' : 'text-ds-text2'
-                  )}
+          </div>
+          {!loading && upgrades.length > 0 ? (
+            <div className="flex shrink-0 flex-wrap gap-2">
+              {upgrades.map((plan) => (
+                <Button
+                  key={plan}
+                  variant={plan === 'premium' ? 'main' : 'tonal'}
+                  className="h-[52px] rounded-[14px] px-5 text-base"
+                  onClick={() => setModalPlan(plan)}
                 >
-                  {row.freeIncluded ? (
-                    <Check
-                      className="h-5 w-5"
-                      weight="bold"
-                      aria-label="Inclus"
-                    />
-                  ) : (
-                    <Minus className="h-5 w-5" aria-label="Non inclus" />
-                  )}
-                </span>
-                <span className="flex items-center justify-center self-stretch bg-ds-accentsoft text-ds-ok">
-                  <Check
-                    className="h-5 w-5"
-                    weight="bold"
-                    aria-label="Inclus"
-                  />
-                </span>
+                  Passer à {PLAN_LABELS[plan]}
+                </Button>
+              ))}
+            </div>
+          ) : null}
+        </section>
+
+        {/* Comparison table */}
+        <section className="overflow-hidden rounded-[18px] border border-ds-line bg-ds-surface">
+          <div className="grid grid-cols-[minmax(0,1fr)_repeat(3,64px)] items-center border-b border-ds-line sm:grid-cols-[minmax(0,1fr)_repeat(3,140px)]">
+            <div className="px-4 py-4 sm:px-[22px]">
+              <span className="font-display text-lg font-bold">Comparer</span>
+            </div>
+            {PLAN_IDS.map((plan) => (
+              <div
+                key={plan}
+                className={cn(
+                  'flex flex-col items-center gap-0.5 self-stretch justify-center py-3',
+                  plan === effectivePlan && 'bg-ds-accentsoft'
+                )}
+              >
+                <PlanBadge plan={plan} className="max-sm:px-1.5 max-sm:text-[10px]" />
+                {plan === effectivePlan ? (
+                  <span className="text-[12px] text-ds-text2">ton offre</span>
+                ) : null}
               </div>
             ))}
-          </section>
-        </div>
+          </div>
 
-        {/* Unlocked with Pro */}
-        <aside className="flex w-full shrink-0 flex-col gap-3 lg:w-[360px]">
-          <h2 className="font-display m-0 text-lg font-bold">
-            Débloqué avec Pro
-          </h2>
-          {PRO_UNLOCK_CARDS.map((card) => (
-            <div
-              key={card.title}
-              className="flex flex-col gap-2.5 rounded-[18px] border border-ds-line bg-ds-surface p-4"
-            >
-              <div className="flex items-center gap-2.5">
-                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] bg-ds-surface2 text-ds-text2">
-                  <Lock className="h-4 w-4" weight="bold" aria-hidden />
-                </span>
-                <span className="min-w-0 flex-1 font-bold">{card.title}</span>
-                {card.soon ? (
-                  <StatusTag variant="scheduled">Bientôt</StatusTag>
-                ) : (
-                  <PlanBadge plan="pro" />
+          <div className="grid grid-cols-[minmax(0,1fr)_repeat(3,64px)] items-center border-t border-ds-line sm:grid-cols-[minmax(0,1fr)_repeat(3,140px)]">
+            <span className="px-4 py-3.5 text-[15px] sm:px-[22px]">
+              Fiche sur la carte, horaires, infos confirmées par les clients
+            </span>
+            {PLAN_IDS.map((plan) => (
+              <span
+                key={plan}
+                className={cn(
+                  'flex items-center justify-center self-stretch text-ds-ok',
+                  plan === effectivePlan && 'bg-ds-accentsoft'
                 )}
-              </div>
-              <p className="m-0 text-sm leading-snug text-ds-text2">
-                {card.text}
-              </p>
+              >
+                <Check className="h-5 w-5" weight="bold" aria-label="Inclus" />
+              </span>
+            ))}
+          </div>
+
+          {PLAN_FEATURES.map((feature) => (
+            <div
+              key={feature.key}
+              className="grid grid-cols-[minmax(0,1fr)_repeat(3,64px)] items-center border-t border-ds-line sm:grid-cols-[minmax(0,1fr)_repeat(3,140px)]"
+            >
+              <span className="flex flex-col gap-0.5 px-4 py-3.5 sm:px-[22px]">
+                <span className="flex flex-wrap items-center gap-2 text-[15px]">
+                  {feature.label}
+                  {feature.soon ? (
+                    <StatusTag variant="scheduled">Bientôt</StatusTag>
+                  ) : null}
+                </span>
+                <span className="text-[13px] text-ds-text2">
+                  {feature.description}
+                </span>
+              </span>
+              {PLAN_IDS.map((plan) => {
+                const included = grid[feature.key].includes(plan);
+                return (
+                  <span
+                    key={plan}
+                    className={cn(
+                      'flex items-center justify-center self-stretch',
+                      included ? 'text-ds-ok' : 'text-ds-text2',
+                      plan === effectivePlan && 'bg-ds-accentsoft'
+                    )}
+                  >
+                    {included ? (
+                      <Check className="h-5 w-5" weight="bold" aria-label="Inclus" />
+                    ) : (
+                      <Minus className="h-5 w-5" aria-label="Non inclus" />
+                    )}
+                  </span>
+                );
+              })}
             </div>
           ))}
-          <Button
-            variant="tonal"
-            className="h-11 rounded-xl text-[15px]"
-            onClick={scrollToCompare}
-          >
-            Voir les détails de Pro
-          </Button>
-        </aside>
+        </section>
       </div>
 
-      {modalOpen ? (
+      {modalOpen && modalPlan ? (
         <div className="fixed inset-0 z-[70] flex items-end justify-center p-0 sm:items-center sm:p-4">
           <button
             type="button"
             className="absolute inset-0 bg-black/45"
             aria-label="Fermer"
-            onClick={() => setModalOpen(false)}
+            onClick={() => setModalPlan(null)}
           />
           <div
             role="dialog"
@@ -306,20 +240,20 @@ export default function AbonnementClient() {
                 id={titleId}
                 className="font-display m-0 text-[22px] font-extrabold"
               >
-                On active Pro avec toi
+                On active {PLAN_LABELS[modalPlan]} avec toi
               </h2>
               <button
                 type="button"
                 aria-label="Fermer"
                 className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-ds-surface2"
-                onClick={() => setModalOpen(false)}
+                onClick={() => setModalPlan(null)}
               >
                 <X className="h-4 w-4" weight="bold" />
               </button>
             </div>
             <p className="m-0 text-[15px] leading-relaxed text-ds-text2">
-              Pas de paiement dans l&apos;app. Écris-nous et on active Pro sur
-              ton compte.
+              Pas de paiement dans l&apos;app. Écris-nous et on active
+              l&apos;offre {PLAN_LABELS[modalPlan]} sur ton compte.
             </p>
             <p className="m-0 text-sm text-ds-text2">
               <span className="font-semibold text-ds-text">Compte :</span>{' '}
@@ -338,7 +272,7 @@ export default function AbonnementClient() {
               <Button
                 variant="outline"
                 className="h-11 rounded-xl px-4 text-[15px]"
-                onClick={() => setModalOpen(false)}
+                onClick={() => setModalPlan(null)}
               >
                 Annuler
               </Button>

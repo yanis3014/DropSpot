@@ -12,6 +12,7 @@ import Button from '@/components/ui/Button';
 import { cn } from '@/lib/cn';
 import { useActivePlace } from '@/app/(pro)/hooks/useActivePlace';
 import { useVendorPlan } from '@/hooks/useVendorPlan';
+import { PLAN_LABELS, type PlanId } from '@/lib/pro/planFeatures';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { ENVIE_OPTIONS } from '@/lib/onboarding';
 import {
@@ -167,10 +168,12 @@ function LockedSection({
   title,
   children,
   onUnlock,
+  plan,
 }: {
   title: string;
   children: ReactNode;
   onUnlock: () => void;
+  plan: PlanId;
 }) {
   return (
     <section className="relative flex flex-col gap-4 rounded-[18px] border border-ds-line bg-ds-surface p-5">
@@ -178,15 +181,16 @@ function LockedSection({
         <h2 className="font-display m-0 text-xl font-extrabold text-ds-text">
           {title}
         </h2>
-        <PlanBadge plan="pro" />
+        <PlanBadge plan={plan} />
       </div>
       <div className="relative">
         {children}
         <div className="absolute inset-0 flex items-center justify-center bg-ds-surface/60 backdrop-blur-[1px]">
           <ProLock
             variant="row"
-            label="Réservé à Pro"
-            actionLabel="Voir l’abonnement"
+            label={`Inclus dans l’offre ${PLAN_LABELS[plan]}`}
+            plan={plan}
+            actionLabel="Voir les offres"
             onUnlock={onUnlock}
             className="max-w-md shadow-sm"
           />
@@ -199,15 +203,21 @@ function LockedSection({
 export default function StatistiquesClient() {
   const router = useRouter();
   const { isAuthenticated, loading: authLoading } = useAuth();
-  const { hasPro, loading: planLoading } = useVendorPlan(
-    isAuthenticated && !authLoading
-  );
   const {
     activePlace,
     activeMemberRole,
     loading: placeLoading,
     withCafe,
   } = useActivePlace();
+  const {
+    hasFeature,
+    planFor,
+    loading: planLoading,
+  } = useVendorPlan(isAuthenticated && !authLoading, activePlace?.id);
+  // 30/90 jours et détail (heures, visiteurs) sont deux fonctions réglables.
+  const hasHistory = hasFeature('stats_history');
+  const hasInsights = hasFeature('stats_insights');
+  const insightsPlan = planFor('stats_insights');
 
   const [days, setDays] = useState<PlaceSummaryDays>(30);
   const [summary, setSummary] = useState<PlaceSummary | null>(null);
@@ -220,7 +230,7 @@ export default function StatistiquesClient() {
   const canView =
     activeMemberRole === 'owner' || activeMemberRole === 'manager';
   const isVerified = activePlace?.verification_status === 'verified';
-  const effectiveDays: PlaceSummaryDays = hasPro ? days : FREE_STATS_MAX_DAYS;
+  const effectiveDays: PlaceSummaryDays = hasHistory ? days : FREE_STATS_MAX_DAYS;
 
   useEffect(() => {
     if (!activePlace || !canView || placeLoading || planLoading) return;
@@ -242,18 +252,15 @@ export default function StatistiquesClient() {
 
     const run = async () => {
       try {
-        if (hasPro) {
-          const data = await getPlaceInsights(activePlace.id, days);
+        if (hasInsights) {
+          const data = await getPlaceInsights(activePlace.id, effectiveDays);
           if (cancelled) return;
           startTransition(() => {
             setInsights(data);
             setSummary(data.current);
           });
         } else {
-          const data = await getPlaceSummary(
-            activePlace.id,
-            FREE_STATS_MAX_DAYS
-          );
+          const data = await getPlaceSummary(activePlace.id, effectiveDays);
           if (cancelled) return;
           startTransition(() => {
             setInsights(null);
@@ -272,7 +279,7 @@ export default function StatistiquesClient() {
             code === 'forbidden'
               ? 'Tu n’as pas accès aux statistiques de ce café.'
               : code === 'pro_required'
-                ? 'Passe en Pro pour débloquer les statistiques détaillées.'
+                ? 'Ces statistiques ne sont pas incluses dans ton offre.'
                 : 'Impossible de charger les statistiques.'
           );
         });
@@ -288,8 +295,8 @@ export default function StatistiquesClient() {
   }, [
     activePlace,
     canView,
-    days,
-    hasPro,
+    effectiveDays,
+    hasInsights,
     isVerified,
     placeLoading,
     planLoading,
@@ -432,7 +439,7 @@ export default function StatistiquesClient() {
         >
           {PLACE_SUMMARY_PERIODS.map((period) => {
             const selected = days === period;
-            const needsPro = !hasPro && period > FREE_STATS_MAX_DAYS;
+            const needsPro = !hasHistory && period > FREE_STATS_MAX_DAYS;
             return (
               <button
                 key={period}
@@ -446,7 +453,9 @@ export default function StatistiquesClient() {
                 )}
               >
                 {period} j
-                {needsPro ? <PlanBadge plan="pro" className="scale-90" /> : null}
+                {needsPro ? (
+                  <PlanBadge plan={planFor('stats_history')} className="scale-90" />
+                ) : null}
               </button>
             );
           })}
@@ -477,7 +486,7 @@ export default function StatistiquesClient() {
               value={current?.views ?? '—'}
               muted={!current}
               trend={
-                hasPro && previous
+                previous
                   ? trendVsPrevious(current?.views ?? 0, previous.views)
                   : undefined
               }
@@ -487,7 +496,7 @@ export default function StatistiquesClient() {
               value={current?.check_ins ?? '—'}
               muted={!current}
               trend={
-                hasPro && previous
+                previous
                   ? trendVsPrevious(
                       current?.check_ins ?? 0,
                       previous.check_ins
@@ -500,7 +509,7 @@ export default function StatistiquesClient() {
               value={current?.saves ?? '—'}
               muted={!current}
               trend={
-                hasPro && previous
+                previous
                   ? trendVsPrevious(current?.saves ?? 0, previous.saves)
                   : undefined
               }
@@ -510,7 +519,7 @@ export default function StatistiquesClient() {
               value={current?.codes_redeemed ?? '—'}
               muted={!current}
               trend={
-                hasPro && previous
+                previous
                   ? trendVsPrevious(
                       current?.codes_redeemed ?? 0,
                       previous.codes_redeemed
@@ -520,14 +529,16 @@ export default function StatistiquesClient() {
             />
           </div>
 
-          {!hasPro ? (
+          {!hasHistory || !hasInsights ? (
             <p className="m-0 text-sm text-ds-text2">
-              Aperçu sur {effectiveDays} jours. Passe en Pro pour comparer les
-              périodes et débloquer le détail.
+              {hasHistory
+                ? `Chiffres sur ${effectiveDays} jours.`
+                : `Aperçu sur ${effectiveDays} jours.`}{' '}
+              Change d’offre pour {hasInsights ? 'voir plus loin dans le temps' : 'comparer les périodes et débloquer le détail'}.
             </p>
           ) : null}
 
-          {hasPro && insights ? (
+          {hasInsights && insights ? (
             <>
               <section className="flex flex-col gap-5 rounded-[18px] border border-ds-line bg-ds-surface p-5">
                 <h2 className="font-display m-0 text-xl font-extrabold text-ds-text">
@@ -675,32 +686,32 @@ export default function StatistiquesClient() {
             </>
           ) : (
             <>
-              <LockedSection title="Quand les gens viennent" onUnlock={unlock}>
+              <LockedSection plan={insightsPlan} title="Quand les gens viennent" onUnlock={unlock}>
                 <BarChart
                   locked
                   values={[2, 4, 6, 8, 7, 5, 3, 4, 6, 5, 3, 2, 1, 1, 0]}
                   labels={[...hourLabels]}
                 />
               </LockedSection>
-              <LockedSection title="Tes drops" onUnlock={unlock}>
+              <LockedSection plan={insightsPlan} title="Tes drops" onUnlock={unlock}>
                 <div className="h-16 rounded-[14px] bg-ds-surface2" />
               </LockedSection>
-              <LockedSection title="Tes visiteurs" onUnlock={unlock}>
+              <LockedSection plan={insightsPlan} title="Tes visiteurs" onUnlock={unlock}>
                 <div className="h-20 rounded-[14px] bg-ds-surface2" />
               </LockedSection>
-              <LockedSection
+              <LockedSection plan={insightsPlan}
                 title="Ce que disent les clients"
                 onUnlock={unlock}
               >
                 <div className="h-24 rounded-[14px] bg-ds-surface2" />
               </LockedSection>
               {isOwner ? (
-                <LockedSection title="Ton équipe" onUnlock={unlock}>
+                <LockedSection plan={insightsPlan} title="Ton équipe" onUnlock={unlock}>
                   <div className="h-14 rounded-[14px] bg-ds-surface2" />
                 </LockedSection>
               ) : null}
               <Button variant="main" onClick={unlock} className="self-start">
-                Passer en Pro
+                Voir les offres
               </Button>
             </>
           )}

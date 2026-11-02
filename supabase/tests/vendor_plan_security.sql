@@ -50,8 +50,8 @@ begin
   on conflict (place_id, user_id) do update set role = 'owner';
 
   insert into public.vendor_plans (user_id, plan, pro_until)
-  values (v_owner, 'free', null)
-  on conflict (user_id) do update set plan = 'free', pro_until = null;
+  values (v_owner, 'presence', null)
+  on conflict (user_id) do update set plan = 'presence', pro_until = null;
 
   if public.has_pro(v_owner) then
     raise exception 'FAIL: free owner should not has_pro';

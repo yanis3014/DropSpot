@@ -45,7 +45,11 @@ export default function EquipeClient() {
   const { user } = useAuth();
   const { activePlace, activeMemberRole, loading: placeLoading } =
     useActivePlace();
-  const { hasPro } = useVendorPlan();
+  const { hasFeature, planFor } = useVendorPlan(true, activePlace?.id);
+  // Rôle Responsable et équipiers suivent la grille des offres (/admin/offres).
+  const hasPro = hasFeature('team_manager');
+  const hasStaff = hasFeature('team_staff');
+  const managerPlan = planFor('team_manager');
   const isOwner = canManageTeam(activeMemberRole);
 
   const [members, setMembers] = useState<TeamMember[]>([]);
@@ -403,7 +407,7 @@ export default function EquipeClient() {
             <span>Gérant·e</span>
             <span className="inline-flex items-center justify-center gap-1">
               Responsable
-              <PlanBadge plan="pro" />
+              <PlanBadge plan={managerPlan} />
             </span>
             <span>Équipier·e</span>
           </div>
@@ -497,17 +501,22 @@ export default function EquipeClient() {
                       'flex cursor-pointer items-start gap-3 rounded-2xl border-[1.5px] p-3.5',
                       inviteRole === 'staff'
                         ? 'border-ds-accent bg-ds-surface'
-                        : 'border-ds-line'
+                        : 'border-ds-line',
+                      !hasStaff && 'opacity-75'
                     )}
                   >
                     <input
                       type="radio"
                       className="mt-1"
                       checked={inviteRole === 'staff'}
+                      disabled={!hasStaff}
                       onChange={() => setInviteRole('staff')}
                     />
                     <span className="flex flex-col gap-0.5">
-                      <span className="font-bold">Équipier·e</span>
+                      <span className="flex flex-wrap items-center gap-1.5 font-bold">
+                        Équipier·e
+                        {!hasStaff ? <PlanBadge plan={planFor('team_staff')} /> : null}
+                      </span>
                       <span className="text-[13px] font-medium text-ds-text2">
                         Valide les drops au comptoir et voit l&apos;accueil du
                         jour.
@@ -531,7 +540,7 @@ export default function EquipeClient() {
                     <span className="flex min-w-0 flex-1 flex-col gap-0.5">
                       <span className="flex flex-wrap items-center gap-1.5 font-bold">
                         Responsable
-                        <PlanBadge plan="pro" />
+                        <PlanBadge plan={managerPlan} />
                       </span>
                       <span className="text-[13px] font-medium text-ds-text2">
                         Crée et arrête des drops, sans accès à l&apos;abonnement.
@@ -542,7 +551,7 @@ export default function EquipeClient() {
                         href="/abonnement"
                         className="shrink-0 text-sm font-bold text-ds-accent no-underline"
                       >
-                        Passer au Pro
+                        Voir les offres
                       </Link>
                     ) : null}
                   </div>
@@ -607,7 +616,8 @@ export default function EquipeClient() {
               <span className="text-sm font-bold">Rôle</span>
               {(['owner', 'manager', 'staff'] as PlaceMemberRole[]).map(
                 (role) => {
-                  const locked = role === 'manager' && !hasPro;
+                  const locked =
+                    (role === 'manager' && !hasPro) || (role === 'staff' && !hasStaff);
                   return (
                     <label
                       key={role}
@@ -624,7 +634,8 @@ export default function EquipeClient() {
                       />
                       <span className="flex items-center gap-2 font-semibold">
                         {TEAM_ROLE_LABELS[role]}
-                        {role === 'manager' ? <PlanBadge plan="pro" /> : null}
+                        {role === 'manager' ? <PlanBadge plan={managerPlan} /> : null}
+                        {role === 'staff' && !hasStaff ? <PlanBadge plan={planFor('team_staff')} /> : null}
                       </span>
                     </label>
                   );

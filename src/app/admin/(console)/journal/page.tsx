@@ -2,6 +2,7 @@ import Link from "next/link";
 import AdminPageHeader from "@/app/admin/(console)/components/AdminPageHeader";
 import { requireAdmin } from "@/lib/admin/requireAdmin";
 import { ACTION_LABEL, formatAdminDate, formatAdminDay } from "@/lib/admin/format";
+import { normalizePlanId, normalizePlanList, PLAN_FEATURES, PLAN_LABELS } from "@/lib/pro/planFeatures";
 
 export const metadata = {
   title: "Journal · Admin DropSpot",
@@ -29,9 +30,17 @@ function targetHref(row: ActionRow): string | null {
   return typeof placeId === "string" ? `/place/${placeId}` : null;
 }
 
+function plansText(value: unknown): string {
+  const plans = normalizePlanList(value);
+  return plans.length ? plans.map((p) => PLAN_LABELS[p]).join(", ") : "aucune offre";
+}
+
 function planDetail(row: ActionRow): string | null {
+  if (row.action === "set_plan_feature") {
+    return `${plansText(row.details?.previous_plans)} → ${plansText(row.details?.plans)}`;
+  }
   if (row.action !== "set_plan") return null;
-  const plan = row.details?.plan === "pro" ? "Pro" : "Gratuit";
+  const plan = PLAN_LABELS[normalizePlanId(row.details?.plan)];
   const until = row.details?.pro_until;
   return typeof until === "string" ? `${plan} jusqu'au ${formatAdminDay(until)}` : plan;
 }
@@ -65,7 +74,10 @@ export default async function AdminLogPage({
         <ol className="overflow-hidden rounded-2xl border border-ds-line bg-ds-surface">
           {rows.map((row) => {
             const href = targetHref(row);
-            const label = row.target_label || "un élément";
+            const label =
+              row.target_type === "plan_feature"
+                ? PLAN_FEATURES.find((f) => f.key === row.target_label)?.label ?? row.target_label ?? "une fonction"
+                : row.target_label || "un élément";
             const extra = planDetail(row);
             return (
               <li key={row.id} className="flex flex-col gap-0.5 border-b border-ds-line px-4 py-3 last:border-b-0">

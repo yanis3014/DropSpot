@@ -1,10 +1,11 @@
 import Link from "next/link";
+import { normalizePlanId } from "@/lib/pro/planFeatures";
 import AdminPageHeader from "@/app/admin/(console)/components/AdminPageHeader";
 import PlanControl from "@/app/admin/(console)/abonnements/PlanControl";
 import { requireAdmin } from "@/lib/admin/requireAdmin";
 
 export const metadata = {
-  title: "Abonnements Pro · Admin DropSpot",
+  title: "Abonnements · Admin DropSpot",
 };
 
 type VendorRow = {
@@ -17,19 +18,23 @@ type VendorRow = {
   has_pro: boolean;
 };
 
-/** Pilot: Pro is paid by e-mail and switched on here by hand. */
+/** Pilot: paid offers are settled by e-mail and switched on here by hand. */
 export default async function AdminPlansPage() {
   const { supabase } = await requireAdmin("/admin/abonnements");
   const { data, error } = await supabase.rpc("admin_list_vendors");
   const vendors = (data ?? []) as VendorRow[];
-  const proCount = vendors.filter((v) => v.has_pro).length;
+  const paidCount = vendors.filter((v) => v.has_pro).length;
 
   return (
     <div className="mx-auto flex w-full max-w-4xl flex-col gap-5 px-4 py-6 lg:px-8 lg:py-8">
       <AdminPageHeader
-        title="Abonnements Pro"
-        subtitle={`Pendant le pilote, le Pro s'active ici à la main. ${proCount} compte(s) Pro actif(s).`}
-      />
+        title="Abonnements"
+        subtitle={`Pendant le pilote, l'offre de chaque café se change ici à la main. ${paidCount} compte(s) en offre payante.`}
+      >
+        <Link href="/admin/offres" className="self-start text-sm font-semibold text-ds-admin">
+          Choisir ce que contient chaque offre →
+        </Link>
+      </AdminPageHeader>
       {error ? (
         <p className="text-sm text-ds-danger">Impossible de charger les comptes café : {error.message}</p>
       ) : vendors.length === 0 ? (
@@ -55,7 +60,7 @@ export default async function AdminPlansPage() {
               <div className="min-w-0 flex-1">
                 <PlanControl
                   userId={v.user_id}
-                  plan={v.plan === "pro" ? "pro" : "free"}
+                  plan={normalizePlanId(v.plan)}
                   proUntil={v.pro_until}
                   hasPro={v.has_pro}
                 />

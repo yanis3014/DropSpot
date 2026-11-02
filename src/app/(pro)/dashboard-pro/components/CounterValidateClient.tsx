@@ -124,7 +124,9 @@ function CounterValidateInner({
   initials: string;
   withCafe: (href: string) => string;
 }) {
-  const { hasPro } = useVendorPlan();
+  const { hasFeature } = useVendorPlan(true, activePlace?.id);
+  const hasPro = hasFeature("team_manager");
+  const canDrop = hasFeature("drops");
   const [mode, setMode] = useState<Mode>("scanner");
   const [keyboardCode, setKeyboardCode] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -588,6 +590,7 @@ function CounterValidateInner({
           place={activePlace}
           role={placeRole}
           hasPro={hasPro}
+          canDrop={canDrop}
           onClose={() => setQuickDropOpen(false)}
           onPublished={resetToScanner}
         />

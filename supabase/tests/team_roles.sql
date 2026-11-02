@@ -82,8 +82,8 @@ begin
 
   -- Free plan for place A vendor (manager role requires Pro)
   insert into public.vendor_plans (user_id, plan, pro_until)
-  values (u_owner_a, 'free', null)
-  on conflict (user_id) do update set plan = 'free', pro_until = null;
+  values (u_owner_a, 'presence', null)
+  on conflict (user_id) do update set plan = 'presence', pro_until = null;
 
   -- -----------------------------------------------------------------------
   -- (1) manager cannot change a role

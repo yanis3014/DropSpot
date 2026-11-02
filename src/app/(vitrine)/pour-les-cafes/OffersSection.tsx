@@ -119,12 +119,24 @@ function OfferCard({ offer }: { offer: Offer }) {
   );
 }
 
-export default function OffersSection() {
+type OffersSectionProps = {
+  /** false dans le <details> du résumé : ni id, ni titre, ni cadre propre. */
+  showHeading?: boolean;
+};
+
+export default function OffersSection({
+  showHeading = true,
+}: OffersSectionProps) {
   return (
-    <section id="offres" className="border-t border-ds-line py-16 sm:py-20">
-      <h2 className="font-display m-0 text-[28px] font-extrabold tracking-tight text-balance text-ds-text sm:text-[36px]">
-        Trois offres, selon ce dont vous avez besoin
-      </h2>
+    <section
+      id={showHeading ? "offres" : undefined}
+      className={showHeading ? "border-t border-ds-line py-16 sm:py-20" : ""}
+    >
+      {showHeading ? (
+        <h2 className="font-display m-0 text-[28px] font-extrabold tracking-tight text-balance text-ds-text sm:text-[36px]">
+          Trois offres, selon ce dont vous avez besoin
+        </h2>
+      ) : null}
       <p className="mt-3 mb-0 max-w-[40em] text-[16px] leading-relaxed text-ds-text2 sm:text-[17px]">
         Commencez gratuitement. Passez à l’offre supérieure quand vous voulez.
       </p>

@@ -63,7 +63,7 @@ export default function PourLesCafesPage() {
 
         {/* 2. La vidéo */}
         <section className="py-16 sm:py-20">
-          <div className="grid gap-8 lg:grid-cols-2 lg:items-center lg:gap-12">
+          <div className="grid grid-cols-1 gap-8 lg:grid-cols-2 lg:items-center lg:gap-12">
             <h2 className="font-display m-0 max-w-[18em] text-[24px] font-extrabold leading-[1.15] tracking-tight text-balance text-ds-text sm:text-[28px]">
               Un mardi, 15 h, dans un café de Nice
             </h2>
@@ -76,7 +76,7 @@ export default function PourLesCafesPage() {
           <h2 className={SECTION_TITLE}>
             Ce que voient les Niçois quand ils vous cherchent
           </h2>
-          <div className="mt-10 grid gap-10 lg:grid-cols-2 lg:items-center lg:gap-12">
+          <div className="mt-10 grid grid-cols-1 gap-10 lg:grid-cols-2 lg:items-center lg:gap-12">
             <CafeCardPreview />
             <div>
               <p className="m-0 max-w-[32em] text-[16px] leading-relaxed text-ds-text2">

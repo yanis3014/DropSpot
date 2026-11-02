@@ -56,7 +56,6 @@ export default function NiceMapHero() {
           <div className="relative -mt-10 lg:order-first lg:mt-0">
             <h1
               className="font-display text-[44px] leading-none font-extrabold tracking-tight text-balance sm:text-[52px] lg:text-[60px]"
-              style={{ fontStretch: "85%" }}
             >
               Nice cherche un café. Le vôtre est sur la carte&nbsp;?
             </h1>

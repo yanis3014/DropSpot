@@ -21,7 +21,7 @@ const DROP_BLOCK_DELAY_MS = 850;
 export default function DayCurve() {
   return (
     <section className="py-16 sm:py-20">
-      <div className="grid gap-8 lg:grid-cols-2 lg:items-center lg:gap-12">
+      <div className="grid grid-cols-1 gap-8 lg:grid-cols-2 lg:items-center lg:gap-12">
         <div>
           <p className="m-0 text-[12px] font-bold uppercase tracking-[0.16em] text-ds-accenttext">
             L’heure creuse

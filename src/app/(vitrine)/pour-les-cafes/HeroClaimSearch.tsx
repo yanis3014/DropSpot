@@ -7,12 +7,25 @@ import {
   writeProClaimQuery,
   writeProIntent,
 } from "@/lib/auth/proIntent";
-import {
-  searchPlacesPublic,
-  type VitrinePlaceHit,
-} from "@/lib/vitrine/searchPlaces";
+import type { VitrinePlaceHit } from "@/lib/vitrine/searchPlaces";
 
 const DEBOUNCE_MS = 250;
+
+/*
+ * The Supabase client is only needed once the visitor types: load it on
+ * first focus or keystroke instead of in the page's first JS bundle
+ * (keeps the landing's main-thread time as low as before the redesign).
+ */
+let searchModule: Promise<typeof import("@/lib/vitrine/searchPlaces")> | null =
+  null;
+function loadSearch() {
+  searchModule ??= import("@/lib/vitrine/searchPlaces").catch((err) => {
+    // Chunk failed to load (offline…): allow a retry on the next keystroke.
+    searchModule = null;
+    throw err;
+  });
+  return searchModule;
+}
 
 /**
  * Premier geste de la landing cafés : taper le nom de son café.
@@ -43,7 +56,13 @@ export default function HeroClaimSearch() {
     const id = ++requestId.current;
     const timer = window.setTimeout(() => {
       void (async () => {
-        const list = await searchPlacesPublic(q);
+        let list: VitrinePlaceHit[] = [];
+        try {
+          const { searchPlacesPublic } = await loadSearch();
+          list = await searchPlacesPublic(q);
+        } catch (err) {
+          console.error(err);
+        }
         // Une frappe plus récente a pris le relais : réponse ignorée.
         if (requestId.current !== id) return;
         setResult({ query: q, hits: list });
@@ -110,6 +129,7 @@ export default function HeroClaimSearch() {
           autoComplete="off"
           placeholder="Ex. Maison Grain"
           value={query}
+          onFocus={() => void loadSearch().catch(() => {})}
           onChange={(e) => setQuery(e.target.value)}
           onKeyDown={onInputKeyDown}
           className="min-h-[52px] min-w-0 flex-1 rounded-[14px] border border-ds-nightline bg-ds-night2 px-4 text-base text-ds-onnight outline-none placeholder:text-ds-onnight2/70 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ds-nightaccent"

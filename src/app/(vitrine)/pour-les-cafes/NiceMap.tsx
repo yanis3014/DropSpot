@@ -19,7 +19,7 @@ const STREETS = [
 const NEIGHBORHOODS = [
   { name: "Libération", left: 38, top: 21 },
   { name: "Carré d’or", left: 18, top: 46 },
-  { name: "Vieux-Nice", left: 60, top: 57 },
+  { name: "Vieux-Nice", left: 56, top: 57 },
   { name: "Port", left: 86, top: 46 },
 ] as const;
 
@@ -37,7 +37,7 @@ export default function NiceMap() {
   return (
     <div
       aria-hidden="true"
-      className="relative aspect-[390/430] w-full overflow-hidden lg:aspect-auto lg:h-[520px] lg:rounded-[28px]"
+      className="relative -mx-4 aspect-[390/430] overflow-hidden sm:-mx-6 lg:mx-0 lg:aspect-auto lg:h-[520px] lg:rounded-[28px]"
     >
       <svg
         viewBox="0 0 390 430"
@@ -82,7 +82,7 @@ export default function NiceMap() {
       </span>
       <span
         className="absolute text-[10px] tracking-[0.2em] uppercase text-ds-onnight2/70"
-        style={{ left: "71%", top: "49%" }}
+        style={{ left: "71%", top: "62%" }}
       >
         Château
       </span>
@@ -123,8 +123,8 @@ export default function NiceMap() {
       <span
         className="absolute flex -translate-x-1/2 -translate-y-1/2 items-center gap-2 rounded-full border-[1.5px] border-dashed border-ds-nightaccenttext px-3 py-1.5 text-[13px] font-bold whitespace-nowrap text-ds-nightaccenttext"
         style={{
-          left: "48%",
-          top: "11%",
+          left: "64%",
+          top: "24%",
           backgroundColor:
             "color-mix(in srgb, var(--night) 85%, transparent)",
         }}

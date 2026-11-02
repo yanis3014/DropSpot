@@ -10,13 +10,10 @@ const figtree = Figtree({
   weight: ["400", "500", "600", "700"],
 });
 
-// Variable font complète : l'axe `wdth` (titres resserrés via font-stretch)
-// n'est chargeable que si `weight` n'est pas une liste statique.
 const bricolage = Bricolage_Grotesque({
   variable: "--font-bricolage",
   subsets: ["latin"],
-  weight: "variable",
-  axes: ["wdth"],
+  weight: ["600", "700", "800"],
 });
 
 export const metadata: Metadata = {

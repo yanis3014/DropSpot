@@ -3,8 +3,6 @@ import { supabase } from '@/lib/supabase/client';
 export type PlaceEventKind = 'view' | 'directions';
 export type PlaceEventSource = 'map' | 'list' | 'top' | 'drop' | 'direct';
 
-const ANON_STORAGE_KEY = 'dropspot_anon_id';
-
 const VALID_SOURCES = new Set<PlaceEventSource>([
   'map',
   'list',
@@ -23,21 +21,12 @@ export function placeEventSourceFromParam(
     : 'direct';
 }
 
-function readOrCreateAnonId(): string | null {
-  try {
-    const existing = localStorage.getItem(ANON_STORAGE_KEY);
-    if (existing) return existing;
-    const id = crypto.randomUUID();
-    localStorage.setItem(ANON_STORAGE_KEY, id);
-    return id;
-  } catch {
-    return null;
-  }
-}
-
 /**
  * Fire-and-forget place view / directions ping.
- * Never throws to the UI; skips silently when Supabase or anon id is unavailable.
+ *
+ * Only signed-in visitors are counted: the server takes the visitor from the
+ * session, so the numbers cafés see cannot be inflated with made-up visitor
+ * ids. Never throws to the UI; skips silently without a session.
  */
 export function logPlaceEvent(
   placeId: string,
@@ -51,15 +40,12 @@ export function logPlaceEvent(
       const {
         data: { session },
       } = await supabase.auth.getSession();
-      const isLoggedIn = Boolean(session?.user?.id);
-      const anonId = isLoggedIn ? null : readOrCreateAnonId();
-      if (!isLoggedIn && !anonId) return;
+      if (!session?.user?.id) return;
 
       await supabase.rpc('log_place_event', {
         p_place: placeId,
         p_kind: kind,
         p_source: source ?? null,
-        p_anon_id: anonId,
       });
     } catch {
       // Fire and forget: never block the place sheet.

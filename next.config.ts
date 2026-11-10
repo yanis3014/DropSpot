@@ -15,6 +15,7 @@ const PRIVATE_PATH_PREFIXES = [
   "/valider",
   "/equipe",
   "/abonnement",
+  "/statistiques",
   "/admin",
   "/onboarding",
 ] as const;

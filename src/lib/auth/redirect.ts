@@ -7,9 +7,32 @@ import {
 
 export type ProfileRole = 'user' | 'vendor' | 'owner';
 
-/** Only allow same-origin relative paths (open-redirect safe). */
+/** Base used only to check that a path stays on the same origin. */
+const SAME_ORIGIN_PROBE = 'https://dropspot.invalid';
+
+/** Char code of the backslash, which browsers treat as a forward slash. */
+const BACKSLASH = 92;
+
+/**
+ * Only allow same-origin relative paths (open-redirect safe).
+ *
+ * Browsers read `\` as `/` and drop tabs / new lines inside a URL, so
+ * `/\evil.example` or `/<tab>/evil.example` would leave the site even though
+ * they start with a single `/`. Those are refused, then the URL parser has the
+ * last word: the path must resolve on the same origin.
+ */
 export function safeRedirectPath(raw: string | null | undefined): string {
   if (!raw || !raw.startsWith('/') || raw.startsWith('//')) return '/';
+  // Backslashes and control characters (tab, CR, LF…) have no place in a path.
+  for (let i = 0; i < raw.length; i += 1) {
+    const code = raw.charCodeAt(i);
+    if (code === BACKSLASH || code < 32 || code === 127) return '/';
+  }
+  try {
+    if (new URL(raw, SAME_ORIGIN_PROBE).origin !== SAME_ORIGIN_PROBE) return '/';
+  } catch {
+    return '/';
+  }
   return raw;
 }
 

@@ -89,14 +89,41 @@ begin
   delete from public.flash_drops where id = v_drop;
 
   -- -----------------------------------------------------------------------
-  -- (1) anon with p_anon_id logs a view; two calls same day = 1 row
+  -- (1a) anon is never counted, whatever p_anon_id says (views cannot be
+  --      inflated with made-up visitor ids)
   -- -----------------------------------------------------------------------
   perform set_config('request.jwt.claim.sub', '', true);
   perform set_config('request.jwt.claims', '{}', true);
   execute 'set local role anon';
 
   perform public.log_place_event(place_a, 'view', 'map', v_anon);
-  perform public.log_place_event(place_a, 'view', 'map', v_anon);
+  perform public.log_place_event(place_a, 'view', 'map', gen_random_uuid());
+  perform public.log_place_event(place_a, 'view', 'map', gen_random_uuid());
+
+  reset role;
+
+  select count(*)::integer into v_count
+  from public.place_events
+  where place_id = place_a and kind = 'view';
+  if v_count <> 0 then
+    raise exception 'FAIL: anonymous views must not be counted, got % rows', v_count;
+  end if;
+
+  -- -----------------------------------------------------------------------
+  -- (1b) signed-in visitor (not on the café team): two calls same day = 1
+  --      row, and p_anon_id cannot turn one visitor into several
+  -- -----------------------------------------------------------------------
+  perform set_config('request.jwt.claim.sub', u_owner_b::text, true);
+  perform set_config(
+    'request.jwt.claims',
+    json_build_object('sub', u_owner_b::text, 'role', 'authenticated')::text,
+    true
+  );
+  execute 'set local role authenticated';
+
+  perform public.log_place_event(place_a, 'view', 'map', null);
+  perform public.log_place_event(place_a, 'view', 'map', gen_random_uuid());
+  perform public.log_place_event(place_a, 'view', 'list', gen_random_uuid());
 
   reset role;
 
@@ -104,7 +131,7 @@ begin
   from public.place_events
   where place_id = place_a and kind = 'view';
   if v_count <> 1 then
-    raise exception 'FAIL: anon double view same day should be 1 row, got %', v_count;
+    raise exception 'FAIL: signed-in double view same day should be 1 row, got %', v_count;
   end if;
 
   -- -----------------------------------------------------------------------

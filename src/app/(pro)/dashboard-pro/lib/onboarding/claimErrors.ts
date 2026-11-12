@@ -8,6 +8,8 @@ const CLAIM_ERROR_MESSAGES: Record<string, string> = {
   place_not_found: 'Ce café est introuvable.',
   place_not_unclaimed: 'Ce café n’est plus libre à la revendication.',
   claim_already_open: 'Une demande est déjà en cours pour ce café.',
+  too_many_open_claims:
+    'Tu as déjà 3 demandes en attente. Attends une réponse avant d’en faire une autre.',
   not_found: 'Demande introuvable.',
   forbidden: 'Action non autorisée.',
   not_pending: 'Cette demande n’est plus en attente.',

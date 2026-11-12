@@ -49,6 +49,8 @@ function errorCopy(result: Extract<CheckInResult, { ok: false }>): string {
       return result.distanceM != null
         ? `Tu es à ${Math.round(result.distanceM)} m du café. Rapproche-toi à moins de 100 m.`
         : 'Rapproche-toi à moins de 100 m du café.';
+    case 'own_place':
+      return 'Tu fais partie de l’équipe de ce café : ton passage ne compte pas ici.';
     case 'no_gps':
       return 'Active ta localisation : ça se fait sur place.';
     case 'not_authenticated':

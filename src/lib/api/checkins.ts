@@ -61,7 +61,9 @@ export type CheckInError =
   | 'invalid_input'
   | 'no_gps'
   | 'not_found'
-  | 'too_far';
+  | 'too_far'
+  /** The caller works at this café (owner, manager or staff). */
+  | 'own_place';
 
 export type CheckInResult =
   | {
